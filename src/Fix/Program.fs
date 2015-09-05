@@ -5,16 +5,29 @@ open Fake.Git
 open System.IO
 open System
 
-[<EntryPoint>]
-let main argv = 
+let RefreshTemplates path =
+    printfn "Getting templates..."
+    Repository.cloneSingleBranch "." "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
+
+let applicationNameToProjectName folder projectName =
+    let applicationName = "ApplicationName"
+    let files = Directory.GetFiles folder |> Seq.where (fun x -> x.Contains applicationName)
+    files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
+
+let sed (find:string) replace folder =
+    folder 
+    |> Directory.GetFiles
+    |> Seq.iter (fun x -> 
+                    let contents = File.ReadAllText(x).Replace(find, replace)
+                    File.WriteAllText(x, contents))
+
+let New projectName =
     let directory = System.Environment.CurrentDirectory
-    let projectName = "MyProject"
     let templatePath = Path.Combine(directory, "templates")
     let projectFolder = Path.Combine(directory, projectName)
 
     if not <| Directory.Exists templatePath
-    then printfn "Getting templates..."
-         Repository.cloneSingleBranch "." "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
+    then RefreshTemplates templatePath
 
     printfn "Choose a template:"
     let templates = Directory.GetDirectories(templatePath) 
@@ -28,14 +41,19 @@ let main argv =
     
     Directory.Move(Path.Combine(templatePath, templateChoice), projectFolder)
 
+    printfn "Changing filenames from ApplicationName.* to %s.*" projectName
+    applicationNameToProjectName projectFolder projectName
+
+    printfn "Changing namespace to %s" projectName
+    projectFolder |> sed "<%= namespace %>" projectName
     
-    //perform replacements
-    //ApplicationName.* files to projectName.*
-    //<%= namespace %> to projectName
-    //<%= guid %> to Guid.NewGuid()
+    let guid = Guid.NewGuid().ToString()
+    printfn "Changing guid to %s" guid
+    projectFolder |> sed "<%= guid %>" guid
+    ()
 
-    //what about solution file?
 
-    let foo = Console.ReadLine()
-    Directory.Delete(templatePath)
+[<EntryPoint>]
+let main argv = 
+    New "TestProject"
     0
