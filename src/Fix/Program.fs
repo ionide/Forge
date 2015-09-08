@@ -1,11 +1,11 @@
 module Fix
 
-open Fake.ProcessHelper
 open Fake.Git
+open Fake.FileHelper
 open System.IO
 open System
 
-let RefreshTemplates path =
+let RefreshTemplates () =
     printfn "Getting templates..."
     Repository.cloneSingleBranch "." "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
@@ -27,7 +27,7 @@ let New projectName =
     let projectFolder = Path.Combine(directory, projectName)
 
     if not <| Directory.Exists templatePath
-    then RefreshTemplates templatePath
+    then RefreshTemplates ()
 
     printfn "Choose a template:"
     let templates = Directory.GetDirectories(templatePath) 
@@ -38,8 +38,12 @@ let New projectName =
 
     let templateChoice = Console.ReadLine()
     printfn "Fixing template %s" templateChoice
+    let templateDir = Path.Combine(templatePath, templateChoice)
     
-    Directory.Move(Path.Combine(templatePath, templateChoice), projectFolder)
+    Directory.Move(templateDir, projectFolder)
+
+
+    //Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
 
     printfn "Changing filenames from ApplicationName.* to %s.*" projectName
     applicationNameToProjectName projectFolder projectName
@@ -50,10 +54,25 @@ let New projectName =
     let guid = Guid.NewGuid().ToString()
     printfn "Changing guid to %s" guid
     projectFolder |> sed "<%= guid %>" guid
+    printfn "Done!"
     ()
 
+let Help () = 
+    printfn "Fix (Mix for F#)"
+    printfn "Available Commands:"
+    printfn " new [projectName] - creates a new project with the given name"
+    printfn " help - displays this help"
+    printfn ""
 
 [<EntryPoint>]
 let main argv = 
-    New "TestProject"
+    let list = [ "new" ; "suaveTest"]
+    match list with
+    | [] -> Help()
+    | h::t -> match h with
+              | "new" -> New (t |> Seq.head)
+              | _ -> printfn "Unknown option"
+                     Help ()
+
+    let stayOpenForDebugging = Console.ReadKey()
     0
