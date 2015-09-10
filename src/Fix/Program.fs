@@ -5,11 +5,13 @@ open Fake.FileHelper
 open System.IO
 open System
 
+let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
 let directory = System.Environment.CurrentDirectory
 
 let RefreshTemplates () =
     printfn "Getting templates..."
-    Repository.cloneSingleBranch "." "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
+    Path.Combine(exeLocation, "templates") |> Fake.FileHelper.CleanDir 
+    Repository.cloneSingleBranch exeLocation "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"
@@ -24,7 +26,7 @@ let sed (find:string) replace folder =
                     File.WriteAllText(x, contents))
 
 let New projectName =
-    let templatePath = Path.Combine(directory, "templates")
+    let templatePath = Path.Combine(exeLocation, "templates")
     let projectFolder = Path.Combine(directory, projectName)
 
     if not <| Directory.Exists templatePath
@@ -54,26 +56,28 @@ let New projectName =
     printfn "Changing guid to %s" guid
     sed "<%= guid %>" guid projectFolder 
     printfn "Done!"
-    ()
 
 let Help () = 
     printfn "Fix (Mix for F#)"
     printfn "Available Commands:"
-    printfn " new [projectName] - creates a new project with the given name"
-    printfn " help - displays this help"
+    printfn " new [projectName] - Creates a new project with the given name"
+    printfn " refresh           - Refreshes the template cache"
+    printfn " help              - Displays this help"
     printfn ""
-
-
 
 let rec consoleLoop f =
     Console.Write("> ")
     let input = Console.ReadLine()
-    input.Split(' ') |> f
-    consoleLoop f
+    let result = input.Split(' ') |> f
+    if result > 0
+    then result
+    else consoleLoop f 
 
 let handleInput = function
-    | [| "new"; projectName |] -> New projectName
-    | _ -> Help()
+    | [| "new"; projectName |] -> New projectName; 1
+    | [| "refresh" |] -> RefreshTemplates (); 0
+    | [| "exit" |] -> 1
+    | _ -> Help(); 0
 
 
 [<EntryPoint>]
@@ -81,4 +85,3 @@ let main argv =
     if argv |> Array.isEmpty
     then consoleLoop handleInput
     else handleInput argv
-    0
