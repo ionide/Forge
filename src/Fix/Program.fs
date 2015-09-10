@@ -5,6 +5,8 @@ open Fake.FileHelper
 open System.IO
 open System
 
+let directory = System.Environment.CurrentDirectory
+
 let RefreshTemplates () =
     printfn "Getting templates..."
     Repository.cloneSingleBranch "." "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
@@ -22,7 +24,6 @@ let sed (find:string) replace folder =
                     File.WriteAllText(x, contents))
 
 let New projectName =
-    let directory = System.Environment.CurrentDirectory
     let templatePath = Path.Combine(directory, "templates")
     let projectFolder = Path.Combine(directory, projectName)
 
@@ -34,16 +35,14 @@ let New projectName =
                     |> Seq.map (fun x -> x.Replace(Path.GetDirectoryName(x) + "\\", ""))
                     |> Seq.where (fun x -> not <| x.StartsWith("."))
     
-    templates |> Seq.iter (fun x -> printfn "%s" x)
+    templates |> Seq.iter (fun x -> printfn " - %s" x)
 
+    printfn ""
     let templateChoice = Console.ReadLine()
     printfn "Fixing template %s" templateChoice
     let templateDir = Path.Combine(templatePath, templateChoice)
-    
-    Directory.Move(templateDir, projectFolder)
 
-    // getting missing method exception here
-    //Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
+    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
 
     printfn "Changing filenames from ApplicationName.* to %s.*" projectName
     applicationNameToProjectName projectFolder projectName
