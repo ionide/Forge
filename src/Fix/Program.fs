@@ -42,18 +42,18 @@ let New projectName =
     
     Directory.Move(templateDir, projectFolder)
 
-
+    // getting missing method exception here
     //Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
 
     printfn "Changing filenames from ApplicationName.* to %s.*" projectName
     applicationNameToProjectName projectFolder projectName
 
     printfn "Changing namespace to %s" projectName
-    projectFolder |> sed "<%= namespace %>" projectName
+    sed "<%= namespace %>" projectName projectFolder
     
     let guid = Guid.NewGuid().ToString()
     printfn "Changing guid to %s" guid
-    projectFolder |> sed "<%= guid %>" guid
+    sed "<%= guid %>" guid projectFolder 
     printfn "Done!"
     ()
 
@@ -64,15 +64,22 @@ let Help () =
     printfn " help - displays this help"
     printfn ""
 
+
+
+let rec consoleLoop f =
+    Console.Write("> ")
+    let input = Console.ReadLine()
+    input.Split(' ') |> f
+    consoleLoop f
+
+let handleInput = function
+    | [| "new"; projectName |] -> New projectName
+    | _ -> Help()
+
+
 [<EntryPoint>]
 let main argv = 
-    let list = [ "new" ; "suaveTest"]
-    match list with
-    | [] -> Help()
-    | h::t -> match h with
-              | "new" -> New (t |> Seq.head)
-              | _ -> printfn "Unknown option"
-                     Help ()
-
-    let stayOpenForDebugging = Console.ReadKey()
+    if argv |> Array.isEmpty
+    then consoleLoop handleInput
+    else handleInput argv
     0
