@@ -40,6 +40,7 @@ let New projectName =
     templates |> Seq.iter (fun x -> printfn " - %s" x)
 
     printfn ""
+    Console.Write("> ")
     let templateChoice = Console.ReadLine()
     printfn "Fixing template %s" templateChoice
     let templateDir = Path.Combine(templatePath, templateChoice)

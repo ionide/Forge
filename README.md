@@ -41,7 +41,7 @@ On the first run Fix will download the templates found in the [Generator F# Repo
 	 - websharperspa
 	 - windows
 
-	suave
+	> suave
 	Fixing template suave
 	Creating C:\Dev\MySuaveProject
 	Changing filenames from ApplicationName.* to MySuaveProject.*
