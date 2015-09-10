@@ -63,6 +63,7 @@ let Help () =
     printfn " new [projectName] - Creates a new project with the given name"
     printfn " refresh           - Refreshes the template cache"
     printfn " help              - Displays this help"
+    printfn " exit              - Exit interactive mode"
     printfn ""
 
 let rec consoleLoop f =
@@ -83,5 +84,7 @@ let handleInput = function
 [<EntryPoint>]
 let main argv = 
     if argv |> Array.isEmpty
-    then consoleLoop handleInput
+    then
+        Help () 
+        consoleLoop handleInput
     else handleInput argv
