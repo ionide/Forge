@@ -2,6 +2,7 @@ module Fix
 
 open Fake.Git
 open Fake.FileHelper
+open Fake.MSBuild.ProjectSystem
 open System.IO
 open System
 
@@ -25,6 +26,12 @@ let sed (find:string) replace folder =
                     let contents = File.ReadAllText(x).Replace(find, replace)
                     File.WriteAllText(x, contents))
 
+let promptList list =
+    list |> Seq.iter (fun x -> printfn " - %s" x)
+    printfn ""
+    Console.Write("> ")
+    Console.ReadLine()
+
 let New projectName =
     let templatePath = Path.Combine(exeLocation, "templates")
     let projectFolder = Path.Combine(directory, projectName)
@@ -37,11 +44,7 @@ let New projectName =
                     |> Seq.map (fun x -> x.Replace(Path.GetDirectoryName(x) + "\\", ""))
                     |> Seq.where (fun x -> not <| x.StartsWith("."))
     
-    templates |> Seq.iter (fun x -> printfn " - %s" x)
-
-    printfn ""
-    Console.Write("> ")
-    let templateChoice = Console.ReadLine()
+    let templateChoice = promptList templates
     printfn "Fixing template %s" templateChoice
     let templateDir = Path.Combine(templatePath, templateChoice)
 
@@ -58,13 +61,32 @@ let New projectName =
     sed "<%= guid %>" guid projectFolder 
     printfn "Done!"
 
+let addFileToProject fileName (project : string) =
+    let contents = File.ReadAllText project
+    let fsProj = new ProjectFile(project, contents)
+    let updatedProject = fsProj.AddFile(fileName)
+    updatedProject.Save(project)
+
+let Add fileName =
+    let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
+
+    match projects with
+    | [| project |] -> project.Name |> addFileToProject fileName
+    | [||] -> printfn "No project found in this directory."
+    | _ -> projects |> Seq.map (fun x -> x.Name) |> promptList |> addFileToProject fileName
+
+    Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
+
 let Help () = 
     printfn "Fix (Mix for F#)"
     printfn "Available Commands:"
-    printfn " new [projectName] - Creates a new project with the given name"
-    printfn " refresh           - Refreshes the template cache"
-    printfn " help              - Displays this help"
-    printfn " exit              - Exit interactive mode"
+    printfn " new [projectName]   - Creates a new project with the given name"
+    printfn " file add [fileName] - Adds a file to the current folder and project."
+    printfn "                       If more than one project is in the current"
+    printfn "                       directory you will be prompted which to use."
+    printfn " refresh             - Refreshes the template cache"
+    printfn " help                - Displays this help"
+    printfn " exit                - Exit interactive mode"
     printfn ""
 
 let rec consoleLoop f =
@@ -77,6 +99,7 @@ let rec consoleLoop f =
 
 let handleInput = function
     | [| "new"; projectName |] -> New projectName; 1
+    | [| "file"; "add"; fileName |] -> Add fileName; 0
     | [| "refresh" |] -> RefreshTemplates (); 0
     | [| "exit" |] -> 1
     | _ -> Help(); 0
