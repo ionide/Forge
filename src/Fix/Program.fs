@@ -77,6 +77,9 @@ let Add fileName =
 
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
 
+let Remove fileName =
+    
+
 let Help () = 
     printfn "Fix (Mix for F#)"
     printfn "Available Commands:"
@@ -100,6 +103,7 @@ let rec consoleLoop f =
 let handleInput = function
     | [| "new"; projectName |] -> New projectName; 1
     | [| "file"; "add"; fileName |] -> Add fileName; 0
+    | [| "file"; "rem"; fileName |] -> Remove fileName; 0
     | [| "refresh" |] -> RefreshTemplates (); 0
     | [| "exit" |] -> 1
     | _ -> Help(); 0

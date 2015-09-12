@@ -63,4 +63,4 @@ This is still in very early stages so you'll need to clone the repo, build the s
 
 ## Maintainer(s)
 
-- [@reidev275](https://github.com/reidev275)
+- [@ReidNEvans](https://twitter.com/reidNEvans)
