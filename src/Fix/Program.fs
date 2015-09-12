@@ -20,6 +20,7 @@ let applicationNameToProjectName folder projectName =
     files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
 
 let sed (find:string) replace folder =
+    printfn "Changing %s to %s" find replace
     folder 
     |> Directory.GetFiles
     |> Seq.iter (fun x -> 
@@ -53,11 +54,9 @@ let New projectName =
     printfn "Changing filenames from ApplicationName.* to %s.*" projectName
     applicationNameToProjectName projectFolder projectName
 
-    printfn "Changing namespace to %s" projectName
     sed "<%= namespace %>" projectName projectFolder
     
     let guid = Guid.NewGuid().ToString()
-    printfn "Changing guid to %s" guid
     sed "<%= guid %>" guid projectFolder 
     printfn "Done!"
 
