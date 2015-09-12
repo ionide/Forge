@@ -2,7 +2,7 @@ module Fix
 
 open Fake.Git
 open Fake.FileHelper
-open Fake.MSBuild.ProjectSystem
+open ProjectSystem
 open System.IO
 open System
 
@@ -66,16 +66,24 @@ let alterProject project (f : ProjectFile -> ProjectFile) =
     let updatedProject = fsProj |> f
     updatedProject.Save(project)
 
-let addFileToProject fileName project = alterProject project (fun x -> x.AddFile(fileName))
-let removeFileFromProject fileName project = alterProject project (fun x -> x.RemoveFile(fileName))
+let nodeType fileName =
+    match Path.GetExtension fileName with
+    | ".fs" -> "Compile"
+    | ".config" -> "Content"
+    | _ -> "None"
+
+let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
+let removeFileFromProject fileName project nodeType = alterProject project (fun x -> x.RemoveFile fileName nodeType)
 
 let file fileName f =
     let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
-
+    let node = nodeType fileName
     match projects with
-    | [| project |] -> project.Name |> f fileName
+    | [| project |] -> f fileName project.Name node
     | [||] -> printfn "No project found in this directory."
-    | _ -> projects |> Seq.map (fun x -> x.Name) |> promptList |> f fileName
+    | _ -> 
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptList 
+        f fileName project node
 
 let Add fileName =
     file fileName addFileToProject
