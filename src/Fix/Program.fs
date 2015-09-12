@@ -77,8 +77,6 @@ let Add fileName =
 
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
 
-let Remove fileName =
-    
 
 let Help () = 
     printfn "Fix (Mix for F#)"
