@@ -60,21 +60,30 @@ let New projectName =
     sed "<%= guid %>" guid projectFolder 
     printfn "Done!"
 
-let addFileToProject fileName (project : string) =
+let alterProject project (f : ProjectFile -> ProjectFile) =
     let contents = File.ReadAllText project
     let fsProj = new ProjectFile(project, contents)
-    let updatedProject = fsProj.AddFile(fileName)
+    let updatedProject = fsProj |> f
     updatedProject.Save(project)
 
-let Add fileName =
+let addFileToProject fileName project = alterProject project (fun x -> x.AddFile(fileName))
+let removeFileFromProject fileName project = alterProject project (fun x -> x.RemoveFile(fileName))
+
+let file fileName f =
     let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
 
     match projects with
-    | [| project |] -> project.Name |> addFileToProject fileName
+    | [| project |] -> project.Name |> f fileName
     | [||] -> printfn "No project found in this directory."
-    | _ -> projects |> Seq.map (fun x -> x.Name) |> promptList |> addFileToProject fileName
+    | _ -> projects |> Seq.map (fun x -> x.Name) |> promptList |> f fileName
 
+let Add fileName =
+    file fileName addFileToProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
+
+let Remove fileName =
+    file fileName removeFileFromProject
+    Path.Combine(directory, fileName) |> Fake.FileHelper.DeleteFile
 
 
 let Help () = 
@@ -82,6 +91,10 @@ let Help () =
     printfn "Available Commands:"
     printfn " new [projectName]   - Creates a new project with the given name"
     printfn " file add [fileName] - Adds a file to the current folder and project."
+    printfn "                       If more than one project is in the current"
+    printfn "                       directory you will be prompted which to use."
+    printfn " file remove [fileName]"
+    printfn "                     - Removes the filename from disk and the project."
     printfn "                       If more than one project is in the current"
     printfn "                       directory you will be prompted which to use."
     printfn " refresh             - Refreshes the template cache"
@@ -100,6 +113,7 @@ let rec consoleLoop f =
 let handleInput = function
     | [| "new"; projectName |] -> New projectName; 1
     | [| "file"; "add"; fileName |] -> Add fileName; 0
+    | [| "file"; "remove"; fileName |] -> Remove fileName; 0
     | [| "refresh" |] -> RefreshTemplates (); 0
     | [| "exit" |] -> 1
     | _ -> Help(); 0

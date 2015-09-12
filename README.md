@@ -10,8 +10,7 @@ When called without any arguments Fix automatically goes into an interactive mod
 
      new [projectName]   - Creates a new project with the given name
      file add [fileName] - Adds a file to the current folder and project.
-                           If more than one project is in the current
-                           directory you will be prompted which to use.
+     file remove [fileName] - Removes a file from the current folder and project.
      refresh             - Refreshes the template cache
      help                - Displays this help
      exit                - Exit interactive mode
@@ -51,11 +50,19 @@ On the first run Fix will download the templates found in the [Generator F# Repo
 	Changing guid to bb3d79ee-318d-435f-8807-54b2585b057c
 	Done!
 
+## Files within a project
+
 ### Adding a file to a project
 
 	fix file add [fileName]
 	
 Adds a file to the current folder and project.  If more than one project file exists in the current directory you will be prompted which project you wish to add the file to.
+
+### Removing a file from a project
+
+	fix file remove [fileName]
+	
+Removes a file from the current folder and project.  If more than one project file exists in the current directory you will be prompted which project you wish to remove the file from.
 
 ### Installing
 
