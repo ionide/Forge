@@ -68,7 +68,7 @@ let alterProject project (f : ProjectFile -> ProjectFile) =
 let nodeType fileName =
     match Path.GetExtension fileName with
     | ".fs" -> "Compile"
-    | ".config" -> "Content"
+    | ".config" | ".html"-> "Content"
     | _ -> "None"
 
 let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
