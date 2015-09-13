@@ -1,5 +1,5 @@
 ﻿/// Contains project file comparion tools for MSBuild project files.
-module ProjectSystem
+module Fix.ProjectSystem
 
 open Fake
 open System.Collections.Generic
@@ -27,7 +27,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     let getNodes xpath (document:XmlDocument) = document.SelectNodes(xpath, nsmgr) |> nodeListToList 
     let getFileAttribute (node:XmlNode) = node.Attributes.["Include"].InnerText    
     
-    let newElement name = document.CreateElement(name, document.DocumentElement.NamespaceURI)
+    let newElement (document:XmlDocument) name = document.CreateElement(name, document.DocumentElement.NamespaceURI)
 
     /// Read a Project from a FileName
     static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
@@ -39,7 +39,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     member x.AddFile fileName nodeType =        
         let document = XMLDoc documentContent // we create a copy and work immutable
 
-        let newNode = newElement nodeType
+        let newNode = newElement document nodeType
         newNode.SetAttribute("Include", fileName)
         
         let itemGroup = getNodes projectFilesXPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.tryHead
@@ -47,7 +47,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         match itemGroup with
         | Some n -> n.AppendChild(newNode) |> ignore
         | None -> 
-            let groupNode = newElement "ItemGroup"
+            let groupNode = newElement document "ItemGroup"
             groupNode.AppendChild newNode |> ignore
             let project = getNodes "/default:Project" document |> Seq.head
             project.AppendChild groupNode |> ignore

@@ -1,8 +1,8 @@
-module Fix
+module FixLib
 
 open Fake.Git
 open Fake.FileHelper
-open ProjectSystem
+open Fix.ProjectSystem
 open System.IO
 open System
 
