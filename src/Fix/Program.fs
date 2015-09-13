@@ -72,7 +72,7 @@ let nodeType fileName =
     | _ -> "None"
 
 let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
-let removeFileFromProject fileName project nodeType = alterProject project (fun x -> x.RemoveFile fileName nodeType)
+let removeFileFromProject fileName project _ = alterProject project (fun x -> x.RemoveFile fileName)
 
 let file fileName f =
     let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"

@@ -64,7 +64,6 @@
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="app.config" />
-    <None Include="Xml.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FakeLib">

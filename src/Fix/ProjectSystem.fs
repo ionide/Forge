@@ -16,8 +16,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         nsmgr.AddNamespace("default", document.DocumentElement.NamespaceURI)
         nsmgr
 
-    let itemGroupXPath = "/default:Project/default:ItemGroup"
-    let compileNodesXPath = itemGroupXPath + "/default:Compile"
+    let compileNodesXPath = "/default:Project/default:ItemGroup/default:Compile"
 
     let projectFilesXPath = "/default:Project/default:ItemGroup/default:Compile|" +
                             "/default:Project/default:ItemGroup/default:Content|" +
@@ -34,25 +33,23 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     /// Saves the project file
     member x.Save(?fileName) = document.Save(defaultArg fileName projectFileName)
 
-    /// Add a file to the ItemGroup node with optional node type
+    /// Add a file to the ItemGroup node with node type
     member x.AddFile fileName nodeType =        
         let document = XMLDoc documentContent // we create a copy and work immutable
 
         let newNode = document.CreateElement(nodeType, document.DocumentElement.NamespaceURI)
         newNode.SetAttribute("Include", fileName)
         
-
-        let itemGroup = getNodes itemGroupXPath document |> Seq.last
+        let itemGroup = getNodes projectFilesXPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.head
         itemGroup.AppendChild(newNode) |> ignore
 
         new ProjectFile(projectFileName,document.OuterXml)
 
     /// Removes a file from the ItemGroup node with optional node type
-    member x.RemoveFile fileName nodeType =        
+    member x.RemoveFile fileName =        
         let document = XMLDoc documentContent // we create a copy and work immutable
-        let xPath = itemGroupXPath + "/default:" + nodeType
         let node = 
-            getNodes xPath document 
+            getNodes projectFilesXPath document 
             |> List.filter (fun node -> getFileAttribute node = fileName) 
             |> Seq.tryLast  // we remove the last one to make easier to remove duplicates
         
@@ -80,7 +77,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
     member x.RemoveDuplicates() =
         x.FindDuplicateFiles()
-        |> List.fold (fun (project:ProjectFile) duplicate -> project.RemoveFile duplicate "Compile") x
+        |> List.fold (fun (project:ProjectFile) duplicate -> project.RemoveFile duplicate) x
 
     /// The project file name
     member x.ProjectFileName = projectFileName
