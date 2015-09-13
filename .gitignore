@@ -171,6 +171,7 @@ packages/
 
 # Generated documentation folder
 docs/output/
+docs/tools/XmlWriter
 *.svclog
 
 # Temp folder used for publishing docs
