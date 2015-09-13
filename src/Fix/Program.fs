@@ -61,8 +61,7 @@ let New projectName =
     printfn "Done!"
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
-    let contents = File.ReadAllText project
-    let fsProj = new ProjectFile(project, contents)
+    let fsProj = ProjectFile.FromFile(project)
     let updatedProject = fsProj |> f
     updatedProject.Save(project)
 
