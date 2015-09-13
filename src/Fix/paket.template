@@ -1,0 +1,23 @@
+type project
+owners
+    Reid Evans
+authors 
+    Reid Evans
+projectUrl
+    http://github.com/reidev275/Fix
+iconUrl
+    https://raw.githubusercontent.com/reidev275/Fix/master/docs/files/img/logo.png
+licenseUrl
+    http://github.com/reidev275/Fix/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015
+tags
+    
+summary
+    Fix is a build tool that provides tasks for creating, compiling, and testing F# projects
+description
+    Fix is a build tool that provides tasks for creating, compiling, and testing F# projects
+
+
