@@ -19,6 +19,11 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     let itemGroupXPath = "/default:Project/default:ItemGroup"
     let compileNodesXPath = itemGroupXPath + "/default:Compile"
 
+    let projectFilesXPath = "/default:Project/default:ItemGroup/default:Compile|" +
+                            "/default:Project/default:ItemGroup/default:Content|" +
+                            "/default:Project/default:ItemGroup/default:None"
+
+
     let nodeListToList (nodeList:XmlNodeList) = [for node in nodeList -> node]
     let getNodes xpath (document:XmlDocument) = document.SelectNodes(xpath, nsmgr) |> nodeListToList 
     let getFileAttribute (node:XmlNode) = node.Attributes.["Include"].InnerText    
@@ -59,6 +64,9 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
     /// All files which are in "Compile" sections
     member x.Files = getNodes compileNodesXPath document |> List.map getFileAttribute
+
+
+    member x.ProjectFiles = getNodes projectFilesXPath document |> List.map getFileAttribute
 
     /// Finds duplicate files which are in "Compile" sections
     member this.FindDuplicateFiles() = 
