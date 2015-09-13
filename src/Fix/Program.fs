@@ -42,7 +42,7 @@ let New projectName =
 
     printfn "Choose a template:"
     let templates = Directory.GetDirectories(templatePath) 
-                    |> Seq.map (fun x -> x.Replace(Path.GetDirectoryName(x) + "\\", ""))
+                    |> Seq.map Path.GetFileName
                     |> Seq.where (fun x -> not <| x.StartsWith("."))
     
     let templateChoice = promptList templates
