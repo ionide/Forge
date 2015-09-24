@@ -94,20 +94,20 @@ let Remove fileName =
 
 
 let Help () = 
-    printfn "Fix (Mix for F#)"
-    printfn "Available Commands:"
-    printfn " new [projectName]   - Creates a new project with the given name"
-    printfn " file add [fileName] - Adds a file to the current folder and project."
-    printfn "                       If more than one project is in the current"
-    printfn "                       directory you will be prompted which to use."
-    printfn " file remove [fileName]"
-    printfn "                     - Removes the filename from disk and the project."
-    printfn "                       If more than one project is in the current"
-    printfn "                       directory you will be prompted which to use."
-    printfn " refresh             - Refreshes the template cache"
-    printfn " help                - Displays this help"
-    printfn " exit                - Exit interactive mode"
-    printfn ""
+    printfn"Fix (Mix for F#)\n\
+            Available Commands:\n\n\
+            new [projectName]   - Creates a new project with the given name\n\
+            file add [fileName] - Adds a file to the current folder and project.\
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
+            file remove [fileName]\
+          \n                    - Removes the filename from disk and the project.\
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
+            refresh             - Refreshes the template cache\n\
+            help                - Displays this help\n\
+            exit                - Exit interactive mode\n"
+            
 
 let rec consoleLoop f =
     Console.Write("> ")
