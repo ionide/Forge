@@ -12,7 +12,9 @@ When called without any arguments Fix automatically goes into an interactive mod
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
      update paket        - Updates Paket to latest version
+     update fake         - Updates FAKE to latest version
      paket [args]        - Runs Paket with given arguments
+     fake [args]         - Runs FAKE with given arguments
      refresh             - Refreshes the template cache
      help                - Displays this help
      exit                - Exit interactive mode
