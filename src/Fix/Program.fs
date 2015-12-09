@@ -7,11 +7,14 @@ open Fix.ProjectSystem
 open System.IO
 open System
 open System.Diagnostics
+open System.Net
 
 let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
 let directory = System.Environment.CurrentDirectory
 
 let paketLocation = exeLocation </> "Tools" </> "Paket"
+let fakeLocation = exeLocation </> "Tools" </> "FAKE"
+let fakeToolLocation = fakeLocation </> "tools"
 
 let RefreshTemplates () =
     printfn "Getting templates..."
@@ -112,6 +115,17 @@ let RunPaket args =
     let args' = args |> String.concat " "
     run (paketLocation </> "paket.exe") args' directory
 
+let UpdateFake () =
+    use wc = new WebClient()
+    let zip = fakeLocation </> "fake.zip"
+    System.IO.Directory.CreateDirectory(fakeLocation) |> ignore
+    printfn "Downloading FAKE..."
+    wc.DownloadFile("https://www.nuget.org/api/v2/package/FAKE", zip )
+    Fake.ZipHelper.Unzip fakeLocation zip
+
+let RunFake args =
+    let args' = args |> String.concat " "
+    run (fakeToolLocation </> "FAKE.exe") args' directory
 
 
 let Help () =
@@ -126,7 +140,9 @@ let Help () =
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
             update paket        - Updates Paket to latest version\n\
+            update fake         - Updates FAKE to latest version\n\
             paket [args]        - Runs Paket with given arguments\n\
+            fake [args]         - Runs FAKE with given arguments\n\
             refresh             - Refreshes the template cache\n\
             help                - Displays this help\n\
             exit                - Exit interactive mode\n"
@@ -145,7 +161,9 @@ let handleInput = function
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
+    | [ "update"; "fake"] -> UpdateFake (); 0
     | "paket"::xs -> RunPaket xs; 0
+    | "fake"::xs -> RunFake xs; 0
     | [ "refresh" ] -> RefreshTemplates (); 0
     | [ "exit" ] -> 1
     | _ -> Help(); 0
