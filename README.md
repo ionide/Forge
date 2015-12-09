@@ -1,7 +1,7 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue)](http://issuestats.com/github/reidev275/Fix)
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr)](http://issuestats.com/github/reidev275/Fix)
 
-#Fix (Mix for F#) 
+#Fix (Mix for F#)
 Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
 
 When called without any arguments Fix automatically goes into an interactive mode.
@@ -11,6 +11,8 @@ When called without any arguments Fix automatically goes into an interactive mod
      new [projectName]   - Creates a new project with the given name
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
+     update paket        - Updates Paket to latest version
+     paket [args]        - Runs Paket with given arguments
      refresh             - Refreshes the template cache
      help                - Displays this help
      exit                - Exit interactive mode
@@ -55,13 +57,13 @@ On the first run Fix will download the templates found in the [Generator F# Repo
 ### Adding a file to a project
 
 	fix file add [fileName]
-	
+
 Adds a file to the current folder and project.  If more than one project file exists in the current directory you will be prompted which project you wish to add the file to.
 
 ### Removing a file from a project
 
 	fix file remove [fileName]
-	
+
 Removes a file from the current folder and project.  If more than one project file exists in the current directory you will be prompted which project you wish to remove the file from.
 
 ### Installing
