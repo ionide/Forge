@@ -64,6 +64,9 @@
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="app.config" />
+    <Content Include="Tools\Paket\paket.bootstrapper.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FakeLib">

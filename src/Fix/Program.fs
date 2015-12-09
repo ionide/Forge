@@ -1,17 +1,21 @@
 module FixLib
 
+open Fake
 open Fake.Git
 open Fake.FileHelper
 open Fix.ProjectSystem
 open System.IO
 open System
+open System.Diagnostics
 
 let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
 let directory = System.Environment.CurrentDirectory
 
+let paketLocation = exeLocation </> "Tools" </> "Paket"
+
 let RefreshTemplates () =
     printfn "Getting templates..."
-    Path.Combine(exeLocation, "templates") |> Fake.FileHelper.CleanDir 
+    Path.Combine(exeLocation, "templates") |> Fake.FileHelper.CleanDir
     Repository.cloneSingleBranch exeLocation "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
 let applicationNameToProjectName folder projectName =
@@ -21,9 +25,9 @@ let applicationNameToProjectName folder projectName =
 
 let sed (find:string) replace folder =
     printfn "Changing %s to %s" find replace
-    folder 
+    folder
     |> Directory.GetFiles
-    |> Seq.iter (fun x -> 
+    |> Seq.iter (fun x ->
                     let contents = File.ReadAllText(x).Replace(find, replace)
                     File.WriteAllText(x, contents))
 
@@ -41,10 +45,10 @@ let New projectName =
     then RefreshTemplates ()
 
     printfn "Choose a template:"
-    let templates = Directory.GetDirectories(templatePath) 
+    let templates = Directory.GetDirectories(templatePath)
                     |> Seq.map Path.GetFileName
                     |> Seq.where (fun x -> not <| x.StartsWith("."))
-    
+
     let templateChoice = promptList templates
     printfn "Fixing template %s" templateChoice
     let templateDir = Path.Combine(templatePath, templateChoice)
@@ -55,9 +59,9 @@ let New projectName =
     applicationNameToProjectName projectFolder projectName
 
     sed "<%= namespace %>" projectName projectFolder
-    
+
     let guid = Guid.NewGuid().ToString()
-    sed "<%= guid %>" guid projectFolder 
+    sed "<%= guid %>" guid projectFolder
     printfn "Done!"
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
@@ -80,8 +84,8 @@ let file fileName f =
     match projects with
     | [| project |] -> f fileName project.Name node
     | [||] -> printfn "No project found in this directory."
-    | _ -> 
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptList 
+    | _ ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptList
         f fileName project node
 
 let Add fileName =
@@ -92,8 +96,25 @@ let Remove fileName =
     file fileName removeFileFromProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.DeleteFile
 
+let run cmd args dir =
+    if execProcess( fun info ->
+        info.FileName <- cmd
+        if not( String.IsNullOrWhiteSpace dir) then
+            info.WorkingDirectory <- dir
+        info.Arguments <- args
+    ) System.TimeSpan.MaxValue = false then
+        traceError <| sprintf "Error while running '%s' with args: %s" cmd args
 
-let Help () = 
+let UpdatePaket () =
+    run (paketLocation </> "paket.bootstrapper.exe") "" paketLocation
+
+let RunPaket args =
+    let args' = args |> String.concat " "
+    run (paketLocation </> "paket.exe") args' directory
+
+
+
+let Help () =
     printfn"Fix (Mix for F#)\n\
             Available Commands:\n\n\
             new [projectName]   - Creates a new project with the given name\n\
@@ -104,32 +125,36 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
+            update paket        - Updates Paket to latest version\n\
+            paket [args]        - Runs Paket with given arguments\n\
             refresh             - Refreshes the template cache\n\
             help                - Displays this help\n\
             exit                - Exit interactive mode\n"
-            
+
 
 let rec consoleLoop f =
     Console.Write("> ")
     let input = Console.ReadLine()
-    let result = input.Split(' ') |> f
+    let result = input.Split(' ') |> Array.toList |> f
     if result > 0
     then result
-    else consoleLoop f 
+    else consoleLoop f
 
 let handleInput = function
-    | [| "new"; projectName |] -> New projectName; 1
-    | [| "file"; "add"; fileName |] -> Add fileName; 0
-    | [| "file"; "remove"; fileName |] -> Remove fileName; 0
-    | [| "refresh" |] -> RefreshTemplates (); 0
-    | [| "exit" |] -> 1
+    | [ "new"; projectName ] -> New projectName; 1
+    | [ "file"; "add"; fileName ] -> Add fileName; 0
+    | [ "file"; "remove"; fileName ] -> Remove fileName; 0
+    | [ "update"; "paket"] -> UpdatePaket (); 0
+    | "paket"::xs -> RunPaket xs; 0
+    | [ "refresh" ] -> RefreshTemplates (); 0
+    | [ "exit" ] -> 1
     | _ -> Help(); 0
 
 
 [<EntryPoint>]
-let main argv = 
+let main argv =
     if argv |> Array.isEmpty
     then
-        Help () 
+        Help ()
         consoleLoop handleInput
-    else handleInput argv
+    else handleInput (argv |> Array.toList)
