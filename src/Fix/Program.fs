@@ -10,11 +10,14 @@ open System.Diagnostics
 open System.Net
 
 let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
+let templatesLocation = Path.Combine(exeLocation, "templates")
 let directory = System.Environment.CurrentDirectory
 
 let paketLocation = exeLocation </> "Tools" </> "Paket"
 let fakeLocation = exeLocation </> "Tools" </> "FAKE"
 let fakeToolLocation = fakeLocation </> "tools"
+
+let (^) = (<|)
 
 let RefreshTemplates () =
     printfn "Getting templates..."
@@ -27,44 +30,48 @@ let applicationNameToProjectName folder projectName =
     files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
 
 let sed (find:string) replace folder =
-    printfn "Changing %s to %s" find replace
     folder
     |> Directory.GetFiles
     |> Seq.iter (fun x ->
                     let contents = File.ReadAllText(x).Replace(find, replace)
                     File.WriteAllText(x, contents))
 
-let promptList list =
-    list |> Seq.iter (fun x -> printfn " - %s" x)
+let promptProjectName () =
+    printfn "Give project name:"
+    Console.Write("> ")
+    Console.ReadLine()
+
+let promptProjectDir () =
+    printfn "Give project directory (relative to working directory):"
+    Console.Write("> ")
+    Console.ReadLine()
+
+let promptList () =
+    printfn "Choose a template:"
+    let templates = Directory.GetDirectories(templatesLocation)
+                    |> Seq.map Path.GetFileName
+                    |> Seq.where (fun x -> not <| x.StartsWith("."))
+    templates |> Seq.iter (fun x -> printfn " - %s" x)
     printfn ""
     Console.Write("> ")
     Console.ReadLine()
 
-let New projectName =
-    let templatePath = Path.Combine(exeLocation, "templates")
-    let projectFolder = Path.Combine(directory, projectName)
+let New projectName projectDir templateName =
+    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
 
-    if not <| Directory.Exists templatePath
-    then RefreshTemplates ()
+    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
+    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
+    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
+    let projectFolder = directory </> projectDir' </> projectName'
+    let templateDir = templatesLocation </> templateName'
 
-    printfn "Choose a template:"
-    let templates = Directory.GetDirectories(templatePath)
-                    |> Seq.map Path.GetFileName
-                    |> Seq.where (fun x -> not <| x.StartsWith("."))
-
-    let templateChoice = promptList templates
-    printfn "Fixing template %s" templateChoice
-    let templateDir = Path.Combine(templatePath, templateChoice)
+    printfn "Generating project..."
 
     Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-
-    printfn "Changing filenames from ApplicationName.* to %s.*" projectName
     applicationNameToProjectName projectFolder projectName
-
     sed "<%= namespace %>" projectName projectFolder
+    sed "<%= guid %>" (Guid.NewGuid().ToString()) projectFolder
 
-    let guid = Guid.NewGuid().ToString()
-    sed "<%= guid %>" guid projectFolder
     printfn "Done!"
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
@@ -88,7 +95,7 @@ let file fileName f =
     | [| project |] -> f fileName project.Name node
     | [||] -> printfn "No project found in this directory."
     | _ ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptList
+        let project = promptList ()
         f fileName project node
 
 let Add fileName =
@@ -127,11 +134,13 @@ let RunFake args =
     let args' = args |> String.concat " "
     run (fakeToolLocation </> "FAKE.exe") args' directory
 
-
 let Help () =
     printfn"Fix (Mix for F#)\n\
             Available Commands:\n\n\
-            new [projectName]   - Creates a new project with the given name\n\
+            new [projectName] [projectDir] [templateName] - Creates a new project\
+          \n                      with the given name, in given directory\
+          \n                      (relative to working directory) and given template.\
+          \n                      If parameters are not provided, program prompts user for them\n\
             file add [fileName] - Adds a file to the current folder and project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
@@ -157,7 +166,10 @@ let rec consoleLoop f =
     else consoleLoop f
 
 let handleInput = function
-    | [ "new"; projectName ] -> New projectName; 1
+    | [ "new" ] -> New "" "" ""; 1
+    | [ "new"; projectName ] -> New projectName "" ""; 1
+    | [ "new"; projectName; projectDir ] -> New projectName projectDir ""; 1
+    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName; 1
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
