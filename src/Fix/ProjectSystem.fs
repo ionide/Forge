@@ -11,7 +11,7 @@ open XMLHelper
 type ProjectFile(projectFileName:string,documentContent : string) =
     let document = XMLDoc documentContent
 
-    let nsmgr = 
+    let nsmgr =
         let nsmgr = new XmlNamespaceManager(document.NameTable)
         nsmgr.AddNamespace("default", document.DocumentElement.NamespaceURI)
         nsmgr
@@ -24,9 +24,9 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
 
     let nodeListToList (nodeList:XmlNodeList) = [for node in nodeList -> node]
-    let getNodes xpath (document:XmlDocument) = document.SelectNodes(xpath, nsmgr) |> nodeListToList 
-    let getFileAttribute (node:XmlNode) = node.Attributes.["Include"].InnerText    
-    
+    let getNodes xpath (document:XmlDocument) = document.SelectNodes(xpath, nsmgr) |> nodeListToList
+    let getFileAttribute (node:XmlNode) = node.Attributes.["Include"].InnerText
+
     let newElement (document:XmlDocument) name = document.CreateElement(name, document.DocumentElement.NamespaceURI)
 
     /// Read a Project from a FileName
@@ -35,18 +35,23 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     /// Saves the project file
     member x.Save(?fileName) = document.Save(defaultArg fileName projectFileName)
 
+    member x.Content =
+        use stringWriter = new System.IO.StringWriter()
+        document.Save(stringWriter)
+        stringWriter.ToString()
+
     /// Add a file to the ItemGroup node with node type
-    member x.AddFile fileName nodeType =        
+    member x.AddFile fileName nodeType =
         let document = XMLDoc documentContent // we create a copy and work immutable
 
         let newNode = newElement document nodeType
         newNode.SetAttribute("Include", fileName)
-        
+
         let itemGroup = getNodes projectFilesXPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.tryHead
 
         match itemGroup with
         | Some n -> n.AppendChild(newNode) |> ignore
-        | None -> 
+        | None ->
             let groupNode = newElement document "ItemGroup"
             groupNode.AppendChild newNode |> ignore
             let project = getNodes "/default:Project" document |> Seq.head
@@ -55,13 +60,13 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         new ProjectFile(projectFileName,document.OuterXml)
 
     /// Removes a file from the ItemGroup node with optional node type
-    member x.RemoveFile fileName =        
+    member x.RemoveFile fileName =
         let document = XMLDoc documentContent // we create a copy and work immutable
-        let node = 
-            getNodes projectFilesXPath document 
-            |> List.filter (fun node -> getFileAttribute node = fileName) 
+        let node =
+            getNodes projectFilesXPath document
+            |> List.filter (fun node -> getFileAttribute node = fileName)
             |> Seq.tryLast  // we remove the last one to make easier to remove duplicates
-        
+
         match node with
         | Some n -> n.ParentNode.RemoveChild n |> ignore
         | None -> ()
@@ -75,7 +80,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     member x.ProjectFiles = getNodes projectFilesXPath document |> List.map getFileAttribute
 
     /// Finds duplicate files which are in "Compile" sections
-    member this.FindDuplicateFiles() = 
+    member this.FindDuplicateFiles() =
         [let dict = Dictionary()
          for file in this.Files do
             match dict.TryGetValue file with
@@ -92,16 +97,16 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     member x.ProjectFileName = projectFileName
 
 /// Result type for project comparisons.
-type ProjectComparison = 
+type ProjectComparison =
     { TemplateProjectFileName: string
       ProjectFileName: string
       MissingFiles: string seq
       DuplicateFiles: string seq
-      UnorderedFiles: string seq }   
-    
-      member this.HasErrors = 
-        not (Seq.isEmpty this.MissingFiles && 
-             Seq.isEmpty this.UnorderedFiles && 
+      UnorderedFiles: string seq }
+
+      member this.HasErrors =
+        not (Seq.isEmpty this.MissingFiles &&
+             Seq.isEmpty this.UnorderedFiles &&
              Seq.isEmpty this.DuplicateFiles)
 
 /// Compares the given project files againts the template project and returns which files are missing.
@@ -111,21 +116,21 @@ let findMissingFiles templateProject projects =
 
     let templateFiles = (ProjectFile.FromFile templateProject).Files
     let templateFilesSet = Set.ofSeq templateFiles
-    
+
     projects
     |> Seq.map (fun fileName -> ProjectFile.FromFile fileName)
-    |> Seq.map (fun ps ->             
+    |> Seq.map (fun ps ->
             let missingFiles = Set.difference templateFilesSet (Set.ofSeq ps.Files)
-                
+
             let unorderedFiles =
                 if not <| isFSharpProject templateProject then [] else
                 if not <| Seq.isEmpty missingFiles then [] else
                 let remainingFiles = ps.Files |> List.filter (fun file -> Set.contains file templateFilesSet)
                 if remainingFiles.Length <> templateFiles.Length then [] else
 
-                templateFiles 
+                templateFiles
                 |> List.zip remainingFiles
-                |> List.filter (fun (a,b) -> a <> b) 
+                |> List.filter (fun (a,b) -> a <> b)
                 |> List.map fst
 
             { TemplateProjectFileName = templateProject
@@ -137,19 +142,19 @@ let findMissingFiles templateProject projects =
 
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
 let FixMissingFiles templateProject projects =
-    let addMissing (project:ProjectFile) missingFile = 
+    let addMissing (project:ProjectFile) missingFile =
         tracefn "Adding %s to %s" missingFile project.ProjectFileName
         project.AddFile missingFile "Compile"
 
     findMissingFiles templateProject projects
-    |> Seq.iter (fun pc -> 
+    |> Seq.iter (fun pc ->
             let project = ProjectFile.FromFile pc.ProjectFileName
             if not (Seq.isEmpty pc.MissingFiles) then
                 let newProject = Seq.fold addMissing project pc.MissingFiles
                 newProject.Save())
 
 /// It removes duplicate files from the project files.
-let RemoveDuplicateFiles projects =    
+let RemoveDuplicateFiles projects =
     projects
     |> Seq.iter (fun fileName ->
             let project = ProjectFile.FromFile fileName
@@ -168,7 +173,7 @@ let FixProjectFiles templateProject projects =
 let CompareProjectsTo templateProject projects =
     let errors =
         findMissingFiles templateProject projects
-        |> Seq.map (fun pc -> 
+        |> Seq.map (fun pc ->
                 seq {
                     if Seq.isEmpty pc.MissingFiles |> not then
                         yield sprintf "Missing files in %s:\r\n%s" pc.ProjectFileName (toLines pc.MissingFiles)
@@ -181,4 +186,3 @@ let CompareProjectsTo templateProject projects =
 
     if isNotNullOrEmpty errors then
         failwith errors
-
