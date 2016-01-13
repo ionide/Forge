@@ -30,6 +30,24 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
     let newElement (document:XmlDocument) name = document.CreateElement(name, document.DocumentElement.NamespaceURI)
 
+    let addFile fileName nodeType xPath =
+        let document = XMLDoc documentContent // we create a copy and work immutable
+
+        let newNode = newElement document nodeType
+        newNode.SetAttribute("Include", fileName)
+
+        let itemGroup = getNodes xPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.tryHead
+
+        match itemGroup with
+        | Some n -> n.AppendChild(newNode) |> ignore
+        | None ->
+            let groupNode = newElement document "ItemGroup"
+            groupNode.AppendChild newNode |> ignore
+            let project = getNodes "/default:Project" document |> Seq.head
+            project.AppendChild groupNode |> ignore
+
+        new ProjectFile(projectFileName,document.OuterXml)
+
     /// Read a Project from a FileName
     static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
 
@@ -41,24 +59,11 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         document.Save(stringWriter)
         stringWriter.ToString()
 
+
+
     /// Add a file to the ItemGroup node with node type
     member x.AddFile fileName nodeType =
-        let document = XMLDoc documentContent // we create a copy and work immutable
-
-        let newNode = newElement document nodeType
-        newNode.SetAttribute("Include", fileName)
-
-        let itemGroup = getNodes projectFilesXPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.tryHead
-
-        match itemGroup with
-        | Some n -> n.AppendChild(newNode) |> ignore
-        | None ->
-            let groupNode = newElement document "ItemGroup"
-            groupNode.AppendChild newNode |> ignore
-            let project = getNodes "/default:Project" document |> Seq.head
-            project.AppendChild groupNode |> ignore
-
-        new ProjectFile(projectFileName,document.OuterXml)
+        addFile fileName nodeType projectFilesXPath
 
     /// Removes a file from the ItemGroup node with optional node type
     member x.RemoveFile fileName =
@@ -73,6 +78,9 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         | None -> ()
 
         new ProjectFile(projectFileName,document.OuterXml)
+
+    member x.AddReference reference =
+        addFile reference "Reference" referenceFilesXPath
 
     /// All files which are in "Compile" sections
     member x.Files = getNodes compileNodesXPath document |> List.map getFileAttribute

@@ -87,6 +87,7 @@ let nodeType fileName =
 
 let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
 let removeFileFromProject fileName project _ = alterProject project (fun x -> x.RemoveFile fileName)
+let addReferenceToProject reference project = alterProject project (fun x -> x.AddReference reference)
 
 let file fileName f =
     let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
@@ -101,6 +102,15 @@ let file fileName f =
 let Add fileName =
     file fileName addFileToProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
+
+let AddReference reference =
+    let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
+    match projects with
+    | [| project |] -> addReferenceToProject reference project.Name
+    | [||] -> printfn "No project found in this directory."
+    | _ ->
+        let project = promptList ()
+        addReferenceToProject reference project
 
 let Remove fileName =
     file fileName removeFileFromProject
@@ -148,6 +158,10 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
+            reference add [reference]\
+          \n                    - Add reference to the current project.\
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
             update paket        - Updates Paket to latest version\n\
             update fake         - Updates FAKE to latest version\n\
             paket [args]        - Runs Paket with given arguments\n\
@@ -172,6 +186,7 @@ let handleInput = function
     | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName; 1
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
+    | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
     | [ "update"; "fake"] -> UpdateFake (); 0
     | "paket"::xs -> RunPaket xs; 0
