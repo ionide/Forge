@@ -117,3 +117,10 @@ let ``Remove non existing file from Project - file count``() =
     let changedProjectFile = projectFile.RemoveFile "FixProject.fs"
     let files = changedProjectFile.ProjectFiles |> Seq.length
     Assert.AreEqual(0, files)
+
+[<Test>]
+let ``List referenced files - file count``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithoutFiles)
+    let references = projectFile.References
+    let referencCount = references |> Seq.length
+    Assert.AreEqual(5, referencCount)

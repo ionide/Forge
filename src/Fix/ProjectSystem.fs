@@ -22,6 +22,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
                             "/default:Project/default:ItemGroup/default:Content|" +
                             "/default:Project/default:ItemGroup/default:None"
 
+    let referenceFilesXPath = "/default:Project/default:ItemGroup/default:Reference"
 
     let nodeListToList (nodeList:XmlNodeList) = [for node in nodeList -> node]
     let getNodes xpath (document:XmlDocument) = document.SelectNodes(xpath, nsmgr) |> nodeListToList
@@ -78,6 +79,8 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
 
     member x.ProjectFiles = getNodes projectFilesXPath document |> List.map getFileAttribute
+
+    member x.References = getNodes referenceFilesXPath document |> List.map getFileAttribute
 
     /// Finds duplicate files which are in "Compile" sections
     member this.FindDuplicateFiles() =
