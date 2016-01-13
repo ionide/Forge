@@ -1,8 +1,10 @@
 module Fix.Tests
 
 open Fix.ProjectSystem
+open FsUnit
 open NUnit.Framework
 open ProjectSystem
+
 
 let projectWithoutFiles = """<?xml version="1.0" encoding="utf-8"?>
     <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -124,3 +126,14 @@ let ``List referenced files - file count``() =
     let references = projectFile.References
     let referencCount = references |> Seq.length
     Assert.AreEqual(5, referencCount)
+
+[<Test>]
+let ``List referenced files - files``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithoutFiles)
+    let references = projectFile.References
+
+    references |> should contain "mscorlib"
+    references |> should contain "FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+    references |> should contain "System"
+    references |> should contain "System.Core"
+    references |> should contain "System.Numerics"
