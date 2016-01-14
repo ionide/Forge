@@ -9,15 +9,17 @@ open System
 open System.Diagnostics
 open System.Net
 
+let (^) = (<|)
+
 let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
-let templatesLocation = Path.Combine(exeLocation, "templates")
+let templatesLocation = exeLocation </> "templates"
+let paketTemplate = templatesLocation </> ".paket"
 let directory = System.Environment.CurrentDirectory
+let packagesDirectory = directory </> "packages"
 
 let paketLocation = exeLocation </> "Tools" </> "Paket"
 let fakeLocation = exeLocation </> "Tools" </> "FAKE"
 let fakeToolLocation = fakeLocation </> "tools"
-
-let (^) = (<|)
 
 let RefreshTemplates () =
     printfn "Getting templates..."
@@ -27,14 +29,32 @@ let RefreshTemplates () =
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"
     let files = Directory.GetFiles folder |> Seq.where (fun x -> x.Contains applicationName)
-    files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
+    files |> Seq.iter (fun x -> File.Copy(x, x.Replace(applicationName, projectName)))
+
+let copyPaket folder =
+    folder </> ".paket" |> Directory.CreateDirectory |> ignore
+    Directory.GetFiles paketTemplate
+    |> Seq.iter (fun x ->
+        let fn = Path.GetFileName x
+        File.Copy (x, folder </> ".paket" </> fn) )
+
 
 let sed (find:string) replace folder =
     folder
     |> Directory.GetFiles
     |> Seq.iter (fun x ->
-                    let contents = File.ReadAllText(x).Replace(find, replace)
+                    let r = replace x
+                    let contents = File.ReadAllText(x).Replace(find, r)
                     File.WriteAllText(x, contents))
+
+let relative (path1 : string) (path2 : string) =
+    let p1 = Uri(path1)
+    let p2 = Uri(path2)
+    Uri.UnescapeDataString(
+        p2.MakeRelativeUri(p1)
+          .ToString()
+          .Replace('/', Path.DirectorySeparatorChar)
+    )
 
 let promptProjectName () =
     printfn "Give project name:"
@@ -68,9 +88,13 @@ let New projectName projectDir templateName =
     printfn "Generating project..."
 
     Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-    applicationNameToProjectName projectFolder projectName
-    sed "<%= namespace %>" projectName projectFolder
-    sed "<%= guid %>" (Guid.NewGuid().ToString()) projectFolder
+    applicationNameToProjectName projectFolder projectName'
+    copyPaket directory
+
+    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
+    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
+    sed "<%= paketPath %>" (relative directory) projectFolder
+    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
 
     printfn "Done!"
 
