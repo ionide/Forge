@@ -1,6 +1,6 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue)](http://issuestats.com/github/reidev275/Fix)
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr)](http://issuestats.com/github/reidev275/Fix)
-[![Build status](https://ci.appveyor.com/api/projects/status/99s6a342bttjx0li/branch/master?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
 
 #Fix (Mix for F#)
 Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
