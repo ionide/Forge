@@ -76,3 +76,4 @@ This is still in very early stages so you'll need to clone the repo, build the s
 ## Maintainer(s)
 
 - [@ReidNEvans](https://twitter.com/reidNEvans)
+- [Krzysztof-Cieslak] (https://github.com/Krzysztof-Cieslak)
