@@ -1,10 +1,24 @@
 module Fix.Tests
 
 open Fix.ProjectSystem
-open FsUnit
 open NUnit.Framework
+open FsUnit
 open ProjectSystem
 
+let cleanup (text : string) =
+    let hasCrLf = text.Contains("\r\n")
+
+    match hasCrLf with
+    | true ->
+        text
+    | false ->
+        text.Replace("\n", "\r\n")
+
+let shouldbetext expected actual =
+    let cleanupExpected = cleanup expected
+    let cleanupActual = cleanup actual
+
+    Assert.AreEqual(cleanupExpected, cleanupActual)
 
 let projectWithoutFiles = """<?xml version="1.0" encoding="utf-8"?>
     <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -80,7 +94,9 @@ let ``Add file works even if ItemGroup not found - file content`` () =
     <Compile Include="file.fs" />
   </ItemGroup>
 </Project>"""
-    Assert.AreEqual(expectedContent, projectContent)
+
+    projectContent |> shouldbetext expectedContent
+
 
 [<Test>]
 let ``Remove file from Project - file count``() =
@@ -111,7 +127,9 @@ let ``Remove file from Project - content``() =
     <Compile Include="a_file.fs" />
   </ItemGroup>
 </Project>"""
-    Assert.AreEqual(expectedContent, projectContent)
+
+    projectContent |> shouldbetext expectedContent
+
 
 [<Test>]
 let ``Remove non existing file from Project - file count``() =
@@ -166,7 +184,7 @@ let ``Add reference to project - only references - content``() =
   </ItemGroup>
 </Project>"""
 
-    expectedContent |> should equal projectContent
+    projectContent |> shouldbetext expectedContent
 
 
 [<Test>]
@@ -195,4 +213,4 @@ let ``Add reference to project - content``() =
   </ItemGroup>
 </Project>"""
 
-    expectedContent |> should equal projectContent
+    projectContent |> shouldbetext expectedContent
