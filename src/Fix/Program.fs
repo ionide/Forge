@@ -153,8 +153,10 @@ let UpdatePaket () =
     run (paketLocation </> "paket.bootstrapper.exe") "" paketLocation
 
 let RunPaket args =
+    let f = paketLocation </> "paket.exe"
+    if not ^ File.Exists f then UpdatePaket ()
     let args' = args |> String.concat " "
-    run (paketLocation </> "paket.exe") args' directory
+    run f args' directory
 
 let UpdateFake () =
     use wc = new WebClient()
@@ -168,7 +170,7 @@ let RunFake args =
     let f = fakeToolLocation </> "FAKE.exe"
     if not ^ File.Exists f then UpdateFake ()
     let args' = args |> String.concat " "
-    run (fakeToolLocation </> "FAKE.exe") args' directory
+    run f args' directory
 
 
 
