@@ -165,8 +165,12 @@ let UpdateFake () =
     Fake.ZipHelper.Unzip fakeLocation zip
 
 let RunFake args =
+    let f = fakeToolLocation </> "FAKE.exe"
+    if not ^ File.Exists f then UpdateFake ()
     let args' = args |> String.concat " "
     run (fakeToolLocation </> "FAKE.exe") args' directory
+
+
 
 let Help () =
     printfn"Fix (Mix for F#)\n\
