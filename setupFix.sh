@@ -2,4 +2,4 @@
 
 
 export PATH=$(pwd):$PATH
-chmod +x fix.sh
+chmod +x fix
