@@ -76,27 +76,6 @@ let promptList () =
     Console.Write("> ")
     Console.ReadLine()
 
-let New projectName projectDir templateName =
-    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
-
-    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
-    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
-    let projectFolder = directory </> projectDir' </> projectName'
-    let templateDir = templatesLocation </> templateName'
-
-    printfn "Generating project..."
-
-    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-    applicationNameToProjectName projectFolder projectName'
-    copyPaket directory
-
-    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
-    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
-    sed "<%= paketPath %>" (relative directory) projectFolder
-    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-
-    printfn "Done!"
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
     let fsProj = ProjectFile.FromFile(project)
@@ -172,12 +151,32 @@ let RunFake args =
     let args' = args |> String.concat " "
     run f args' directory
 
+let New projectName projectDir templateName paket =
+    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
 
+    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
+    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
+    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
+    let projectFolder = directory </> projectDir' </> projectName'
+    let templateDir = templatesLocation </> templateName'
+
+    printfn "Generating project..."
+
+    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
+    applicationNameToProjectName projectFolder projectName'
+    copyPaket directory
+
+    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
+    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
+    sed "<%= paketPath %>" (relative directory) projectFolder
+    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
+    if paket then RunPaket ["convert-from-nuget";"-f"]
+    printfn "Done!"
 
 let Help () =
     printfn"Fix (Mix for F#)\n\
             Available Commands:\n\n\
-            new [projectName] [projectDir] [templateName] - Creates a new project\
+            new [projectName] [projectDir] [templateName] [--no-paket] - Creates a new project\
           \n                      with the given name, in given directory\
           \n                      (relative to working directory) and given template.\
           \n                      If parameters are not provided, program prompts user for them\n\
@@ -209,11 +208,16 @@ let rec consoleLoop f =
     then result
     else consoleLoop f
 
+//TODO: Better input handling, maybe Argu ?
 let handleInput = function
-    | [ "new" ] -> New "" "" ""; 1
-    | [ "new"; projectName ] -> New projectName "" ""; 1
-    | [ "new"; projectName; projectDir ] -> New projectName projectDir ""; 1
-    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName; 1
+    | [ "new" ] -> New "" "" "" true; 1
+    | [ "new"; "--no-paket" ] -> New "" "" "" false; 1
+    | [ "new"; projectName ] -> New projectName "" "" true; 1
+    | [ "new"; projectName; "--no-paket"] -> New projectName "" "" false; 1
+    | [ "new"; projectName; projectDir ] -> New projectName projectDir "" true; 1
+    | [ "new"; projectName; projectDir; "--no-paket" ] -> New projectName projectDir "" false; 1
+    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName true; 1
+    | [ "new"; projectName; projectDir; templateName; "--no-paket" ] -> New projectName projectDir templateName false; 1
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0

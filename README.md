@@ -1,5 +1,5 @@
-[![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue)](http://issuestats.com/github/reidev275/Fix)
-[![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr)](http://issuestats.com/github/reidev275/Fix)
+[![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
+[![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
 
 #Fix (Mix for F#)
