@@ -143,14 +143,6 @@ let Add fileName =
     file fileName addFileToProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
 
-let AddReference reference =
-    match getProjects() with
-    | [| project |] -> addReferenceToProject reference project.Name
-    | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
-        addReferenceToProject reference project
-
 let executeForProject exec =
     match getProjects() with
     | [| project |] -> exec project.Name
@@ -158,6 +150,10 @@ let executeForProject exec =
     | _ ->
         let project = promptList ()
         exec project
+
+let AddReference reference =
+    let add = addReferenceToProject reference
+    executeForProject add
 
 let RemoveReference reference =
     let remove = removeReferenceOfProject reference
@@ -223,6 +219,10 @@ let Help () =
           \n                      directory you will be prompted which to use.\n\
             reference add [reference]\
           \n                    - Add reference to the current project.\
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
+            reference remove [reference]\
+                                - Remove reference from the current project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
             reference list      - list all references\n\
