@@ -124,7 +124,7 @@ let listReferencesOfProject project =
 
 let listFilesOfProject project =
     let fsProj = ProjectFile.FromFile(project)
-    fsProj.Files
+    fsProj.ProjectFiles
     |> List.iter (fun i -> printfn "%s" i)
 
 let getProjects() =
@@ -217,6 +217,7 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
+            file list           - List all files
             reference add [reference]\
           \n                    - Add reference to the current project.\
           \n                      If more than one project is in the current\
