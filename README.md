@@ -9,7 +9,7 @@ When called without any arguments Fix automatically goes into an interactive mod
 
 ### Available Commands
 
-     new [projectName] [projectDir] [templateName] - Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them\n\
+     new [projectName] [projectDir] [templateName] [--no-paket]- Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them. Uses Paket, unless `--no-paket` flag is specified\n\
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
      update paket        - Updates Paket to latest version
