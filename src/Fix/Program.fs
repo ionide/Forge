@@ -164,13 +164,14 @@ let New projectName projectDir templateName paket =
 
     Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
     applicationNameToProjectName projectFolder projectName'
-    copyPaket directory
 
     sed "<%= namespace %>" (fun _ -> projectName') projectFolder
     sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
     sed "<%= paketPath %>" (relative directory) projectFolder
     sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-    if paket then RunPaket ["convert-from-nuget";"-f"]
+    if paket then
+        copyPaket directory
+        RunPaket ["convert-from-nuget";"-f"]
     printfn "Done!"
 
 let Help () =
