@@ -94,7 +94,7 @@ Target "AssemblyInfo" (fun _ ->
 // Clean build results
 
 Target "Clean" (fun _ ->
-    CleanDirs ["temp"; buildDir]
+    CleanDirs ["temp"; ]
 )
 
 Target "CleanDocs" (fun _ ->
@@ -136,10 +136,11 @@ Target "ReleaseDocs" (fun _ ->
 )
 
 Target "ZipRelease" (fun _ ->
-    Zip buildDir ("temp" </> "fix.zip")
+    Zip "temp" ("temp" </> "fix.zip")
         (!! (buildDir </> "*.dll")
          ++ (buildDir </> "*.exe")
          ++ (buildDir </> "*.config")
+         -- (buildDir </> "*templates*")
          -- (buildDir </> "*Tests*")
          ++ (buildDir </> "Tools" </> "Paket" </> "paket.bootstrapper.exe")
         )
@@ -194,7 +195,6 @@ Target "Default" DoNothing
 
 "Default"
   ==> "ZipRelease"
-  ==> "ReleaseDocs"
   ==> "Release"
 
 RunTargetOrDefault "Default"
