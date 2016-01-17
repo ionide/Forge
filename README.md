@@ -12,6 +12,8 @@ When called without any arguments Fix automatically goes into an interactive mod
      new [projectName] [projectDir] [templateName] - Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them\n\
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
+     reference add [refeence] - Add a reference to the current project.
+     reference list - List all references of the current project.
      update paket        - Updates Paket to latest version
      update fake         - Updates FAKE to latest version
      paket [args]        - Runs Paket with given arguments
