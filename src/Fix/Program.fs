@@ -115,6 +115,7 @@ let nodeType fileName =
 let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
 let removeFileFromProject fileName project _ = alterProject project (fun x -> x.RemoveFile fileName)
 let addReferenceToProject reference project = alterProject project (fun x -> x.AddReference reference)
+let removeReferenceOfProject reference project = alterProject project (fun x -> x.RemoveReference reference)
 
 let listReferencesOfProject project =
     let fsProj = ProjectFile.FromFile(project)
@@ -158,6 +159,9 @@ let executeForProject exec =
         let project = promptList ()
         exec project
 
+let RemoveReference reference =
+    let remove = removeReferenceOfProject reference
+    executeForProject remove
 
 let ListReference() =
     executeForProject listReferencesOfProject
@@ -248,6 +252,7 @@ let handleInput = function
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "file"; "list"] -> ListFiles(); 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
+    | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
     | [ "reference"; "list"] -> ListReference(); 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
     | [ "update"; "fake"] -> UpdateFake (); 0
