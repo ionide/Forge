@@ -48,6 +48,19 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
         new ProjectFile(projectFileName,document.OuterXml)
 
+    let removeFile fileName xPath =
+        let document = XMLDoc documentContent // we create a copy and work immutable
+        let node =
+            getNodes xPath document
+            |> List.filter (fun node -> getFileAttribute node = fileName)
+            |> Seq.tryLast  // we remove the last one to make easier to remove duplicates
+
+        match node with
+        | Some n -> n.ParentNode.RemoveChild n |> ignore
+        | None -> ()
+
+        new ProjectFile(projectFileName,document.OuterXml)
+
     /// Read a Project from a FileName
     static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
 
@@ -67,20 +80,13 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
     /// Removes a file from the ItemGroup node with optional node type
     member x.RemoveFile fileName =
-        let document = XMLDoc documentContent // we create a copy and work immutable
-        let node =
-            getNodes projectFilesXPath document
-            |> List.filter (fun node -> getFileAttribute node = fileName)
-            |> Seq.tryLast  // we remove the last one to make easier to remove duplicates
-
-        match node with
-        | Some n -> n.ParentNode.RemoveChild n |> ignore
-        | None -> ()
-
-        new ProjectFile(projectFileName,document.OuterXml)
+        removeFile fileName projectFilesXPath
 
     member x.AddReference reference =
         addFile reference "Reference" referenceFilesXPath
+
+    member x.RemoveReference reference =
+        removeFile reference referenceFilesXPath
 
     /// All files which are in "Compile" sections
     member x.Files = getNodes compileNodesXPath document |> List.map getFileAttribute
