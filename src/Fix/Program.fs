@@ -121,6 +121,11 @@ let listReferencesOfProject project =
     fsProj.References
     |> List.iter (fun i -> printfn "%s" i)
 
+let listFilesOfProject project =
+    let fsProj = ProjectFile.FromFile(project)
+    fsProj.Files
+    |> List.iter (fun i -> printfn "%s" i)
+
 let getProjects() =
     DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
 
@@ -145,13 +150,20 @@ let AddReference reference =
         let project = promptList ()
         addReferenceToProject reference project
 
-let ListReference() =
+let executeForProject exec =
     match getProjects() with
-    | [| project |] -> listReferencesOfProject project.Name
+    | [| project |] -> exec project.Name
     | [||] -> promptNoProjectFound()
     | _ ->
         let project = promptList ()
-        listReferencesOfProject project
+        exec project
+
+
+let ListReference() =
+    executeForProject listReferencesOfProject
+
+let ListFiles() =
+    executeForProject listFilesOfProject
 
 let Remove fileName =
     file fileName removeFileFromProject
@@ -234,6 +246,7 @@ let handleInput = function
     | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName; 1
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
+    | [ "file"; "list"] -> ListFiles(); 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
     | [ "reference"; "list"] -> ListReference(); 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
@@ -247,7 +260,6 @@ let handleInput = function
 
 [<EntryPoint>]
 let main argv =
-    printfn "%s" directory
     if argv |> Array.isEmpty
     then
         Help ()
