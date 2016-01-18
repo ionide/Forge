@@ -217,7 +217,7 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
-            file list           - List all files
+            file list           - List all files\n\
             reference add [reference]\
           \n                    - Add reference to the current project.\
           \n                      If more than one project is in the current\
