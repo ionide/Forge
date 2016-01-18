@@ -234,6 +234,10 @@ let Help () =
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
             file list           - List all files\n\
+            file order [file1] [file2]\
+          \n                    - Moves file1 immediately before file2 in the project.
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
             reference add [reference]\
           \n                    - Add reference to the current project.\
           \n                      If more than one project is in the current\
