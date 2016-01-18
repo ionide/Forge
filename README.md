@@ -3,6 +3,8 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
 
 #Fix (Mix for F#)
+
+[![Join the chat at https://gitter.im/reidev275/Fix](https://badges.gitter.im/reidev275/Fix.svg)](https://gitter.im/reidev275/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
 
 When called without any arguments Fix automatically goes into an interactive mode.
