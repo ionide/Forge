@@ -16,6 +16,7 @@ When called without any arguments Fix automatically goes into an interactive mod
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
      file list - List all files of the current project.
+	 file order [file1] [file2] - orders `file1` immediately before `file2` in the project.
      reference add [reference] - Add a reference to the current project.
      reference remove [reference] - Remove a reference from the current project.
      reference list - List all references of the current project.
