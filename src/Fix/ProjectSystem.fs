@@ -72,7 +72,8 @@ type ProjectFile(projectFileName:string,documentContent : string) =
             let updatedXml = XMLDoc updated.Content
             match getNode updatedXml xPath fileName2 with
             | Some n2 -> 
-                let node = updatedXml.CreateElement(n1.Name, n1.LocalName, n1.NamespaceURI)
+                let node = newElement updatedXml n1.Name
+                node.SetAttribute("Include", fileName1)
                 n2.ParentNode.InsertBefore(node, n2) |> ignore
 
                 new ProjectFile(projectFileName, updatedXml.OuterXml)
