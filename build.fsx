@@ -28,7 +28,7 @@ let summary = "Fix is a build tool that provides tasks for creating, compiling, 
 let description = "Fix is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
 // List of author names (for NuGet package)
-let authors = [ "Reid Evans" ]
+let authors = [ "Reid Evans"; "Krzysztof Cieslak" ]
 
 // Tags for your project (for NuGet package)
 let tags = ""
@@ -41,14 +41,14 @@ let testAssemblies = "temp/bin/*Tests*.dll"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
-let gitOwner = "reidev275"
+let gitOwner = "fsprojects"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
 let gitName = "Fix"
 
 // The url for the raw files hosted
-let gitRaw = environVarOrDefault "gitRaw" "https://raw.github.com/reidev275"
+let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
 // Read additional information from the release notes document
 let release = LoadReleaseNotes "RELEASE_NOTES.md"
@@ -94,7 +94,7 @@ Target "AssemblyInfo" (fun _ ->
 // Clean build results
 
 Target "Clean" (fun _ ->
-    CleanDirs ["temp"; buildDir]
+    CleanDirs ["temp"; ]
 )
 
 Target "CleanDocs" (fun _ ->
@@ -136,10 +136,11 @@ Target "ReleaseDocs" (fun _ ->
 )
 
 Target "ZipRelease" (fun _ ->
-    Zip buildDir ("temp" </> "fix.zip")
+    Zip "temp" ("temp" </> "fix.zip")
         (!! (buildDir </> "*.dll")
          ++ (buildDir </> "*.exe")
          ++ (buildDir </> "*.config")
+         -- (buildDir </> "*templates*")
          -- (buildDir </> "*Tests*")
          ++ (buildDir </> "Tools" </> "Paket" </> "paket.bootstrapper.exe")
         )
@@ -194,7 +195,6 @@ Target "Default" DoNothing
 
 "Default"
   ==> "ZipRelease"
-  ==> "ReleaseDocs"
   ==> "Release"
 
 RunTargetOrDefault "Default"
