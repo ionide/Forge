@@ -78,7 +78,9 @@ Removes a file from the current folder and project.  If more than one project fi
 
 ### Installing
 
-This is still in very early stages so you'll need to clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
+You can download one of the releases found at https://github.com/fsprojects/Fix/releases
+
+Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
 
 ## Maintainer(s)
 
