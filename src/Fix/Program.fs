@@ -29,7 +29,7 @@ let RefreshTemplates () =
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"
     let files = Directory.GetFiles folder |> Seq.where (fun x -> x.Contains applicationName)
-    files |> Seq.iter (fun x -> File.Copy(x, x.Replace(applicationName, projectName)))
+    files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
 
 let copyPaket folder =
     folder </> ".paket" |> Directory.CreateDirectory |> ignore
@@ -69,7 +69,7 @@ let promptProjectDir () =
     Console.Write("> ")
     Console.ReadLine()
 
-let promptList () =
+let promptTemplates () =
     printfn "Choose a template:"
     let templates = Directory.GetDirectories(templatesLocation)
                     |> Seq.map Path.GetFileName
@@ -79,6 +79,12 @@ let promptList () =
     Console.Write("> ")
     Console.ReadLine()
 
+let promptSelect list =
+    printfn "Choose one:"
+    list |> Seq.iter (fun x -> printfn " - %s" x)
+    printfn ""
+    Console.Write("> ")
+    Console.ReadLine()
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
     let fsProj = ProjectFile.FromFile(project)
@@ -114,8 +120,8 @@ let file fileName f =
     match getProjects() with
     | [| project |] -> f fileName project.Name node
     | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
         f fileName project node
 
 let Order file1 file2 =
@@ -124,8 +130,8 @@ let Order file1 file2 =
     match getProjects() with
     | [| project |] -> orderFiles project.Name
     | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
         orderFiles project
 
 let Add fileName =
@@ -136,8 +142,8 @@ let executeForProject exec =
     match getProjects() with
     | [| project |] -> exec project.Name
     | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
         exec project
 
 let AddReference reference =
@@ -195,7 +201,7 @@ let New projectName projectDir templateName paket =
 
     let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
     let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
+    let templateName' = if String.IsNullOrWhiteSpace templateName then promptTemplates () else templateName
     let projectFolder = directory </> projectDir' </> projectName'
     let templateDir = templatesLocation </> templateName'
 
