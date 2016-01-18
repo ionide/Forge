@@ -2,7 +2,7 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
 
-[![Join the chat at https://gitter.im/reidev275/Fix](https://badges.gitter.im/reidev275/Fix.svg)](https://gitter.im/reidev275/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/fsprojects/Fix](https://badges.gitter.im/fsprojects/Fix.svg)](https://gitter.im/fsprojects/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 #Fix (Mix for F#)
 
