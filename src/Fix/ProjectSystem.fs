@@ -110,6 +110,10 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         x.FindDuplicateFiles()
         |> List.fold (fun (project:ProjectFile) duplicate -> project.RemoveFile duplicate) x
 
+    /// Places the first file above the second file
+    member x.OrderFiles file1 file2 =
+        
+
     /// The project file name
     member x.ProjectFileName = projectFileName
 
