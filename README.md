@@ -3,6 +3,8 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
 
 #Fix (Mix for F#)
+
+[![Join the chat at https://gitter.im/reidev275/Fix](https://badges.gitter.im/reidev275/Fix.svg)](https://gitter.im/reidev275/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
 
 When called without any arguments Fix automatically goes into an interactive mode.
@@ -12,6 +14,10 @@ When called without any arguments Fix automatically goes into an interactive mod
      new [projectName] [projectDir] [templateName] [--no-paket]- Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them. Uses Paket, unless `--no-paket` flag is specified\n\
      file add [fileName] - Adds a file to the current folder and project.
      file remove [fileName] - Removes a file from the current folder and project.
+     file list - List all files of the current project.
+     reference add [reference] - Add a reference to the current project.
+     reference remove [reference] - Remove a reference from the current project.
+     reference list - List all references of the current project.
      update paket        - Updates Paket to latest version
      update fake         - Updates FAKE to latest version
      paket [args]        - Runs Paket with given arguments
