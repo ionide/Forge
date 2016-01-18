@@ -118,6 +118,16 @@ let file fileName f =
         let project = promptList ()
         f fileName project node
 
+let Order file1 file2 =
+    let orderFiles project = alterProject project (fun x -> x.OrderFiles file1 file2)
+
+    match getProjects() with
+    | [| project |] -> orderFiles project.Name
+    | [||] -> promptNoProjectFound()
+    | _ ->
+        let project = promptList ()
+        orderFiles project
+
 let Add fileName =
     file fileName addFileToProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
@@ -257,6 +267,7 @@ let handleInput = function
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "file"; "list"] -> ListFiles(); 0
+    | [ "file"; "order"; file1; file2 ] -> Order file1 file2; 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
     | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
     | [ "reference"; "list"] -> ListReference(); 0

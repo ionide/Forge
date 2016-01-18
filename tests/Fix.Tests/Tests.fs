@@ -123,3 +123,9 @@ let ``Reorder files in project - content``() =
 </Project>"""
 
     projectContent |> shouldbetext expectedContent
+
+[<Test>]
+let ``Reorder files does nothing if one of the files isn't found``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithFiles)
+    let changedProjectFile = projectFile.OrderFiles  "404.fs" "FixProject.fs"
+    Assert.AreEqual(projectFile.Content, changedProjectFile.Content)
