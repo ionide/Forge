@@ -27,7 +27,7 @@ When called without any arguments Fix automatically goes into an interactive mod
      help                - Displays this help
      exit                - Exit interactive mode
 
-### Creating A project
+### Creating a project
 
     fix new [projectName]
 
