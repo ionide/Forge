@@ -56,6 +56,9 @@ let relative (path1 : string) (path2 : string) =
           .Replace('/', Path.DirectorySeparatorChar)
     )
 
+let promptNoProjectFound () =
+    printfn "No project found in this directory."
+
 let promptProjectName () =
     printfn "Give project name:"
     Console.Write("> ")
@@ -76,27 +79,6 @@ let promptList () =
     Console.Write("> ")
     Console.ReadLine()
 
-let New projectName projectDir templateName =
-    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
-
-    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
-    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
-    let projectFolder = directory </> projectDir' </> projectName'
-    let templateDir = templatesLocation </> templateName'
-
-    printfn "Generating project..."
-
-    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-    applicationNameToProjectName projectFolder projectName'
-    copyPaket directory
-
-    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
-    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
-    sed "<%= paketPath %>" (relative directory) projectFolder
-    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-
-    printfn "Done!"
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
     let fsProj = ProjectFile.FromFile(project)
@@ -112,13 +94,26 @@ let nodeType fileName =
 let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
 let removeFileFromProject fileName project _ = alterProject project (fun x -> x.RemoveFile fileName)
 let addReferenceToProject reference project = alterProject project (fun x -> x.AddReference reference)
+let removeReferenceOfProject reference project = alterProject project (fun x -> x.RemoveReference reference)
+
+let listReferencesOfProject project =
+    let fsProj = ProjectFile.FromFile(project)
+    fsProj.References
+    |> List.iter (fun i -> printfn "%s" i)
+
+let listFilesOfProject project =
+    let fsProj = ProjectFile.FromFile(project)
+    fsProj.ProjectFiles
+    |> List.iter (fun i -> printfn "%s" i)
+
+let getProjects() =
+    DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
 
 let file fileName f =
-    let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
     let node = nodeType fileName
-    match projects with
+    match getProjects() with
     | [| project |] -> f fileName project.Name node
-    | [||] -> printfn "No project found in this directory."
+    | [||] -> promptNoProjectFound()
     | _ ->
         let project = promptList ()
         f fileName project node
@@ -127,14 +122,27 @@ let Add fileName =
     file fileName addFileToProject
     Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
 
-let AddReference reference =
-    let projects = DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
-    match projects with
-    | [| project |] -> addReferenceToProject reference project.Name
-    | [||] -> printfn "No project found in this directory."
+let executeForProject exec =
+    match getProjects() with
+    | [| project |] -> exec project.Name
+    | [||] -> promptNoProjectFound()
     | _ ->
         let project = promptList ()
-        addReferenceToProject reference project
+        exec project
+
+let AddReference reference =
+    let add = addReferenceToProject reference
+    executeForProject add
+
+let RemoveReference reference =
+    let remove = removeReferenceOfProject reference
+    executeForProject remove
+
+let ListReference() =
+    executeForProject listReferencesOfProject
+
+let ListFiles() =
+    executeForProject listFilesOfProject
 
 let Remove fileName =
     file fileName removeFileFromProject
@@ -172,12 +180,33 @@ let RunFake args =
     let args' = args |> String.concat " "
     run f args' directory
 
+let New projectName projectDir templateName paket =
+    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
 
+    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
+    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
+    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
+    let projectFolder = directory </> projectDir' </> projectName'
+    let templateDir = templatesLocation </> templateName'
+
+    printfn "Generating project..."
+
+    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
+    applicationNameToProjectName projectFolder projectName'
+
+    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
+    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
+    sed "<%= paketPath %>" (relative directory) projectFolder
+    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
+    if paket then
+        copyPaket directory
+        RunPaket ["convert-from-nuget";"-f"]
+    printfn "Done!"
 
 let Help () =
     printfn"Fix (Mix for F#)\n\
             Available Commands:\n\n\
-            new [projectName] [projectDir] [templateName] - Creates a new project\
+            new [projectName] [projectDir] [templateName] [--no-paket] - Creates a new project\
           \n                      with the given name, in given directory\
           \n                      (relative to working directory) and given template.\
           \n                      If parameters are not provided, program prompts user for them\n\
@@ -188,10 +217,16 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
+            file list           - List all files
             reference add [reference]\
           \n                    - Add reference to the current project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
+            reference remove [reference]\
+                                - Remove reference from the current project.\
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
+            reference list      - list all references\n\
             update paket        - Updates Paket to latest version\n\
             update fake         - Updates FAKE to latest version\n\
             paket [args]        - Runs Paket with given arguments\n\
@@ -209,14 +244,22 @@ let rec consoleLoop f =
     then result
     else consoleLoop f
 
+//TODO: Better input handling, maybe Argu ?
 let handleInput = function
-    | [ "new" ] -> New "" "" ""; 1
-    | [ "new"; projectName ] -> New projectName "" ""; 1
-    | [ "new"; projectName; projectDir ] -> New projectName projectDir ""; 1
-    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName; 1
+    | [ "new" ] -> New "" "" "" true; 1
+    | [ "new"; "--no-paket" ] -> New "" "" "" false; 1
+    | [ "new"; projectName ] -> New projectName "" "" true; 1
+    | [ "new"; projectName; "--no-paket"] -> New projectName "" "" false; 1
+    | [ "new"; projectName; projectDir ] -> New projectName projectDir "" true; 1
+    | [ "new"; projectName; projectDir; "--no-paket" ] -> New projectName projectDir "" false; 1
+    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName true; 1
+    | [ "new"; projectName; projectDir; templateName; "--no-paket" ] -> New projectName projectDir templateName false; 1
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
+    | [ "file"; "list"] -> ListFiles(); 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
+    | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
+    | [ "reference"; "list"] -> ListReference(); 0
     | [ "update"; "paket"] -> UpdatePaket (); 0
     | [ "update"; "fake"] -> UpdateFake (); 0
     | "paket"::xs -> RunPaket xs; 0
