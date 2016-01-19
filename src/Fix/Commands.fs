@@ -3,6 +3,7 @@ module Commands
 open System
 open System.Text
 open Argu
+open Common
 
 type Command =
     | [<First>][<CustomCommandLine("new")>] New
@@ -34,8 +35,8 @@ with
         :?> CustomCommandLineAttribute).Name
 
 type NewArgs =
-    | ProjectName of string
-    | ProjectDir of string
+    | Name of string
+    | Dir of string
     | Template of string
     | No_Paket
     | No_Fake
@@ -43,8 +44,8 @@ with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | ProjectName _ -> "Project name"
-            | ProjectDir _ -> "Project directory, relative to Fix working directory"
+            | Name _ -> "Project name"
+            | Dir _ -> "Project directory, relative to Fix working directory"
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"
@@ -83,36 +84,51 @@ with
             | Paket -> "Updates Paket to latest version"
             | Fake _ -> "Updates FAKE to latest version"
 
-
-let cmdLineSyntax (parser:ArgumentParser<_>) commandName =
-    "fix " + commandName + " " + parser.PrintCommandLineSyntax()
-
-let cmdLineUsageMessage (command : Command) parser =
-    let sb = StringBuilder()
-    sb.Append("Fix ")
-      .AppendLine(command.Name)
-      .AppendLine()
-      .AppendLine((command :> IArgParserTemplate).Usage)
-      .AppendLine()
-      .Append(cmdLineSyntax parser command.Name)
-      .ToString()
-
-let processWithValidation<'T when 'T :> IArgParserTemplate> validateF commandF command args =
+let processCommand<'T when 'T :> IArgParserTemplate> (commandF : ParseResults<'T> -> int) _ args =
     let parser = ArgumentParser.Create<'T>()
     let results =
         parser.Parse
             (inputs = args, raiseOnUsage = false, ignoreMissing = true,
              errorHandler = ProcessExiter())
+    commandF results
 
-    let resultsValid = validateF (results)
-    if results.IsUsageRequested || not resultsValid then
-        if not resultsValid then
-            parser.Usage(cmdLineUsageMessage command parser) |> Console.WriteLine
-            Environment.ExitCode <- 1
-        else
-            parser.Usage(cmdLineUsageMessage command parser)  |> Console.WriteLine
-    else
-        commandF results
+let project (results : ParseResults<_>) =
+    let projectName = defaultArg (results.TryGetResult <@ NewArgs.Name @>) ""
+    let projectDir = defaultArg (results.TryGetResult <@ NewArgs.Dir @>) ""
+    let templateName = defaultArg (results.TryGetResult <@ NewArgs.Template @>) ""
+    let paket = not ^ results.Contains <@ NewArgs.No_Paket @>
+    Project.New projectName projectDir templateName paket
+    1
 
-let processCommand<'T when 'T :> IArgParserTemplate> (commandF : ParseResults<'T> -> unit) =
-    processWithValidation (fun _ -> true) commandF
+let file (results : ParseResults<_>) =
+    let add = results.TryGetResult <@ FileArgs.Add @>
+    let remove = results.TryGetResult <@ FileArgs.Remove @>
+    let list = results.Contains <@ FileArgs.List @>
+    match add, remove, list with
+    | Some fn, _, _ -> Files.Add fn
+    | _, Some fn, _ -> Files.Remove fn
+    | _, _, true -> Files.List ()
+    | None, None, false -> ()
+    0
+
+let reference (results : ParseResults<_>) =
+    let add = results.TryGetResult <@ ReferenceArgs.Add @>
+    let remove = results.TryGetResult <@ ReferenceArgs.Remove @>
+    let list = results.Contains <@ ReferenceArgs.List @>
+    match add, remove, list with
+    | Some fn, _, _ -> Files.Add fn
+    | _, Some fn, _ -> Files.Remove fn
+    | _, _, true -> Files.List ()
+    | None, None, false -> ()
+    0
+
+let update (results : ParseResults<_>) =
+    let paket = results.Contains <@ UpdateArgs.Paket @>
+    let fake = results.Contains <@ UpdateArgs.Fake @>
+    match paket,fake with
+    | true, _ -> Paket.Update ()
+    | _, true -> Fake.Update ()
+    | false, false -> ()
+    0
+
+
