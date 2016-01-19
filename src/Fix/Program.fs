@@ -74,7 +74,6 @@ let handleInput = function
     | [ "exit" ] -> 1
     | _ -> Help(); 0
 
-
 [<EntryPoint>]
 let main argv =
     if argv |> Array.isEmpty
