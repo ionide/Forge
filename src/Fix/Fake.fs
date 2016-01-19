@@ -4,6 +4,13 @@ open System.IO
 open System.Net
 open Common
 
+let location = templatesLocation </> ".fake"
+
+let Copy folder =
+    Directory.GetFiles location
+    |> Seq.iter (fun x ->
+        let fn = (folder </> Path.GetFileName x)
+        if not ^ File.Exists fn then File.Copy (x, fn) )
 
 let Update () =
     use wc = new WebClient()

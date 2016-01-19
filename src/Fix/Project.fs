@@ -45,7 +45,7 @@ let execOnProject fn =
 
 
 
-let New projectName projectDir templateName paket =
+let New projectName projectDir templateName paket fake =
     if not ^ Directory.Exists templatesLocation then Templates.Refresh ()
 
     let projectName' = if String.IsNullOrWhiteSpace projectName then prompt "Enter project name:" else projectName
@@ -66,4 +66,7 @@ let New projectName projectDir templateName paket =
     if paket then
         Paket.Copy directory
         Paket.Run ["convert-from-nuget";"-f"]
+    if fake then
+        Fake.Copy directory
+
     printfn "Done!"

@@ -103,7 +103,8 @@ let project (results : ParseResults<_>) =
     let projectDir = defaultArg (results.TryGetResult <@ NewArgs.Dir @>) ""
     let templateName = defaultArg (results.TryGetResult <@ NewArgs.Template @>) ""
     let paket = not ^ results.Contains <@ NewArgs.No_Paket @>
-    Project.New projectName projectDir templateName paket
+    let fake = not ^ results.Contains <@ NewArgs.No_Fake @>
+    Project.New projectName projectDir templateName paket fake
     1
 
 let file (results : ParseResults<_>) =
