@@ -25,7 +25,7 @@ with
             | Update -> "Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
-            | Refresh -> "Refreshs the template cache"
+            | Refresh -> "Refreshes the template cache"
             | Help -> "Displays help"
             | Exit -> "Exits interactive mode"
     member this.Name =
@@ -54,13 +54,15 @@ type FileArgs =
     |[<CustomCommandLine("add")>] Add of string
     |[<CustomCommandLine("remove")>] Remove of string
     |[<CustomCommandLine("list")>] List
+    |[<CustomCommandLine("order")>] Order of string * string
 with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Add _ -> "Adds a file to the current folder and project"
             | Remove _ -> "Removes the file from disk and the project"
-            | List  -> " List all files"
+            | List  -> "List all files"
+            | Order _ -> "Moves file1 immediately before file2 in the project"
 
 type ReferenceArgs =
     |[<CustomCommandLine("add")>] Add of string
@@ -108,11 +110,13 @@ let file (results : ParseResults<_>) =
     let add = results.TryGetResult <@ FileArgs.Add @>
     let remove = results.TryGetResult <@ FileArgs.Remove @>
     let list = results.Contains <@ FileArgs.List @>
-    match add, remove, list with
-    | Some fn, _, _ -> Files.Add fn
-    | _, Some fn, _ -> Files.Remove fn
-    | _, _, true -> Files.List ()
-    | None, None, false -> ()
+    let order = results.TryGetResult <@ FileArgs.Order @>
+    match add, remove, list, order with
+    | Some fn, _, _, _ -> Files.Add fn
+    | _, Some fn, _, _ -> Files.Remove fn
+    | _, _, true, _ -> Files.List ()
+    | _, _, _, Some (f1,f2) -> Files.Order f1 f2
+    | None, None, false, None -> ()
     0
 
 let reference (results : ParseResults<_>) =
