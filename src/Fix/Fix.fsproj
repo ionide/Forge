@@ -60,6 +60,13 @@
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
     <Compile Include="ProjectSystem.fs" />
+    <Compile Include="Common.fs" />
+    <Compile Include="Paket.fs" />
+    <Compile Include="Fake.fs" />
+    <Compile Include="Templates.fs" />
+    <Compile Include="Project.fs" />
+    <Compile Include="Files.fs" />
+    <Compile Include="References.fs" />
     <Compile Include="Program.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
