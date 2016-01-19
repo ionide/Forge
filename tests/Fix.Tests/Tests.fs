@@ -90,3 +90,42 @@ let ``Remove non existing file from Project - file count``() =
     let changedProjectFile = projectFile.RemoveFile "FixProject.fs"
     let files = changedProjectFile.ProjectFiles |> Seq.length
     Assert.AreEqual(0, files)
+
+
+[<Test>]
+let ``Reorder files in project - file count``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithFiles)
+    let changedProjectFile = projectFile.OrderFiles  "a_file.fs" "FixProject.fs"
+    Assert.AreEqual(projectFile.ProjectFiles |> Seq.length, changedProjectFile.ProjectFiles |> Seq.length)
+
+[<Test>]
+let ``Reorder files in project - content``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithFiles)
+    let changedProjectFile = projectFile.OrderFiles  "a_file.fs" "FixProject.fs"
+    let projectContent = changedProjectFile.Content
+
+    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="a_file.fs" />
+    <Compile Include="FixProject.fs" />
+    <None Include="App.config" />
+  </ItemGroup>
+</Project>"""
+
+    projectContent |> shouldbetext expectedContent
+
+[<Test>]
+let ``Reorder files does nothing if one of the files isn't found``() =
+    let projectFile = new ProjectFile("foo.fsproj", projectWithFiles)
+    let changedProjectFile = projectFile.OrderFiles  "404.fs" "FixProject.fs"
+    Assert.AreEqual(projectFile.Content, changedProjectFile.Content)

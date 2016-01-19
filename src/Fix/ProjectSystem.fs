@@ -36,6 +36,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         let newNode = newElement document nodeType
         newNode.SetAttribute("Include", fileName)
 
+        //get the first ItemGroup node
         let itemGroup = getNodes xPath document |> List.map(fun x -> x.ParentNode) |> List.distinct |> List.tryHead
 
         match itemGroup with
@@ -48,18 +49,37 @@ type ProjectFile(projectFileName:string,documentContent : string) =
 
         new ProjectFile(projectFileName,document.OuterXml)
 
+    let getNode document xPath fileName =
+        getNodes xPath document
+        |> List.filter (fun node -> getFileAttribute node = fileName)
+        |> Seq.tryLast
+
     let removeFile fileName xPath =
         let document = XMLDoc documentContent // we create a copy and work immutable
-        let node =
-            getNodes xPath document
-            |> List.filter (fun node -> getFileAttribute node = fileName)
-            |> Seq.tryLast  // we remove the last one to make easier to remove duplicates
+        let node = getNode document xPath fileName
 
         match node with
         | Some n -> n.ParentNode.RemoveChild n |> ignore
         | None -> ()
 
         new ProjectFile(projectFileName,document.OuterXml)
+
+    let orderFiles fileName1 fileName2 xPath =
+        let document = XMLDoc documentContent // we create a copy and work immutable
+        match getNode document xPath fileName1 with
+        | Some n1 -> 
+            let updated = removeFile fileName1 xPath
+            let updatedXml = XMLDoc updated.Content
+            match getNode updatedXml xPath fileName2 with
+            | Some n2 -> 
+                let node = newElement updatedXml n1.Name
+                node.SetAttribute("Include", fileName1)
+                n2.ParentNode.InsertBefore(node, n2) |> ignore
+
+                new ProjectFile(projectFileName, updatedXml.OuterXml)
+
+            | None -> new ProjectFile(projectFileName,document.OuterXml)
+        | _ -> new ProjectFile(projectFileName,document.OuterXml)
 
     /// Read a Project from a FileName
     static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
@@ -109,6 +129,11 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     member x.RemoveDuplicates() =
         x.FindDuplicateFiles()
         |> List.fold (fun (project:ProjectFile) duplicate -> project.RemoveFile duplicate) x
+
+    /// Places the first file above the second file
+    member x.OrderFiles file1 file2 =
+        orderFiles file1 file2 projectFilesXPath
+        
 
     /// The project file name
     member x.ProjectFileName = projectFileName

@@ -29,7 +29,7 @@ let RefreshTemplates () =
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"
     let files = Directory.GetFiles folder |> Seq.where (fun x -> x.Contains applicationName)
-    files |> Seq.iter (fun x -> File.Copy(x, x.Replace(applicationName, projectName)))
+    files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
 
 let copyPaket folder =
     folder </> ".paket" |> Directory.CreateDirectory |> ignore
@@ -69,7 +69,7 @@ let promptProjectDir () =
     Console.Write("> ")
     Console.ReadLine()
 
-let promptList () =
+let promptTemplates () =
     printfn "Choose a template:"
     let templates = Directory.GetDirectories(templatesLocation)
                     |> Seq.map Path.GetFileName
@@ -79,6 +79,12 @@ let promptList () =
     Console.Write("> ")
     Console.ReadLine()
 
+let promptSelect list =
+    printfn "Choose one:"
+    list |> Seq.iter (fun x -> printfn " - %s" x)
+    printfn ""
+    Console.Write("> ")
+    Console.ReadLine()
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
     let fsProj = ProjectFile.FromFile(project)
@@ -114,9 +120,19 @@ let file fileName f =
     match getProjects() with
     | [| project |] -> f fileName project.Name node
     | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
         f fileName project node
+
+let Order file1 file2 =
+    let orderFiles project = alterProject project (fun x -> x.OrderFiles file1 file2)
+
+    match getProjects() with
+    | [| project |] -> orderFiles project.Name
+    | [||] -> promptNoProjectFound()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
+        orderFiles project
 
 let Add fileName =
     file fileName addFileToProject
@@ -126,8 +142,8 @@ let executeForProject exec =
     match getProjects() with
     | [| project |] -> exec project.Name
     | [||] -> promptNoProjectFound()
-    | _ ->
-        let project = promptList ()
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
         exec project
 
 let AddReference reference =
@@ -185,7 +201,7 @@ let New projectName projectDir templateName paket =
 
     let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
     let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then promptList () else templateName
+    let templateName' = if String.IsNullOrWhiteSpace templateName then promptTemplates () else templateName
     let projectFolder = directory </> projectDir' </> projectName'
     let templateDir = templatesLocation </> templateName'
 
@@ -217,7 +233,11 @@ let Help () =
           \n                    - Removes the filename from disk and the project.\
           \n                      If more than one project is in the current\
           \n                      directory you will be prompted which to use.\n\
-            file list           - List all files
+            file list           - List all files\n\
+            file order [file1] [file2]\
+          \n                    - Moves file1 immediately before file2 in the project.
+          \n                      If more than one project is in the current\
+          \n                      directory you will be prompted which to use.\n\
             reference add [reference]\
           \n                    - Add reference to the current project.\
           \n                      If more than one project is in the current\
@@ -257,6 +277,7 @@ let handleInput = function
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "file"; "list"] -> ListFiles(); 0
+    | [ "file"; "order"; file1; file2 ] -> Order file1 file2; 0
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
     | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
     | [ "reference"; "list"] -> ListReference(); 0
