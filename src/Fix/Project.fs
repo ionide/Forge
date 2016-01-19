@@ -3,6 +3,7 @@ open Fake
 open Common
 open System
 open System.IO
+open Fix.ProjectSystem
 
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"
@@ -25,6 +26,24 @@ let relative (path1 : string) (path2 : string) =
           .ToString()
           .Replace('/', Path.DirectorySeparatorChar)
     )
+
+let getProjects() =
+    DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
+
+let alter (f : ProjectFile -> ProjectFile) project =
+    let fsProj = ProjectFile.FromFile(project)
+    let updatedProject = fsProj |> f
+    updatedProject.Save(project)
+
+let execOnProject fn =
+    match getProjects() with
+    | [| project |] -> project.Name |> alter fn
+    | [||] -> printfn "No project found in this directory."
+    | projects ->
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
+        project |> alter fn
+
+
 
 let New projectName projectDir templateName paket =
     if not ^ Directory.Exists templatesLocation then Templates.Refresh ()

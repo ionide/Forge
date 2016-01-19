@@ -1,96 +1,5 @@
 module FixLib
-
-open Fake
-open Fake.FileHelper
-open Fix.ProjectSystem
-open System.IO
 open System
-open System.Diagnostics
-open Common
-
-
-
-let promptNoProjectFound () = printfn "No project found in this directory."
-
-let alterProject project (f : ProjectFile -> ProjectFile) =
-    let fsProj = ProjectFile.FromFile(project)
-    let updatedProject = fsProj |> f
-    updatedProject.Save(project)
-
-let nodeType fileName =
-    match Path.GetExtension fileName with
-    | ".fs" -> "Compile"
-    | ".config" | ".html"-> "Content"
-    | _ -> "None"
-
-let addFileToProject fileName project nodeType = alterProject project (fun x -> x.AddFile fileName nodeType)
-let removeFileFromProject fileName project _ = alterProject project (fun x -> x.RemoveFile fileName)
-let addReferenceToProject reference project = alterProject project (fun x -> x.AddReference reference)
-let removeReferenceOfProject reference project = alterProject project (fun x -> x.RemoveReference reference)
-
-let listReferencesOfProject project =
-    let fsProj = ProjectFile.FromFile(project)
-    fsProj.References
-    |> List.iter (fun i -> printfn "%s" i)
-
-let listFilesOfProject project =
-    let fsProj = ProjectFile.FromFile(project)
-    fsProj.ProjectFiles
-    |> List.iter (fun i -> printfn "%s" i)
-
-let getProjects() =
-    DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
-
-let file fileName f =
-    let node = nodeType fileName
-    match getProjects() with
-    | [| project |] -> f fileName project.Name node
-    | [||] -> promptNoProjectFound()
-    | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
-        f fileName project node
-
-let Order file1 file2 =
-    let orderFiles project = alterProject project (fun x -> x.OrderFiles file1 file2)
-
-    match getProjects() with
-    | [| project |] -> orderFiles project.Name
-    | [||] -> promptNoProjectFound()
-    | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
-        orderFiles project
-
-let Add fileName =
-    file fileName addFileToProject
-    Path.Combine(directory, fileName) |> Fake.FileHelper.CreateFile
-
-let executeForProject exec =
-    match getProjects() with
-    | [| project |] -> exec project.Name
-    | [||] -> promptNoProjectFound()
-    | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
-        exec project
-
-let AddReference reference =
-    let add = addReferenceToProject reference
-    executeForProject add
-
-let RemoveReference reference =
-    let remove = removeReferenceOfProject reference
-    executeForProject remove
-
-let ListReference() =
-    executeForProject listReferencesOfProject
-
-let ListFiles() =
-    executeForProject listFilesOfProject
-
-let Remove fileName =
-    file fileName removeFileFromProject
-    directory </> fileName |> Fake.FileHelper.DeleteFile
-
-
 
 let Help () =
     printfn"Fix (Mix for F#)\n\
@@ -148,14 +57,14 @@ let handleInput = function
     | [ "new"; projectName; projectDir; templateName ] -> Project.New projectName projectDir templateName true; 1
     | [ "new"; projectName; projectDir; templateName; "--no-paket" ] -> Project.New projectName projectDir templateName false; 1
 
-    | [ "file"; "add"; fileName ] -> Add fileName; 0
-    | [ "file"; "remove"; fileName ] -> Remove fileName; 0
-    | [ "file"; "list"] -> ListFiles(); 0
-    | [ "file"; "order"; file1; file2 ] -> Order file1 file2; 0
+    | [ "file"; "add"; fileName ] -> Files.Add fileName; 0
+    | [ "file"; "remove"; fileName ] -> Files.Remove fileName; 0
+    | [ "file"; "list"] -> Files.List(); 0
+    | [ "file"; "order"; file1; file2 ] -> Files.Order file1 file2; 0
 
-    | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
-    | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
-    | [ "reference"; "list"] -> ListReference(); 0
+    | [ "reference"; "add"; fileName ] -> References.Add fileName; 0
+    | [ "reference"; "remove"; fileName ] -> References.Remove fileName; 0
+    | [ "reference"; "list"] -> References.List(); 0
 
     | [ "update"; "paket"] -> Paket.Update (); 0
     | [ "update"; "fake"] -> Fake.Update (); 0

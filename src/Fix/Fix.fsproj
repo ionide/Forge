@@ -65,6 +65,8 @@
     <Compile Include="Fake.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
+    <Compile Include="Files.fs" />
+    <Compile Include="References.fs" />
     <Compile Include="Program.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
