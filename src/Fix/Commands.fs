@@ -20,8 +20,8 @@ with
         member this.Usage =
             match this with
             | New -> "Create new project"
-            | File -> "Adds or removes file from current folder and project. If more than one project is in the current directory you will be prompted which to use"
-            | Reference -> "Adds or removes reference from current project. If more than one project is in the current directory you will be prompted which to use"
+            | File -> "Adds or removes file from current folder and project."
+            | Reference -> "Adds or removes reference from current project."
             | Update -> "Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
