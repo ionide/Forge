@@ -1,90 +1,16 @@
 module FixLib
 
 open Fake
-open Fake.Git
 open Fake.FileHelper
 open Fix.ProjectSystem
 open System.IO
 open System
 open System.Diagnostics
-open System.Net
-
-let (^) = (<|)
-
-let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
-let templatesLocation = exeLocation </> "templates"
-let paketTemplate = templatesLocation </> ".paket"
-let directory = System.Environment.CurrentDirectory
-let packagesDirectory = directory </> "packages"
-
-let paketLocation = exeLocation </> "Tools" </> "Paket"
-let fakeLocation = exeLocation </> "Tools" </> "FAKE"
-let fakeToolLocation = fakeLocation </> "tools"
-
-let RefreshTemplates () =
-    printfn "Getting templates..."
-    Path.Combine(exeLocation, "templates") |> Fake.FileHelper.CleanDir
-    Repository.cloneSingleBranch exeLocation "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
-
-let applicationNameToProjectName folder projectName =
-    let applicationName = "ApplicationName"
-    let files = Directory.GetFiles folder |> Seq.where (fun x -> x.Contains applicationName)
-    files |> Seq.iter (fun x -> File.Move(x, x.Replace(applicationName, projectName)))
-
-let copyPaket folder =
-    folder </> ".paket" |> Directory.CreateDirectory |> ignore
-    Directory.GetFiles paketTemplate
-    |> Seq.iter (fun x ->
-        let fn = Path.GetFileName x
-        File.Copy (x, folder </> ".paket" </> fn) )
+open Common
 
 
-let sed (find:string) replace folder =
-    folder
-    |> Directory.GetFiles
-    |> Seq.iter (fun x ->
-                    let r = replace x
-                    let contents = File.ReadAllText(x).Replace(find, r)
-                    File.WriteAllText(x, contents))
 
-let relative (path1 : string) (path2 : string) =
-    let p1 = Uri(path1)
-    let p2 = Uri(path2)
-    Uri.UnescapeDataString(
-        p2.MakeRelativeUri(p1)
-          .ToString()
-          .Replace('/', Path.DirectorySeparatorChar)
-    )
-
-let promptNoProjectFound () =
-    printfn "No project found in this directory."
-
-let promptProjectName () =
-    printfn "Give project name:"
-    Console.Write("> ")
-    Console.ReadLine()
-
-let promptProjectDir () =
-    printfn "Give project directory (relative to working directory):"
-    Console.Write("> ")
-    Console.ReadLine()
-
-let promptTemplates () =
-    printfn "Choose a template:"
-    let templates = Directory.GetDirectories(templatesLocation)
-                    |> Seq.map Path.GetFileName
-                    |> Seq.where (fun x -> not <| x.StartsWith("."))
-    templates |> Seq.iter (fun x -> printfn " - %s" x)
-    printfn ""
-    Console.Write("> ")
-    Console.ReadLine()
-
-let promptSelect list =
-    printfn "Choose one:"
-    list |> Seq.iter (fun x -> printfn " - %s" x)
-    printfn ""
-    Console.Write("> ")
-    Console.ReadLine()
+let promptNoProjectFound () = printfn "No project found in this directory."
 
 let alterProject project (f : ProjectFile -> ProjectFile) =
     let fsProj = ProjectFile.FromFile(project)
@@ -121,7 +47,7 @@ let file fileName f =
     | [| project |] -> f fileName project.Name node
     | [||] -> promptNoProjectFound()
     | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
         f fileName project node
 
 let Order file1 file2 =
@@ -131,7 +57,7 @@ let Order file1 file2 =
     | [| project |] -> orderFiles project.Name
     | [||] -> promptNoProjectFound()
     | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
         orderFiles project
 
 let Add fileName =
@@ -143,7 +69,7 @@ let executeForProject exec =
     | [| project |] -> exec project.Name
     | [||] -> promptNoProjectFound()
     | projects ->
-        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect
+        let project = projects |> Seq.map (fun x -> x.Name) |> promptSelect "Choose a project:"
         exec project
 
 let AddReference reference =
@@ -162,62 +88,9 @@ let ListFiles() =
 
 let Remove fileName =
     file fileName removeFileFromProject
-    Path.Combine(directory, fileName) |> Fake.FileHelper.DeleteFile
+    directory </> fileName |> Fake.FileHelper.DeleteFile
 
-let run cmd args dir =
-    if execProcess( fun info ->
-        info.FileName <- cmd
-        if not( String.IsNullOrWhiteSpace dir) then
-            info.WorkingDirectory <- dir
-        info.Arguments <- args
-    ) System.TimeSpan.MaxValue = false then
-        traceError <| sprintf "Error while running '%s' with args: %s" cmd args
 
-let UpdatePaket () =
-    run (paketLocation </> "paket.bootstrapper.exe") "" paketLocation
-
-let RunPaket args =
-    let f = paketLocation </> "paket.exe"
-    if not ^ File.Exists f then UpdatePaket ()
-    let args' = args |> String.concat " "
-    run f args' directory
-
-let UpdateFake () =
-    use wc = new WebClient()
-    let zip = fakeLocation </> "fake.zip"
-    System.IO.Directory.CreateDirectory(fakeLocation) |> ignore
-    printfn "Downloading FAKE..."
-    wc.DownloadFile("https://www.nuget.org/api/v2/package/FAKE", zip )
-    Fake.ZipHelper.Unzip fakeLocation zip
-
-let RunFake args =
-    let f = fakeToolLocation </> "FAKE.exe"
-    if not ^ File.Exists f then UpdateFake ()
-    let args' = args |> String.concat " "
-    run f args' directory
-
-let New projectName projectDir templateName paket =
-    if not ^ Directory.Exists templatesLocation then RefreshTemplates ()
-
-    let projectName' = if String.IsNullOrWhiteSpace projectName then promptProjectName () else projectName
-    let projectDir' = if String.IsNullOrWhiteSpace projectDir then promptProjectDir () else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then promptTemplates () else templateName
-    let projectFolder = directory </> projectDir' </> projectName'
-    let templateDir = templatesLocation </> templateName'
-
-    printfn "Generating project..."
-
-    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-    applicationNameToProjectName projectFolder projectName'
-
-    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
-    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
-    sed "<%= paketPath %>" (relative directory) projectFolder
-    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-    if paket then
-        copyPaket directory
-        RunPaket ["convert-from-nuget";"-f"]
-    printfn "Done!"
 
 let Help () =
     printfn"Fix (Mix for F#)\n\
@@ -266,26 +139,29 @@ let rec consoleLoop f =
 
 //TODO: Better input handling, maybe Argu ?
 let handleInput = function
-    | [ "new" ] -> New "" "" "" true; 1
-    | [ "new"; "--no-paket" ] -> New "" "" "" false; 1
-    | [ "new"; projectName ] -> New projectName "" "" true; 1
-    | [ "new"; projectName; "--no-paket"] -> New projectName "" "" false; 1
-    | [ "new"; projectName; projectDir ] -> New projectName projectDir "" true; 1
-    | [ "new"; projectName; projectDir; "--no-paket" ] -> New projectName projectDir "" false; 1
-    | [ "new"; projectName; projectDir; templateName ] -> New projectName projectDir templateName true; 1
-    | [ "new"; projectName; projectDir; templateName; "--no-paket" ] -> New projectName projectDir templateName false; 1
+    | [ "new" ] -> Project.New "" "" "" true; 1
+    | [ "new"; "--no-paket" ] -> Project.New "" "" "" false; 1
+    | [ "new"; projectName ] -> Project.New projectName "" "" true; 1
+    | [ "new"; projectName; "--no-paket"] -> Project.New projectName "" "" false; 1
+    | [ "new"; projectName; projectDir ] -> Project.New projectName projectDir "" true; 1
+    | [ "new"; projectName; projectDir; "--no-paket" ] -> Project.New projectName projectDir "" false; 1
+    | [ "new"; projectName; projectDir; templateName ] -> Project.New projectName projectDir templateName true; 1
+    | [ "new"; projectName; projectDir; templateName; "--no-paket" ] -> Project.New projectName projectDir templateName false; 1
+
     | [ "file"; "add"; fileName ] -> Add fileName; 0
     | [ "file"; "remove"; fileName ] -> Remove fileName; 0
     | [ "file"; "list"] -> ListFiles(); 0
     | [ "file"; "order"; file1; file2 ] -> Order file1 file2; 0
+
     | [ "reference"; "add"; fileName ] -> AddReference fileName; 0
     | [ "reference"; "remove"; fileName ] -> RemoveReference fileName; 0
     | [ "reference"; "list"] -> ListReference(); 0
-    | [ "update"; "paket"] -> UpdatePaket (); 0
-    | [ "update"; "fake"] -> UpdateFake (); 0
-    | "paket"::xs -> RunPaket xs; 0
-    | "fake"::xs -> RunFake xs; 0
-    | [ "refresh" ] -> RefreshTemplates (); 0
+
+    | [ "update"; "paket"] -> Paket.Update (); 0
+    | [ "update"; "fake"] -> Fake.Update (); 0
+    | "paket"::xs -> Paket.Run xs; 0
+    | "fake"::xs -> Fake.Run xs; 0
+    | [ "refresh" ] -> Templates.Refresh(); 0
     | [ "exit" ] -> 1
     | _ -> Help(); 0
 
