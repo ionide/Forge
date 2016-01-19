@@ -10,7 +10,7 @@ let Remove reference =
 let List () =
     let listReferencesOfProject (project:ProjectFile) =
         project.References
-        |> List.iter (fun i -> printfn "%s" i)
+        |> List.iter (printfn "%s")
         project
 
     Project.execOnProject listReferencesOfProject

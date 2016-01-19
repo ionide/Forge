@@ -21,7 +21,7 @@ let prompt text =
 
 let promptSelect text list =
     printfn text
-    list |> Seq.iter (fun x -> printfn " - %s" x)
+    list |> Seq.iter (printfn " - %s")
     printfn ""
     Console.Write("> ")
     Console.ReadLine()
@@ -29,8 +29,8 @@ let promptSelect text list =
 let run cmd args dir =
     if execProcess( fun info ->
         info.FileName <- cmd
-        if not( String.IsNullOrWhiteSpace dir) then
+        if not ^ String.IsNullOrWhiteSpace dir then
             info.WorkingDirectory <- dir
         info.Arguments <- args
     ) System.TimeSpan.MaxValue = false then
-        traceError <| sprintf "Error while running '%s' with args: %s" cmd args
+        traceError ^ sprintf "Error while running '%s' with args: %s" cmd args

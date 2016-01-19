@@ -25,7 +25,7 @@ let Remove fileName =
 let List () =
     let listFilesOfProject (project:ProjectFile) =
         project.ProjectFiles
-        |> List.iter (fun i -> printfn "%s" i)
+        |> List.iter (printfn "%s")
         project
 
     Project.execOnProject listFilesOfProject
