@@ -1,8 +1,10 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Build status](https://ci.appveyor.com/api/projects/status/abkhgg8skclwjngk?svg=true)](https://ci.appveyor.com/project/reidev275/fix-fnuet)
+[![Build Status](https://travis-ci.org/fsprojects/Fix.svg?branch=master)](https://travis-ci.org/fsprojects/Fix)
 
 [![Join the chat at https://gitter.im/fsprojects/Fix](https://badges.gitter.im/fsprojects/Fix.svg)](https://gitter.im/fsprojects/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 #Fix (Mix for F#)
 
