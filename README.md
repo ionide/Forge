@@ -1,6 +1,6 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
-[![Build status](https://ci.appveyor.com/api/projects/status/94dsmj5nrnlbvykp?svg=true)](https://ci.appveyor.com/project/reidev275/fix/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/abkhgg8skclwjngk?svg=true)](https://ci.appveyor.com/project/reidev275/fix-fnuet)
 
 [![Join the chat at https://gitter.im/fsprojects/Fix](https://badges.gitter.im/fsprojects/Fix.svg)](https://gitter.im/fsprojects/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
