@@ -14,37 +14,43 @@ When called without any arguments Fix automatically goes into an interactive mod
 
 ### Available Commands
 
-     new [projectName] [projectDir] [templateName] [--no-paket]- Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them. Uses Paket, unless `--no-paket` flag is specified\n\
-     file add [fileName] - Adds a file to the current folder and project.
-     file remove [fileName] - Removes a file from the current folder and project.
+     new [--name <string>] [--dir <string>] [--template <string>] [--no-paket]- Creates a new project with the given name, in given directory (relative to working directory) and given template. If parameters are not provided, program prompts user for them. Uses Paket, unless `--no-paket` flag is specified\n\
+     file add <string> - Adds a file to the current folder and project.
+     file remove <string> - Removes a file from the current folder and project.
      file list - List all files of the current project.
-	 file order [file1] [file2] - orders `file1` immediately before `file2` in the project.
-     reference add [reference] - Add a reference to the current project.
-     reference remove [reference] - Remove a reference from the current project.
+	 file order <string> <string> - orders `file1` immediately before `file2` in the project.
+     reference add <string> - Add a reference to the current project.
+     reference remove <string> - Remove a reference from the current project.
      reference list - List all references of the current project.
      update paket        - Updates Paket to latest version
      update fake         - Updates FAKE to latest version
-     paket [args]        - Runs Paket with given arguments
-     fake [args]         - Runs FAKE with given arguments
+     paket <string>        - Runs Paket with given arguments
+     fake <string>         - Runs FAKE with given arguments
      refresh             - Refreshes the template cache
      help                - Displays this help
      exit                - Exit interactive mode
 
 ### Creating a project
 
-    fix new [projectName]
+    new [--name <string>] [--dir <string>] [--template <string>] [--no-paket]
 
 On the first run Fix will download the templates found in the [Generator F# Repository](https://github.com/fsprojects/generator-fsharp) and then allow you to choose which template you'd like to base your new project from.
 
 	C:\Dev>c:\tools\fix\fix.exe
 	>
 	Fix (Mix for F#)
-	Available Commands:
-	 new [projectName] - Creates a new project with the given name
-	 refresh           - Refreshes the template cache
-	 help              - Displays this help
+	Available commands:
+        new: Create new project
+        file: Adds or removes file from current folder and project.
+        reference: Adds or removes reference from current project.
+        update: Updates Paket or FAKE
+        paket: Runs Paket
+        fake: Runs FAKE
+        refresh: Refreshs the template cache
+        help: Displays help
+        exit: Exits interactive mode
 
-	> new MySuaveProject
+	> new --name MySuaveProject --dir src
 	Choose a template:
 	 - aspwebapi2
 	 - classlib
