@@ -72,6 +72,7 @@ On the first run Fix will download the templates found in the [Generator F# Repo
 	Done!
 
 Unless `--no-paket` flag is used, solution folder (folder in which `Fix` is running) will contain `.paket` folder and `paket.dependencies` and `paket.lock` file. Project folder will contain `paket.references` file.
+
 Unless `--no-paket` flag is used, solution folder (folder in which `Fix` is running) will contain `build.fsx`, `build.cmd`, and `build.sh` files. It won't override previously existing files.
 
 ## Files within a project
