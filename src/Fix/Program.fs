@@ -18,8 +18,11 @@ let handleInput (parser : ArgumentParser<_>) args =
                     ignoreMissing = true,
                     ignoreUnrecognized = true,
                     raiseOnUsage = false)
-    match result.GetAllResults () with
-    | [command] ->
+    match result.IsUsageRequested, result.GetAllResults () with
+    | true, [] ->
+        parser.Usage("Available commands:") |> System.Console.WriteLine
+        0
+    | _, [command] ->
         let h =
             match command with
             | New -> processCommand project
@@ -33,7 +36,7 @@ let handleInput (parser : ArgumentParser<_>) args =
             | Exit -> (fun _ _ -> 1)
         let args = args.[1 ..]
         h command args
-    | [] ->
+    | _, [] ->
         System.Console.WriteLine "Command was:"
         System.Console.WriteLine ("  " + String.Join(" ", args))
         parser.Usage("Available commands:") |> System.Console.WriteLine

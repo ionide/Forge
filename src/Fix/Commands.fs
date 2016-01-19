@@ -90,7 +90,11 @@ let processCommand<'T when 'T :> IArgParserTemplate> (commandF : ParseResults<'T
         parser.Parse
             (inputs = args, raiseOnUsage = false, ignoreMissing = true,
              errorHandler = ProcessExiter())
-    commandF results
+    if results.IsUsageRequested then
+        parser.Usage("Available parameters:") |> System.Console.WriteLine
+        0
+    else
+        commandF results
 
 let project (results : ParseResults<_>) =
     let projectName = defaultArg (results.TryGetResult <@ NewArgs.Name @>) ""
