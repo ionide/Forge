@@ -11,7 +11,7 @@ let Copy folder =
     Directory.GetFiles location
     |> Seq.iter (fun x ->
         let fn = Path.GetFileName x
-        File.Copy (x, folder </> ".paket" </> fn) )
+        File.Copy (x, folder </> ".paket" </> fn, true) )
 
 let Update () =
     run (paketLocation </> "paket.bootstrapper.exe") "" paketLocation
