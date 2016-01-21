@@ -1,3 +1,6 @@
+### 0.3.1 - 2016-01-21
+* Fix NullReferenceException when Ctr-d is entered in interactive mode
+
 ### 0.3.0 - 2016-01-19
 * Add file ordering command
 * Change syntax of new command
