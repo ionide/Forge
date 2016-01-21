@@ -7,7 +7,9 @@ open Commands
 let rec consoleLoop f =
     Console.Write("> ")
     let input = Console.ReadLine()
-    let result = input.Split(' ')  |> f
+    let result = match input with
+                 | null -> 1
+                 | _ -> input.Split(' ')  |> f
     if result > 0
     then result
     else consoleLoop f
