@@ -67,6 +67,8 @@ let New projectName projectDir templateName paket fake =
         Paket.Copy directory
         Paket.Run ["convert-from-nuget";"-f"]
     if fake then
+        if paket then
+            Paket.Run ["add"; "nuget"; "FAKE"]
         Fake.Copy directory
 
     printfn "Done!"
