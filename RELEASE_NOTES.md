@@ -1,3 +1,6 @@
+### 0.3.3 - 2016-01-27
+* Ensure UTF-8 encoding on fsproj files
+
 ### 0.3.2 - 2016-01-22
 * FAKE installed by Paket unless --no-fake flag is sepcified
 
