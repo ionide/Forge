@@ -67,11 +67,11 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     let orderFiles fileName1 fileName2 xPath =
         let document = XMLDoc documentContent // we create a copy and work immutable
         match getNode document xPath fileName1 with
-        | Some n1 -> 
+        | Some n1 ->
             let updated = removeFile fileName1 xPath
             let updatedXml = XMLDoc updated.Content
             match getNode updatedXml xPath fileName2 with
-            | Some n2 -> 
+            | Some n2 ->
                 let node = newElement updatedXml n1.Name
                 node.SetAttribute("Include", fileName1)
                 n2.ParentNode.InsertBefore(node, n2) |> ignore
@@ -85,12 +85,21 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
 
     /// Saves the project file
-    member x.Save(?fileName) = document.Save(defaultArg fileName projectFileName)
+    member x.Save(?fileName) =
+        use writer = new System.IO.StreamWriter(defaultArg fileName projectFileName,
+                                                false,
+                                                new System.Text.UTF8Encoding(false))
+        document.Save(writer)
 
     member x.Content =
-        use stringWriter = new System.IO.StringWriter()
-        document.Save(stringWriter)
-        stringWriter.ToString()
+        let utf8 = new System.Text.UTF8Encoding(false)
+        let settings = new XmlWriterSettings()
+        settings.Encoding <- utf8
+        settings.Indent <- true
+        use ms = new System.IO.MemoryStream()
+        use writer = System.Xml.XmlWriter.Create(ms, settings)
+        document.Save(writer)
+        ms.GetBuffer() |> utf8.GetString
 
 
 
@@ -133,7 +142,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     /// Places the first file above the second file
     member x.OrderFiles file1 file2 =
         orderFiles file1 file2 projectFilesXPath
-        
+
 
     /// The project file name
     member x.ProjectFileName = projectFileName

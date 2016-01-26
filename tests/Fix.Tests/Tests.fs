@@ -32,7 +32,7 @@ let ``Add file works even if ItemGroup not found - file content`` () =
     let newProject = projectFile.AddFile "file.fs" "Compile"
     let projectContent = newProject.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -64,7 +64,7 @@ let ``Remove file from Project - content``() =
     let changedProjectFile = projectFile.RemoveFile "FixProject.fs"
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -104,7 +104,7 @@ let ``Reorder files in project - content``() =
     let changedProjectFile = projectFile.OrderFiles  "a_file.fs" "FixProject.fs"
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
