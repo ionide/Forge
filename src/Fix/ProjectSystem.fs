@@ -92,9 +92,14 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         document.Save(writer)
 
     member x.Content =
-        use stringWriter = new System.IO.StringWriter()
-        document.Save(stringWriter)
-        stringWriter.ToString()
+        let utf8 = new System.Text.UTF8Encoding(false)
+        let settings = new XmlWriterSettings()
+        settings.Encoding <- utf8
+        settings.Indent <- true
+        use ms = new System.IO.MemoryStream()
+        use writer = System.Xml.XmlWriter.Create(ms, settings)
+        document.Save(writer)
+        ms.GetBuffer() |> utf8.GetString
 
 
 

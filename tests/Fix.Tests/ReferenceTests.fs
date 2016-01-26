@@ -39,7 +39,7 @@ let ``Add reference to project - only references - content``() =
 
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -63,7 +63,7 @@ let ``Add reference to project - content``() =
 
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -97,7 +97,7 @@ let ``Remove reference from project - only references - content``() =
 
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -119,7 +119,7 @@ let ``Remove reference from project - content``() =
 
     let projectContent = changedProjectFile.Content
 
-    let expectedContent = """<?xml version="1.0" encoding="utf-16"?>
+    let expectedContent = """<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Reference Include="mscorlib" />
