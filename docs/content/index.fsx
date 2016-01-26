@@ -1,63 +1,38 @@
 (*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
+// This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#I "../../bin"
+#I "../../temp/bin"
 
 (**
-Fix
+What is Fix?
 ======================
 
-Documentation
+Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
 
-<div class="row">
-  <div class="span1"></div>
-  <div class="span6">
-    <div class="well well-small" id="nuget">
-      The Fix library can be <a href="https://nuget.org/packages/Fix">installed from NuGet</a>:
-      <pre>PM> Install-Package Fix</pre>
-    </div>
-  </div>
-  <div class="span1"></div>
-</div>
+It can be run both as single run executable when command and parameters are provided or when called without any arguments Fix automatically goes into an interactive mode.
 
-Example
--------
+If you want to learn how to use Fix then read the ["Getting started" tutorial](tutorial.html), check [command list](commands.html) or look at documentation of particular command
 
-This example demonstrates using a function defined in this sample library.
+[![Join the chat at https://gitter.im/fsprojects/Fix](https://badges.gitter.im/fsprojects/Fix.svg)](https://gitter.im/fsprojects/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-*)
-#r "Fix.dll"
-open Fix
-
-printfn "hello = %i" <| Library.hello 0
-
-(**
-Some more info
-
-Samples & documentation
+Installation
 -----------------------
 
-The library comes with comprehensible documentation. 
-It can include tutorials automatically generated from `*.fsx` files in [the content folder][content]. 
-The API reference is automatically generated from Markdown comments in the library implementation.
+1. Download latest version of Fix from [GitHub](https://github.com/fsprojects/Fix/releases)
+1. Extract zip file
+1. Add Fix location to PATH
 
- * [Tutorial](tutorial.html) contains a further explanation of this sample library.
-
- * [API Reference](reference/index.html) contains automatically generated documentation for all types, modules
-   and functions in the library. This includes additional brief samples on using most of the
-   functions.
- 
 Contributing and copyright
 --------------------------
 
-The project is hosted on [GitHub][gh] where you can [report issues][issues], fork 
-the project and submit pull requests. If you're adding a new public API, please also 
+The project is hosted on [GitHub][gh] where you can [report issues][issues], fork
+the project and submit pull requests. If you're adding a new public API, please also
 consider adding [samples][content] that can be turned into a documentation. You might
 also want to read the [library design notes][readme] to understand how it works.
 
-The library is available under Public Domain license, which allows modification and 
-redistribution for both commercial and non-commercial purposes. For more information see the 
-[License file][license] in the GitHub repository. 
+The library is available under Public Domain license, which allows modification and
+redistribution for both commercial and non-commercial purposes. For more information see the
+[License file][license] in the GitHub repository.
 
   [content]: https://github.com/fsprojects/Fix/tree/master/docs/content
   [gh]: https://github.com/fsprojects/Fix

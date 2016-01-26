@@ -58,19 +58,9 @@ Target "GenerateHelpDebug" (fun _ ->
     generateHelp' true true
 )
 
-Target "KeepRunning" (fun _ ->
-    use watcher = !! "docs/content/**/*.*" |> WatchChanges (fun changes ->
-         generateHelp false
-    )
 
-    traceImportant "Waiting for help edits. Press any key to stop."
 
-    System.Console.ReadKey() |> ignore
 
-    watcher.Dispose()
-)
-
-Target "GenerateDocs" DoNothing
 
 let createIndexFsx lang =
     let content = """(*** hide ***)

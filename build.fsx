@@ -176,10 +176,20 @@ Target "Release" (fun _ ->
     |> Async.RunSynchronously
 )
 
+Target "KeepRunning" (fun _ ->
+    use watcher = !! "docs/content/**/*.*" |> WatchChanges (fun changes ->
+         Build_docs.generateHelp false
+    )
+    System.Threading.Thread.Sleep -1
+
+    watcher.Dispose()
+)
+
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 
 Target "Default" DoNothing
+Target "GenerateDocs" DoNothing
 
 "Clean"
   ==> "AssemblyInfo"
@@ -195,6 +205,7 @@ Target "Default" DoNothing
 
 "Default"
   ==> "ZipRelease"
+  ==> "ReleaseDocs"
   ==> "Release"
 
 RunTargetOrDefault "Default"
