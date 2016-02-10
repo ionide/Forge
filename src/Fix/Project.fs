@@ -48,27 +48,32 @@ let execOnProject fn =
 let New projectName projectDir templateName paket fake =
     if not ^ Directory.Exists templatesLocation then Templates.Refresh ()
 
+    let templates = Templates.GetList()
+
     let projectName' = if String.IsNullOrWhiteSpace projectName then prompt "Enter project name:" else projectName
     let projectDir' = if String.IsNullOrWhiteSpace projectDir then prompt "Enter project directory (relative to working directory):" else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then Templates.GetList() |> promptSelect "Choose a template:" else templateName
+    let templateName' = if String.IsNullOrWhiteSpace templateName then templates |> promptSelect "Choose a template:" else templateName
     let projectFolder = directory </> projectDir' </> projectName'
     let templateDir = templatesLocation </> templateName'
 
-    printfn "Generating project..."
+    if templates |> Seq.contains templateName' then
+        printfn "Generating project..."
 
-    Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
-    applicationNameToProjectName projectFolder projectName'
+        Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
+        applicationNameToProjectName projectFolder projectName'
 
-    sed "<%= namespace %>" (fun _ -> projectName') projectFolder
-    sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
-    sed "<%= paketPath %>" (relative directory) projectFolder
-    sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-    if paket then
-        Paket.Copy directory
-        Paket.Run ["convert-from-nuget";"-f"]
-    if fake then
+        sed "<%= namespace %>" (fun _ -> projectName') projectFolder
+        sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
+        sed "<%= paketPath %>" (relative directory) projectFolder
+        sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
         if paket then
-            Paket.Run ["add"; "nuget"; "FAKE"]
-        Fake.Copy directory
+            Paket.Copy directory
+            Paket.Run ["convert-from-nuget";"-f"]
+        if fake then
+            if paket then
+                Paket.Run ["add"; "nuget"; "FAKE"]
+            Fake.Copy directory
 
-    printfn "Done!"
+        printfn "Done!"
+    else
+        printfn "Wrong template name"
