@@ -1,3 +1,6 @@
+### 0.3.4 - 2016-02-10
+* Handle wrong template name
+
 ### 0.3.3 - 2016-01-27
 * Ensure UTF-8 encoding on fsproj files
 
