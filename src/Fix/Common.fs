@@ -6,7 +6,7 @@ open Fake
 let (^) = (<|)
 
 let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
-let templatesLocation = exeLocation </> "templates"
+let templatesLocation = exeLocation </> ".." </> "templates"
 let directory = System.Environment.CurrentDirectory
 let packagesDirectory = directory </> "packages"
 
