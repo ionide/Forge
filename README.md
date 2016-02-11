@@ -95,6 +95,12 @@ You can download one of the releases found at https://github.com/fsprojects/Fix/
 
 Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
 
+#### Via Homebrew
+
+You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
+
+  brew tap samritchie/fix && brew install fix
+
 ## Maintainer(s)
 
 - [@ReidNEvans](https://twitter.com/reidNEvans)
