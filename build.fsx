@@ -53,6 +53,7 @@ let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 // Read additional information from the release notes document
 let release = LoadReleaseNotes "RELEASE_NOTES.md"
 
+let tempDir = "temp"
 let buildDir = "temp/bin"
 
 // Helper active pattern for project types
@@ -110,6 +111,10 @@ Target "Build" (fun _ ->
     |> ignore
 )
 
+Target "CopyRunners" (fun _ ->
+    CopyFiles "temp" ["runners/fix.cmd"; "runners/fix.sh"]
+)
+
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
 
@@ -138,6 +143,8 @@ Target "ReleaseDocs" (fun _ ->
 Target "ZipRelease" (fun _ ->
     Zip "temp" ("temp" </> "fix.zip")
         (!! (buildDir </> "*.dll")
+         ++ (tempDir </> "fix.sh")
+         ++ (tempDir </> "fix.cmd")
          ++ (buildDir </> "*.exe")
          ++ (buildDir </> "*.config")
          -- (buildDir </> "*templates*")
@@ -194,6 +201,7 @@ Target "GenerateDocs" DoNothing
 "Clean"
   ==> "AssemblyInfo"
   ==> "Build"
+  ==> "CopyRunners"
   ==> "RunTests"
   ==> "Default"
 
