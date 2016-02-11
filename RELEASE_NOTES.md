@@ -1,3 +1,6 @@
+### 0.4.0 - 2016-02-10
+* Change applications structure
+
 ### 0.3.4 - 2016-02-10
 * Handle wrong template name
 
