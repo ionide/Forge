@@ -18,6 +18,14 @@ If you want to learn how to use Fix then read the ["Getting started" tutorial](t
 Installation
 -----------------------
 
+#### Via Homebrew
+
+You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
+
+    brew tap samritchie/fix && brew install fix
+
+#### Other
+
 1. Download latest version of Fix from [GitHub](https://github.com/fsprojects/Fix/releases)
 1. Extract zip file
 1. Add Fix location to PATH

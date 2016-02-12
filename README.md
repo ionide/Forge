@@ -91,15 +91,17 @@ Removes a file from the current folder and project.  If more than one project fi
 
 ### Installing
 
-You can download one of the releases found at https://github.com/fsprojects/Fix/releases
-
-Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
-
 #### Via Homebrew
 
 You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
 
-  brew tap samritchie/fix && brew install fix
+    brew tap samritchie/fix && brew install fix
+
+#### Other
+
+You can download one of the releases found at https://github.com/fsprojects/Fix/releases
+
+Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
 
 ## Maintainer(s)
 
