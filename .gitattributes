@@ -23,3 +23,6 @@
 *.PDF diff=astextplain
 *.rtf diff=astextplain
 *.RTF diff=astextplain
+
+# Ensure that build.sh keeps LF instead of CRLF
+build.sh eol=lf
