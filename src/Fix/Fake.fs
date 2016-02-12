@@ -12,6 +12,11 @@ let Copy folder =
         let fn = (folder </> Path.GetFileName x)
         if not ^ File.Exists fn then File.Copy (x, fn) )
 
+let getFAKE () =
+    match Directory.EnumerateFiles(directory, "FAKE.exe", SearchOption.AllDirectories) |> Seq.tryHead with
+    | Some f -> f
+    | None -> fakeToolLocation </> "FAKE.exe"
+
 let Update () =
     use wc = new WebClient()
     let zip = fakeLocation </> "fake.zip"
@@ -21,7 +26,7 @@ let Update () =
     Fake.ZipHelper.Unzip fakeLocation zip
 
 let Run args =
-    let f = fakeToolLocation </> "FAKE.exe"
+    let f = getFAKE ()
     if not ^ File.Exists f then Update ()
     let args' = args |> String.concat " "
     run f args' directory
