@@ -91,7 +91,13 @@ Removes a file from the current folder and project.  If more than one project fi
 
 ### Installing
 
-#### Via Homebrew
+#### Via Scoop.sh (Windows)
+
+You can install Fix via the [Scoop](http://scoop.sh/) package manager on Windows
+
+    scoop install fix
+
+#### Via Homebrew (OSX)
 
 You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
 

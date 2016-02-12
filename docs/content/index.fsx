@@ -18,7 +18,13 @@ If you want to learn how to use Fix then read the ["Getting started" tutorial](t
 Installation
 -----------------------
 
-#### Via Homebrew
+#### Via Scoop.sh (Windows)
+
+You can install Fix via the [Scoop](http://scoop.sh/) package manager on Windows
+
+    scoop install fix
+
+#### Via Homebrew (OSX)
 
 You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
 
