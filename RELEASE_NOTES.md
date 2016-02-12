@@ -1,3 +1,6 @@
+### 0.5.0 - 2016-02-10
+* Run local Paket or FAKE if they are present
+
 ### 0.4.0 - 2016-02-10
 * Change applications structure
 
