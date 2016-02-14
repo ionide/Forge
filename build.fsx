@@ -125,7 +125,7 @@ Target "RunTests" (fun _ ->
         { p with
             ShadowCopy = true
             TimeOut = TimeSpan.FromMinutes 20.
-            OutputDir = "bin/TestResults.xml" })
+            OutputDir = "TestResults.xml" })
 )
 // --------------------------------------------------------------------------------------
 // Release Scripts
