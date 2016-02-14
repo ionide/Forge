@@ -1,13 +1,12 @@
-﻿module Templates
-open Common
-open Fake
-open Fake.Git
+﻿module Forge.Templates
+
+open Forge.Git
 open System.IO
 
 let Refresh () =
     printfn "Getting templates..."
-    templatesLocation|> FileHelper.CleanDir
-    Repository.cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
+    cleanDir templatesLocation
+    cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
 let GetList () =
     Directory.GetDirectories(templatesLocation)

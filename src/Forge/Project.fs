@@ -1,6 +1,5 @@
-﻿module Project
-open Fake
-open Common
+﻿module Forge.Project
+
 open System
 open System.IO
 open Forge.ProjectSystem
@@ -28,7 +27,7 @@ let relative (path1 : string) (path2 : string) =
     )
 
 let getProjects() =
-    DirectoryInfo(directory) |> Fake.FileSystemHelper.filesInDirMatching "*.fsproj"
+    DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
 
 let alter (f : ProjectFile -> ProjectFile) project =
     let fsProj = ProjectFile.FromFile(project)
@@ -58,8 +57,7 @@ let New projectName projectDir templateName paket fake =
 
     if templates |> Seq.contains templateName' then
         printfn "Generating project..."
-
-        Fake.FileHelper.CopyDir projectFolder templateDir (fun _ -> true)
+        copyDir projectFolder templateDir (fun _ -> true)
         applicationNameToProjectName projectFolder projectName'
 
         sed "<%= namespace %>" (fun _ -> projectName') projectFolder

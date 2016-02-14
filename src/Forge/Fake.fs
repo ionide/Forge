@@ -1,8 +1,7 @@
-﻿module Fake
-open Fake
+﻿module Forge.Fake
+open Forge.ZipHelper
 open System.IO
 open System.Net
-open Common
 
 let location = templatesLocation </> ".fake"
 
@@ -17,13 +16,14 @@ let getFAKE () =
     | Some f -> f
     | None -> fakeToolLocation </> "FAKE.exe"
 
+
 let Update () =
     use wc = new WebClient()
     let zip = fakeLocation </> "fake.zip"
     System.IO.Directory.CreateDirectory(fakeLocation) |> ignore
     printfn "Downloading FAKE..."
     wc.DownloadFile("https://www.nuget.org/api/v2/package/FAKE", zip )
-    Fake.ZipHelper.Unzip fakeLocation zip
+    Unzip fakeLocation zip
 
 let Run args =
     let f = getFAKE ()

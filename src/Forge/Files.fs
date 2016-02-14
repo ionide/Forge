@@ -1,7 +1,6 @@
-﻿module Files
+﻿module Forge.Files
+
 open System.IO
-open Fake
-open Common
 open Forge.ProjectSystem
 
 let nodeType fileName =
@@ -16,11 +15,11 @@ let Order file1 file2 =
 let Add fileName =
     let node = nodeType fileName
     Project.execOnProject (fun x -> x.AddFile fileName node)
-    directory </> fileName |> Fake.FileHelper.CreateFile
+    directory </> fileName |> createFile
 
 let Remove fileName =
     Project.execOnProject (fun x -> x.RemoveFile fileName)
-    directory </> fileName |> Fake.FileHelper.DeleteFile
+    directory </> fileName |> deleteFile
 
 let List () =
     let listFilesOfProject (project:ProjectFile) =

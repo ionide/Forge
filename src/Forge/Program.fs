@@ -1,8 +1,8 @@
-module ForgeLib
+module Forge.App
+
 open System
 open Argu
-open Common
-open Commands
+open Forge.Commands
 
 let rec consoleLoop f =
     Console.Write("> ")
@@ -41,11 +41,11 @@ let handleInput (parser : ArgumentParser<_>) args =
     | _, [] ->
         System.Console.WriteLine "Command was:"
         System.Console.WriteLine ("  " + String.Join(" ", args))
-        parser.Usage("Available commands:") |> System.Console.WriteLine
+        parser.Usage "Available commands:" |> System.Console.WriteLine
         0
     | _ ->
         System.Console.WriteLine "Expected only one command"
-        parser.Usage("Available commands:") |> System.Console.WriteLine
+        parser.Usage "Available commands:" |> System.Console.WriteLine
         0
 
 [<EntryPoint>]
@@ -53,6 +53,6 @@ let main argv =
     let parser = ArgumentParser.Create<Command>()
     if argv |> Array.isEmpty
     then
-        parser.Usage("Available commands:") |> System.Console.WriteLine
+        parser.Usage "Available commands:" |> System.Console.WriteLine
         consoleLoop ^ handleInput parser
     else handleInput parser argv

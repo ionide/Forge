@@ -1,4 +1,4 @@
-﻿module References
+﻿module Forge.References
 open Forge.ProjectSystem
 
 let Add reference =

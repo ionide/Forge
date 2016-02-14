@@ -59,10 +59,15 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
+    <Compile Include="Prelude.fs" />
+    <Compile Include="Extensions.fs" />
+    <Compile Include="Globbing.fs" />
+    <Compile Include="FileHelper.fs" />
     <Compile Include="ProjectSystem.fs" />
-    <Compile Include="Common.fs" />
     <Compile Include="Paket.fs" />
+    <Compile Include="ZipHelper.fs" />
     <Compile Include="Fake.fs" />
+    <Compile Include="Git.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
@@ -77,12 +82,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FakeLib">
-      <HintPath>..\..\packages\FAKE\tools\FakeLib.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
@@ -93,6 +96,17 @@
       <ItemGroup>
         <Reference Include="Argu">
           <HintPath>..\..\packages\Argu\lib\net40\Argu.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="ICSharpCode.SharpZipLib">
+          <HintPath>..\..\packages\SharpZipLib\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
