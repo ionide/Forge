@@ -2,7 +2,6 @@
 module Forge.Globbing
 
 open System
-open System.Collections.Generic
 open System.IO
 open System.Text.RegularExpressions
 
@@ -34,14 +33,12 @@ let rec private buildPaths acc (input : SearchOption list) =
     | Directory name :: t -> 
         let subDirs = 
             acc
-            |> List.map (checkSubDirs false name)
-            |> List.concat
+            |> List.collect (checkSubDirs false name)
         buildPaths subDirs t
     | Drive name :: t -> 
         let subDirs = 
             acc
-            |> List.map (checkSubDirs true name)
-            |> List.concat
+            |> List.collect (checkSubDirs true name)
         buildPaths subDirs t
     | Recursive :: [] -> 
         let dirs = 
@@ -76,8 +73,7 @@ let internal getRoot (baseDirectory : string) (pattern : string) =
     let patternParts = normPattern.Split ([| '/'; '\\' |], StringSplitOptions.RemoveEmptyEntries)
     let patternPathParts = 
         patternParts
-        |> Seq.takeWhile (fun p -> not ^ p.Contains "*")
-        |> Seq.toArray
+        |> Array.takeWhile (fun p -> not ^ p.Contains "*")
 
     let globRoot = 
         // If we did not find any "*", then drop the last bit (it is a file name, not a pattern)
@@ -101,13 +97,13 @@ let internal search (baseDir : string) (input : string) =
 
     let filePattern = Path.GetFileName input
     input.Split([| '/'; '\\' |], StringSplitOptions.RemoveEmptyEntries)
-    |> Seq.map (function 
+    |> Array.map (function 
         | "**" -> Recursive
         | a when a = filePattern -> FilePattern a
         | a when driveRegex.IsMatch a -> Directory(a + "\\")
         | a -> Directory a
         )
-    |> Seq.toList
+    |> Array.toList
     |> buildPaths [ baseDir ]
     |> List.map normalizeOutputPath
 
@@ -126,16 +122,16 @@ let internal compileGlobToRegex pattern =
                 key, (pattern, replace)
             )
         let xTOyMap = xTOy |> Map.ofList
-        let replacePattern = xTOy |> List.map(fun x -> x |> snd |> fst) |> String.concat("|")
+        let replacePattern = xTOy |> List.map(fun x -> x |> snd |> fst) |> String.concat "|"
         let replaced = Regex(replacePattern).Replace(escapedPattern, fun m -> 
-            let matched = xTOy |> Seq.map(fst) |> Seq.find(fun n -> 
-                m.Groups.Item(n).Success
+            let matched = xTOy |> Seq.map fst |> Seq.find (fun n -> 
+                m.Groups.[n].Success
             )
             (xTOyMap |> Map.tryFind matched).Value |> snd
         )
         "^" + replaced + "$"
 
-    Regex(regexPattern)
+    Regex regexPattern
 
 let globRegexCache = System.Collections.Concurrent.ConcurrentDictionary<string, Regex>()
 
@@ -151,5 +147,5 @@ let isMatch pattern path : bool =
             globRegexCache.TryAdd(pattern, compiled) |> ignore
             compiled
 
-    regex.IsMatch(path)
+    regex.IsMatch path
 

@@ -8,7 +8,7 @@ open Forge.Tests.Common
 
 [<Test>]
 let ``ProjectFiles gets all project files - file count`` () =
-    let projectFile = new ProjectFile("foo.fsproj", projectWithFiles)
+    let projectFile = ProjectFile("foo.fsproj", projectWithFiles)
     let files = projectFile.ProjectFiles |> Seq.length
     Assert.AreEqual(3, files)
 

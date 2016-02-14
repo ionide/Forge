@@ -1,4 +1,4 @@
-module Forge.Commands
+﻿module Forge.Commands
 
 open System
 open System.Text
@@ -153,5 +153,7 @@ let update (results : ParseResults<_>) =
     | _, true -> Fake.Update ()
     | false, false -> ()
     0
+
+
 
 

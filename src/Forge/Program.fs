@@ -1,4 +1,4 @@
-module Forge.App
+﻿module Forge.App
 
 open System
 open Argu

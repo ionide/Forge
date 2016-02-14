@@ -75,10 +75,11 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Forge\Forge.fsproj">
-      <Name>Forge</Name>
+    <ProjectReference Include="..\..\src\Forge.Core\Forge.Core.fsproj">
+      <Name>Forge.Core</Name>
       <Project>{d28ce980-2040-4b62-aca6-f07eb6b31920}</Project>
       <Private>True</Private>
     </ProjectReference>
