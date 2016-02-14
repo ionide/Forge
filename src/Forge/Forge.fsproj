@@ -5,37 +5,34 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>fbaf8c7b-4eda-493a-a7fe-4db25d15736f</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Fix.Tests</RootNamespace>
-    <AssemblyName>Fix.Tests</AssemblyName>
+    <ProjectGuid>d28ce980-2040-4b62-aca6-f07eb6b31920</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Fix</RootNamespace>
+    <AssemblyName>Forge</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
-    <Name>Fix.Tests</Name>
+    <Name>Fix</Name>
     <TargetFrameworkProfile />
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>.\bin\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <StartAction>Project</StartAction>
-    <StartProgram>
-    </StartProgram>
-    <StartArguments>
-    </StartArguments>
+    <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>.\bin\Release</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
+    <DocumentationFile>.\bin\Release\Fix.xml</DocumentationFile>
+    <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -52,8 +49,7 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
-  <Import Project="$(FSharpTargetsPath)" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -63,45 +59,40 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
+    <Compile Include="ProjectSystem.fs" />
+    <Compile Include="Common.fs" />
+    <Compile Include="Paket.fs" />
+    <Compile Include="Fake.fs" />
+    <Compile Include="Templates.fs" />
+    <Compile Include="Project.fs" />
+    <Compile Include="Files.fs" />
+    <Compile Include="References.fs" />
+    <Compile Include="Commands.fs" />
+    <Compile Include="Program.fs" />
     <None Include="paket.references" />
+    <None Include="paket.template" />
     <Content Include="app.config" />
-    <Compile Include="common.fs" />
-    <Compile Include="Tests.fs" />
-    <Compile Include="ReferenceTests.fs" />
+    <Content Include="Tools\Paket\paket.bootstrapper.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FakeLib">
+      <HintPath>..\..\packages\FAKE\tools\FakeLib.dll</HintPath>
+    </Reference>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\..\src\Fix\Fix.fsproj">
-      <Name>Fix</Name>
-      <Project>{d28ce980-2040-4b62-aca6-f07eb6b31920}</Project>
-      <Private>True</Private>
-    </ProjectReference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
       <ItemGroup>
-        <Reference Include="FsUnit.NUnit">
-          <HintPath>..\..\packages\FsUnit\lib\net45\FsUnit.NUnit.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="NHamcrest">
-          <HintPath>..\..\packages\FsUnit\lib\net45\NHamcrest.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
-      <ItemGroup>
-        <Reference Include="nunit.framework">
-          <HintPath>..\..\packages\NUnit\lib\nunit.framework.dll</HintPath>
+        <Reference Include="Argu">
+          <HintPath>..\..\packages\Argu\lib\net40\Argu.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

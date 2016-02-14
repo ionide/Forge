@@ -5,16 +5,30 @@ open System.Text
 open Argu
 open Common
 
+/// Custom Command Line Argument
+type CLIArg = CustomCommandLineAttribute
+/// Alternative Command Line Argument
+type CLIAlt = AltCommandLineAttribute
+
 type Command =
-    | [<First>][<CustomCommandLine("new")>] New
-    | [<First>][<CustomCommandLine("file")>] File
-    | [<First>][<CustomCommandLine("reference")>] Reference
-    | [<First>][<CustomCommandLine("update")>] Update
-    | [<First>][<CustomCommandLine("paket")>] Paket
-    | [<First>][<CustomCommandLine("fake")>] Fake
-    | [<First>][<CustomCommandLine("refresh")>] Refresh
-    | [<First>][<CustomCommandLine("help")>] Help
-    | [<First>][<CustomCommandLine("exit")>] Exit
+    | [<First>][<CLIArg "new">][<CLIAlt "-n">] 
+        New
+    | [<First>][<CLIArg "file">][<CLIAlt "-f">] 
+        File
+    | [<First>][<CLIArg "reference">][<CLIAlt "-ref">] 
+        Reference
+    | [<First>][<CLIArg "update">] 
+        Update
+    | [<First>][<CLIArg "paket">] 
+        Paket
+    | [<First>][<CLIArg "fake">] 
+        Fake
+    | [<First>][<CLIArg "refresh">] 
+        Refresh
+    | [<First>][<CLIArg "help">][<CLIAlt("-h","-?")>] 
+        Help
+    | [<First>][<CLIArg "exit">][<CLIAlt("quit","-q")>] 
+        Exit
 with
     interface IArgParserTemplate with
         member this.Usage =
@@ -45,16 +59,16 @@ with
         member this.Usage =
             match this with
             | Name _ -> "Project name"
-            | Dir _ -> "Project directory, relative to Fix working directory"
+            | Dir _ -> "Project directory, relative to Forge working directory"
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"
 
 type FileArgs =
-    |[<CustomCommandLine("add")>] Add of string
-    |[<CustomCommandLine("remove")>] Remove of string
-    |[<CustomCommandLine("list")>] List
-    |[<CustomCommandLine("order")>] Order of string * string
+    |[<CLIArg "add">] Add of string
+    |[<CLIArg "remove">] Remove of string
+    |[<CLIArg "list">] List
+    |[<CLIArg "order">] Order of string * string
 with
     interface IArgParserTemplate with
         member this.Usage =
@@ -65,9 +79,9 @@ with
             | Order _ -> "Moves file1 immediately before file2 in the project"
 
 type ReferenceArgs =
-    |[<CustomCommandLine("add")>] Add of string
-    |[<CustomCommandLine("remove")>] Remove of string
-    |[<CustomCommandLine("list")>] List
+    |[<CLIArg "add">] Add of string
+    |[<CLIArg "remove">] Remove of string
+    |[<CLIArg "list">] List
 with
     interface IArgParserTemplate with
         member this.Usage =
@@ -77,8 +91,8 @@ with
             | List  -> " List all references"
 
 type UpdateArgs =
-    |[<CustomCommandLine("paket")>] Paket
-    |[<CustomCommandLine("fake")>] Fake
+    |[<CLIArg "paket">] Paket
+    |[<CLIArg "fake">] Fake
 with
     interface IArgParserTemplate with
         member this.Usage =

@@ -1,0 +1,1 @@
+bin\forge.exe %*

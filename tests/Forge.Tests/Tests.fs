@@ -1,10 +1,10 @@
-module Fix.Tests.Files
+module Forge.Tests.Files
 
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 open NUnit.Framework
 open FsUnit
 
-open Fix.Tests.Common
+open Forge.Tests.Common
 
 [<Test>]
 let ``ProjectFiles gets all project files - file count`` () =

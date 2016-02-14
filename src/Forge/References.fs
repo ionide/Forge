@@ -1,5 +1,5 @@
 ﻿module References
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 
 let Add reference =
     Project.execOnProject(fun x -> x.AddReference reference)

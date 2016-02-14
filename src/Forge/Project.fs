@@ -3,7 +3,7 @@ open Fake
 open Common
 open System
 open System.IO
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 
 let applicationNameToProjectName folder projectName =
     let applicationName = "ApplicationName"

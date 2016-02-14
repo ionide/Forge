@@ -1,10 +1,10 @@
-module Fix.Tests.References
+module Forge.Tests.References
 
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 open NUnit.Framework
 open FsUnit
 
-open Fix.Tests.Common
+open Forge.Tests.Common
 
 
 [<Test>]

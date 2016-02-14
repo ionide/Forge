@@ -11,21 +11,22 @@ open Fake.AssemblyInfoFile
 open Fake.ReleaseNotesHelper
 open Fake.UserInputHelper
 open Fake.ZipHelper
+open Fake.Testing
 open System
 open System.IO
 open Octokit
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "Fix"
+let project = "Forge"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
-let summary = "Fix is a build tool that provides tasks for creating, compiling, and testing F# projects"
+let summary = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
 // Longer description of the project
 // (used as a description for NuGet package; line breaks are automatically cleaned up)
-let description = "Fix is a build tool that provides tasks for creating, compiling, and testing F# projects"
+let description = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
 // List of author names (for NuGet package)
 let authors = [ "Reid Evans"; "Krzysztof Cieslak" ]
@@ -34,7 +35,7 @@ let authors = [ "Reid Evans"; "Krzysztof Cieslak" ]
 let tags = ""
 
 // File system information
-let solutionFile  = "Fix.sln"
+let solutionFile  = "Forge.sln"
 
 // Pattern specifying assemblies to be tested using NUnit
 let testAssemblies = "temp/bin/*Tests*.dll"
@@ -45,7 +46,7 @@ let gitOwner = "fsprojects"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
-let gitName = "Fix"
+let gitName = "Forge"
 
 // The url for the raw files hosted
 let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
@@ -112,7 +113,7 @@ Target "Build" (fun _ ->
 )
 
 Target "CopyRunners" (fun _ ->
-    CopyFiles "temp" ["runners/fix.cmd"; "runners/fix.sh"]
+    CopyFiles "temp" ["runners/forge.cmd"; "runners/forge.sh"]
 )
 
 // --------------------------------------------------------------------------------------
@@ -120,11 +121,11 @@ Target "CopyRunners" (fun _ ->
 
 Target "RunTests" (fun _ ->
     !! testAssemblies
-    |> NUnit (fun p ->
+    |> NUnit3 (fun p ->
         { p with
-            DisableShadowCopy = true
+            ShadowCopy = true
             TimeOut = TimeSpan.FromMinutes 20.
-            OutputFile = "TestResults.xml" })
+            OutputDir = "bin/TestResults.xml" })
 )
 // --------------------------------------------------------------------------------------
 // Release Scripts
@@ -141,10 +142,10 @@ Target "ReleaseDocs" (fun _ ->
 )
 
 Target "ZipRelease" (fun _ ->
-    Zip "temp" ("temp" </> "fix.zip")
+    Zip "temp" ("temp" </> "forge.zip")
         (!! (buildDir </> "*.dll")
-         ++ (tempDir </> "fix.sh")
-         ++ (tempDir </> "fix.cmd")
+         ++ (tempDir </> "forge.sh")
+         ++ (tempDir </> "forge.cmd")
          ++ (buildDir </> "*.exe")
          ++ (buildDir </> "*.config")
          -- (buildDir </> "*templates*")
@@ -178,7 +179,7 @@ Target "Release" (fun _ ->
     // release on github
     createClient user pw
     |> createDraft gitOwner gitName release.NugetVersion (release.SemVer.PreRelease <> None) release.Notes
-    |> uploadFile "temp/fix.zip"
+    |> uploadFile "temp/forge.zip"
     |> releaseDraft
     |> Async.RunSynchronously
 )
