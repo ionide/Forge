@@ -1,3 +1,6 @@
+### 0.6.0 - 2016-02-14
+* Rename to Forge
+
 ### 0.5.0 - 2016-02-10
 * Run local Paket or FAKE if they are present
 
