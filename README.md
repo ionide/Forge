@@ -1,7 +1,7 @@
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/issue?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Issue Stats](http://issuestats.com/github/reidev275/Fix/badge/pr?style=flat-square)](http://issuestats.com/github/reidev275/Fix)
 [![Build status](https://ci.appveyor.com/api/projects/status/abkhgg8skclwjngk?svg=true)](https://ci.appveyor.com/project/reidev275/Fix-fnuet)
-[![Build Status](https://travis-ci.org/fsprojects/Fix.svg?branch=master)](https://travis-ci.org/fsprojects/Forge)
+[![Build Status](https://travis-ci.org/fsprojects/Forge.svg?branch=master)](https://travis-ci.org/fsprojects/Forge)
 
 [![Join the chat at https://gitter.im/fsprojects/Forge](https://badges.gitter.im/fsprojects/Forge.svg)](https://gitter.im/fsprojects/Forge?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
