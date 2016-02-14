@@ -31,7 +31,7 @@
     <OutputPath>.\bin\Release</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>.\bin\Release\Fix.xml</DocumentationFile>
+    <DocumentationFile>.\bin\Release\Forge.xml</DocumentationFile>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <PropertyGroup>

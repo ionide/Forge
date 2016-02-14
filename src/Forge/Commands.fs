@@ -25,7 +25,7 @@ type Command =
         Fake
     | [<First>][<CLIArg "refresh">] 
         Refresh
-    | [<First>][<CLIArg "help">][<CLIAlt("-h","-?")>] 
+    | [<First>][<CLIArg "help">] 
         Help
     | [<First>][<CLIArg "exit">][<CLIAlt("quit","-q")>] 
         Exit
