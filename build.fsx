@@ -120,7 +120,6 @@ Target "CopyRunners" (fun _ ->
 // Run the unit tests using test runner
 
 Target "RunTests" (fun _ ->
-    ensureDirectory "bin"
     !! testAssemblies
     |> NUnit3 (fun p ->
         { p with
