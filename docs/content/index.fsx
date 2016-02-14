@@ -4,37 +4,37 @@
 #I "../../temp/bin"
 
 (**
-What is Fix?
+What is Forge?
 ======================
 
-Fix is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
+Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages.
 
-It can be run both as single run executable when command and parameters are provided or when called without any arguments Fix automatically goes into an interactive mode.
+It can be run both as single run executable when command and parameters are provided or when called without any arguments Forge automatically goes into an interactive mode.
 
-If you want to learn how to use Fix then read the ["Getting started" tutorial](tutorial.html), check [command list](commands.html) or look at documentation of particular command
+If you want to learn how to use Forge then read the ["Getting started" tutorial](tutorial.html), check [command list](commands.html) or look at documentation of particular command
 
-[![Join the chat at https://gitter.im/fsprojects/Fix](https://badges.gitter.im/fsprojects/Fix.svg)](https://gitter.im/fsprojects/Fix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/fsprojects/Forge](https://badges.gitter.im/fsprojects/Forge.svg)](https://gitter.im/fsprojects/Forge?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Installation
 -----------------------
 
 #### Via Scoop.sh (Windows)
 
-You can install Fix via the [Scoop](http://scoop.sh/) package manager on Windows
+You can install Forge via the [Scoop](http://scoop.sh/) package manager on Windows
 
-    scoop install fix
+    scoop install forge
 
 #### Via Homebrew (OSX)
 
-You can install Fix via the [Homebrew](http://brew.sh) package manager on OS X
+You can install Forge via the [Homebrew](http://brew.sh) package manager on OS X
 
-    brew tap samritchie/fix && brew install fix
+    brew tap samritchie/forge && brew install forge
 
 #### Other
 
-1. Download latest version of Fix from [GitHub](https://github.com/fsprojects/Fix/releases)
+1. Download latest version of Forge from [GitHub](https://github.com/fsprojects/Forge/releases)
 1. Extract zip file
-1. Add Fix location to PATH
+1. Add Forge location to PATH
 
 Contributing and copyright
 --------------------------
@@ -48,9 +48,9 @@ The library is available under Public Domain license, which allows modification 
 redistribution for both commercial and non-commercial purposes. For more information see the
 [License file][license] in the GitHub repository.
 
-  [content]: https://github.com/fsprojects/Fix/tree/master/docs/content
-  [gh]: https://github.com/fsprojects/Fix
-  [issues]: https://github.com/fsprojects/Fix/issues
-  [readme]: https://github.com/fsprojects/Fix/blob/master/README.md
-  [license]: https://github.com/fsprojects/Fix/blob/master/LICENSE.txt
+  [content]: https://github.com/fsprojects/Forge/tree/master/docs/content
+  [gh]: https://github.com/fsprojects/Forge
+  [issues]: https://github.com/fsprojects/Forge/issues
+  [readme]: https://github.com/fsprojects/Forge/blob/master/README.md
+  [license]: https://github.com/fsprojects/Forge/blob/master/LICENSE.txt
 *)

@@ -2,7 +2,7 @@
 open System.IO
 open Fake
 open Common
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 
 let nodeType fileName =
     match Path.GetExtension fileName with

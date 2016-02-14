@@ -1,6 +1,6 @@
-module Fix.Tests.Common
+module Forge.Tests.Common
 
-open Fix.ProjectSystem
+open Forge.ProjectSystem
 open NUnit.Framework
 
 

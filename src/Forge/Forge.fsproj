@@ -8,7 +8,7 @@
     <ProjectGuid>d28ce980-2040-4b62-aca6-f07eb6b31920</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Fix</RootNamespace>
-    <AssemblyName>Fix</AssemblyName>
+    <AssemblyName>Forge</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
     <Name>Fix</Name>

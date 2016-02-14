@@ -45,7 +45,7 @@ with
         member this.Usage =
             match this with
             | Name _ -> "Project name"
-            | Dir _ -> "Project directory, relative to Fix working directory"
+            | Dir _ -> "Project directory, relative to Forge working directory"
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"

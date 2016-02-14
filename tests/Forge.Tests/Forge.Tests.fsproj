@@ -8,10 +8,10 @@
     <ProjectGuid>fbaf8c7b-4eda-493a-a7fe-4db25d15736f</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Fix.Tests</RootNamespace>
-    <AssemblyName>Fix.Tests</AssemblyName>
+    <AssemblyName>Forge.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
-    <Name>Fix.Tests</Name>
+    <Name>Forge.Tests</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
   </PropertyGroup>
@@ -75,8 +75,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\..\src\Fix\Fix.fsproj">
-      <Name>Fix</Name>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Forge\Forge.fsproj">
+      <Name>Forge</Name>
       <Project>{d28ce980-2040-4b62-aca6-f07eb6b31920}</Project>
       <Private>True</Private>
     </ProjectReference>

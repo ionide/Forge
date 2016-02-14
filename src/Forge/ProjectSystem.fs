@@ -1,5 +1,5 @@
 ﻿/// Contains project file comparion tools for MSBuild project files.
-module Fix.ProjectSystem
+module Forge.ProjectSystem
 
 open Fake
 open System.Collections.Generic

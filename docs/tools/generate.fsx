@@ -11,17 +11,17 @@
 // (This is the original behaviour of ProjectScaffold prior to multi project support)
 let referenceBinaries = []
 // Web site location for the generated documentation
-let website = "/Fix"
+let website = "/Forge"
 
-let githubLink = "http://github.com/fsprojects/Fix"
+let githubLink = "http://github.com/fsprojects/Forge"
 
 // Specify more information about your project
 let info =
-  [ "project-name", "Fix"
+  [ "project-name", "Forge"
     "project-author", "Reid Evans"
-    "project-summary", "Fix is a build tool that provides tasks for creating, compiling, and testing F# projects"
+    "project-summary", "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
     "project-github", githubLink
-    "project-nuget", "http://nuget.org/packages/Fix" ]
+    "project-nuget", "http://nuget.org/packages/Forge" ]
 
 // --------------------------------------------------------------------------------------
 // For typical project, no changes are needed below

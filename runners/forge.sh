@@ -10,4 +10,4 @@ function run() {
   fi
 }
 
-run bin/fix.exe "$@"
+run bin/forge.exe "$@"
