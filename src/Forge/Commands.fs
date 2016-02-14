@@ -49,9 +49,9 @@ with
         :?> CustomCommandLineAttribute).Name
 
 type NewArgs =
-    | Name of string
-    | Dir of string
-    | Template of string
+    | [<CLIAlt "-a">] Name of string
+    | [<CLIAlt "-d">] Dir of string
+    | [<CLIAlt "-t">] Template of string
     | No_Paket
     | No_Fake
 with
@@ -65,10 +65,10 @@ with
             | No_Fake -> "Don't use FAKE for build"
 
 type FileArgs =
-    |[<CLIArg "add">] Add of string
-    |[<CLIArg "remove">] Remove of string
-    |[<CLIArg "list">] List
-    |[<CLIArg "order">] Order of string * string
+    |[<CLIArg "add">][<CLIAlt "-a">] Add of string
+    |[<CLIArg "remove">][<CLIAlt "-r">] Remove of string
+    |[<CLIArg "list">][<CLIAlt "-l">] List
+    |[<CLIArg "order">][<CLIAlt "-o">] Order of string * string
 with
     interface IArgParserTemplate with
         member this.Usage =
@@ -79,9 +79,9 @@ with
             | Order _ -> "Moves file1 immediately before file2 in the project"
 
 type ReferenceArgs =
-    |[<CLIArg "add">] Add of string
-    |[<CLIArg "remove">] Remove of string
-    |[<CLIArg "list">] List
+    |[<CLIArg "add">][<CLIAlt "-a">] Add of string
+    |[<CLIArg "remove">][<CLIAlt "-r">] Remove of string
+    |[<CLIArg "list">][<CLIAlt "-l">] List
 with
     interface IArgParserTemplate with
         member this.Usage =
