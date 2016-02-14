@@ -14,8 +14,8 @@ open System.Xml
 let (^) = (<|)
 
 /// Combines two path strings using Path.Combine
-let inline combinePaths path1 (path2 : string) = Path.Combine(path1, path2.TrimStart [| '\\'; '/' |])
-let inline combinePathsNoTrim path1 path2 = Path.Combine(path1, path2)
+let inline combinePaths path1 (path2 : string) = Path.Combine (path1, path2.TrimStart [| '\\'; '/' |])
+let inline combinePathsNoTrim path1 path2 = Path.Combine (path1, path2)
 
 /// Combines two path strings using Path.Combine
 let inline (@@) path1 path2 = combinePaths path1 path2
@@ -29,8 +29,41 @@ let inline (</>) path1 path2 = combinePathsNoTrim path1 path2
 /// Retrieves the environment variable with the given name
 let environVar name = Environment.GetEnvironmentVariable name
 
+let environVarOrNone name = 
+    let var = environVar name
+    if String.IsNullOrEmpty var then None
+    else Some var
+
+/// Splits the entries of an environment variable and removes the empty ones.
+let splitEnvironVar name =
+    let var = environVarOrNone name
+    if var = None then [ ]
+    else var.Value.Split([| Path.PathSeparator |]) |> Array.toList
+
+/// The system root environment variable. Typically "C:\Windows"
+let SystemRoot = environVar "SystemRoot"
+
 /// Determines if the current system is an Unix system
 let isUnix = Environment.OSVersion.Platform = PlatformID.Unix
+
+/// Determines if the current system is a MacOs system
+let isMacOS =
+    (Environment.OSVersion.Platform = PlatformID.MacOSX) ||
+      // osascript is the AppleScript interpreter on OS X
+      File.Exists "/usr/bin/osascript"
+
+/// Determines if the current system is a Linux system
+let isLinux = int System.Environment.OSVersion.Platform |> fun p -> p=4 || p=6 || p=128
+
+/// Determines if the current system is a mono system
+/// Todo: Detect mono on windows
+let isMono = isLinux || isUnix || isMacOS
+
+let monoPath =
+    if isMacOS && File.Exists "/Library/Frameworks/Mono.framework/Commands/mono" then
+        "/Library/Frameworks/Mono.framework/Commands/mono"
+    else
+        "mono"
 
 /// The path of the "Program Files" folder - might be x64 on x64 machine
 let ProgramFiles = Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
@@ -48,19 +81,7 @@ let ProgramFilesX86 =
     | _ -> environVar "ProgramFiles"
     |> fun detected -> if detected = null then @"C:\Program Files (x86)\" else detected
 
-/// The system root environment variable. Typically "C:\Windows"
-let SystemRoot = environVar "SystemRoot"
 
-let environVarOrNone name = 
-    let var = environVar name
-    if String.IsNullOrEmpty var then None
-    else Some var
-
-/// Splits the entries of an environment variable and removes the empty ones.
-let splitEnvironVar name =
-    let var = environVarOrNone name
-    if var = None then [ ]
-    else var.Value.Split([| Path.PathSeparator |]) |> Array.toList
 
 /// Detects whether the given path does not contains invalid characters.
 let isValidPath (path:string) =
@@ -68,9 +89,20 @@ let isValidPath (path:string) =
     (true, path.ToCharArray())
     ||> Array.fold (fun isValid pathChar ->
         if not isValid then false else
-        not ^ Array.exists ((=)pathChar) invalidChars
+        not ^ Array.exists ((=) pathChar) invalidChars
     ) 
 
+/// Returns if the build parameter with the given name was set
+let inline hasBuildParam name = environVar name <> null
+
+/// Type alias for System.EnvironmentVariableTarget
+type EnvironTarget = EnvironmentVariableTarget
+
+/// Retrieves all environment variables from the given target
+let environVars target = 
+    [ for e in Environment.GetEnvironmentVariables target -> 
+          let e1 = e :?> Collections.DictionaryEntry
+          e1.Key, e1.Value ]
 
 // String Helpers
 //=====================================================
@@ -121,30 +153,15 @@ let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
 
 let prompt text =
     printfn text
-    Console.Write("> ")
+    Console.Write "> "
     Console.ReadLine()
 
 let promptSelect text list =
     printfn text
     list |> Seq.iter (printfn " - %s")
     printfn ""
-    Console.Write("> ")
+    Console.Write "> "
     Console.ReadLine()
-
-let run cmd args dir =
-    use proc = new Process()
-    let info = proc.StartInfo
-    info.UseShellExecute <- false
-    info.FileName <- cmd
-    if not ^ String.IsNullOrWhiteSpace dir then
-        info.WorkingDirectory <- dir
-    info.Arguments <- args
-    try 
-        proc.WaitForExit()
-    with
-    | exn -> failwithf "Process %s %s failed with -\n%s." proc.StartInfo.FileName proc.StartInfo.Arguments exn.Message
-
-
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text = 
@@ -158,11 +175,11 @@ let XMLDoc text =
 // Environment Config
 //====================================================
 
-let exeLocation = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
+let exeLocation       = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
 let templatesLocation = exeLocation </> ".." </> "templates"
-let directory = System.Environment.CurrentDirectory
+let directory         = System.Environment.CurrentDirectory
 let packagesDirectory = directory </> "packages"
 
-let paketLocation = exeLocation </> "Tools" </> "Paket"
-let fakeLocation = exeLocation </> "Tools" </> "FAKE"
-let fakeToolLocation = fakeLocation </> "tools"
+let paketLocation     = exeLocation </> "Tools" </> "Paket"
+let fakeLocation      = exeLocation </> "Tools" </> "FAKE"
+let fakeToolLocation  = fakeLocation </> "tools"

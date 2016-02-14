@@ -61,13 +61,16 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Extensions.fs" />
+    <Compile Include="TraceListener.fs" />
+    <Compile Include="TraceHelper.fs" />
+    <Compile Include="ProcessHelper.fs" />
     <Compile Include="Globbing.fs" />
     <Compile Include="FileHelper.fs" />
+    <Compile Include="ZipHelper.fs" />
+    <Compile Include="Git.fs" />
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="Paket.fs" />
-    <Compile Include="ZipHelper.fs" />
     <Compile Include="Fake.fs" />
-    <Compile Include="Git.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />

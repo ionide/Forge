@@ -1,13 +1,6 @@
 ﻿module Forge.Git
 
-
 open System
-open System.Diagnostics
-open System.IO
-open System.Threading  
-open System.Text
-open System.Collections.Generic
-open Fake
 
 /// Specifies a global timeout for git.exe - default is *no timeout*
 let mutable gitTimeOut = TimeSpan.MaxValue
@@ -24,14 +17,13 @@ let gitPath =
 
 /// Runs git.exe with the given command in the given repository directory.
 let runGitCommand repositoryDir command = 
-    run gitPath repositoryDir command
-//    let processResult = 
-//        ExecProcessAndReturnMessages (fun info ->  
-//          info.FileName <- gitPath
-//          info.WorkingDirectory <- repositoryDir
-//          info.Arguments <- command) gitTimeOut
-//
-//    processResult.OK,processResult.Messages,toLines processResult.Errors
+    let processResult = 
+        ExecProcessAndReturnMessages (fun info ->  
+          info.FileName <- gitPath
+          info.WorkingDirectory <- repositoryDir
+          info.Arguments <- command) gitTimeOut
+
+    processResult.OK,processResult.Messages,toLines processResult.Errors
 
 /// [omit]
 let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
@@ -39,15 +31,15 @@ let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
 /// Runs the git command and returns the first line of the result.
 let runSimpleGitCommand repositoryDir command =
     try
-        runGitCommand repositoryDir command
-//               
-//        let errorText = toLines msg + Environment.NewLine + errors
-//        if errorText.Contains "fatal: " then
-//            failwith errorText
-//
-//        if msg.Count = 0 then "" else
-//        msg |> Seq.iter (logfn "%s")
-//        msg.[0]
+        let _,msg,errors = runGitCommand repositoryDir command
+               
+        let errorText = toLines msg + Environment.NewLine + errors
+        if errorText.Contains "fatal: " then
+            failwith errorText
+
+        if msg.Count = 0 then "" else
+        msg |> Seq.iter (logfn "%s")
+        msg.[0]
     with 
     | exn -> failwithf "Could not run \"git %s\".\r\nError: %s" command exn.Message
 
@@ -61,5 +53,6 @@ let runSimpleGitCommand repositoryDir command =
 let cloneSingleBranch workingDir repoUrl branchName toPath =
     sprintf "clone -b %s --single-branch %s %s" branchName repoUrl toPath
     |> runSimpleGitCommand workingDir
+    |> trace
 
 

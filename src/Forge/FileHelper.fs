@@ -26,18 +26,18 @@ let inline ensureDirectory dir = DirectoryInfo dir |> ensureDirExists
 let createFile fileName = 
     let file = FileInfo fileName
     if not file.Exists then 
-        printfn "Creating %s" file.FullName
+        logfn "Creating %s" file.FullName
         let newFile = file.Create()
         newFile.Close()
-    else printfn "%s already exists." file.FullName
+    else logfn "%s already exists." file.FullName
 
 /// Deletes a file if it exists.
 let deleteFile fileName = 
     let file = FileInfo fileName
     if file.Exists then 
-        printfn "Deleting %s" file.FullName
+        logfn "Deleting %s" file.FullName
         file.Delete()
-    else printfn "%s does not exist." file.FullName
+    else logfn "%s does not exist." file.FullName
 
 /// Gets the list of valid directories included in the PATH environment variable.
 let pathDirectories =

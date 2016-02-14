@@ -18,26 +18,26 @@ type private SearchOption =
     | FilePattern of string
 
 let private checkSubDirs absolute (dir : string) root = 
-    if dir.Contains "*" then Directory.EnumerateDirectories(root, dir, SearchOption.TopDirectoryOnly) |> Seq.toList
+    if dir.Contains "*" then Directory.EnumerateDirectories (root, dir, SearchOption.TopDirectoryOnly) |> Seq.toList
     else 
-        let path = Path.Combine(root, dir)
+        let path = Path.Combine (root, dir)
         
         let di = 
-            if absolute then new DirectoryInfo(dir)
-            else new DirectoryInfo(path)
+            if absolute then DirectoryInfo dir
+            else DirectoryInfo path
         if di.Exists then [ di.FullName ]
         else []
 
 let rec private buildPaths acc (input : SearchOption list) = 
     match input with
     | [] -> acc
-    | Directory(name) :: t -> 
+    | Directory name :: t -> 
         let subDirs = 
             acc
             |> List.map (checkSubDirs false name)
             |> List.concat
         buildPaths subDirs t
-    | Drive(name) :: t -> 
+    | Drive name :: t -> 
         let subDirs = 
             acc
             |> List.map (checkSubDirs true name)
@@ -53,19 +53,17 @@ let rec private buildPaths acc (input : SearchOption list) =
             Seq.collect (fun dir -> Directory.EnumerateDirectories(dir, "*", SearchOption.AllDirectories)) acc 
             |> Seq.toList
         buildPaths (acc @ dirs) t
-    | FilePattern(pattern) :: t -> 
-         Seq.collect (fun dir -> 
-                            if Directory.Exists(Path.Combine(dir, pattern))
-                            then seq { yield Path.Combine(dir, pattern) }
-                            else 
-                                try
-                                    Directory.EnumerateFiles(dir, pattern)
-                                with
-                                    | :? System.IO.PathTooLongException as ex ->
-                                        Array.toSeq [| |]
-                            ) acc |> Seq.toList
+    | FilePattern pattern ::_ -> 
+        Seq.collect (fun dir -> 
+            if Directory.Exists(Path.Combine(dir, pattern))
+            then seq { yield Path.Combine(dir, pattern) } else 
+            try
+                Directory.EnumerateFiles(dir, pattern)
+            with
+            | :? System.IO.PathTooLongException -> Array.toSeq [| |]
+        ) acc |> Seq.toList
 
-let private driveRegex = Regex(@"^[A-Za-z]:$", RegexOptions.Compiled)
+let private driveRegex = Regex (@"^[A-Za-z]:$", RegexOptions.Compiled)
 
 let inline private normalizeOutputPath (p : string) = 
     p.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar)
@@ -75,10 +73,10 @@ let internal getRoot (baseDirectory : string) (pattern : string) =
     let baseDirectory = normalizePath baseDirectory
     let normPattern = normalizePath pattern
 
-    let patternParts = normPattern.Split([| '/'; '\\' |], StringSplitOptions.RemoveEmptyEntries)
+    let patternParts = normPattern.Split ([| '/'; '\\' |], StringSplitOptions.RemoveEmptyEntries)
     let patternPathParts = 
         patternParts
-        |> Seq.takeWhile(fun p -> not (p.Contains("*")))
+        |> Seq.takeWhile (fun p -> not ^ p.Contains "*")
         |> Seq.toArray
 
     let globRoot = 
@@ -101,13 +99,14 @@ let internal search (baseDir : string) (input : string) =
     let input = normalizePath input
     let input = input.Replace(baseDir, "")
 
-    let filePattern = Path.GetFileName(input)
+    let filePattern = Path.GetFileName input
     input.Split([| '/'; '\\' |], StringSplitOptions.RemoveEmptyEntries)
     |> Seq.map (function 
-           | "**" -> Recursive
-           | a when a = filePattern -> FilePattern(a)
-           | a when driveRegex.IsMatch a -> Directory(a + "\\")
-           | a -> Directory(a))
+        | "**" -> Recursive
+        | a when a = filePattern -> FilePattern a
+        | a when driveRegex.IsMatch a -> Directory(a + "\\")
+        | a -> Directory a
+        )
     |> Seq.toList
     |> buildPaths [ baseDir ]
     |> List.map normalizeOutputPath
@@ -118,11 +117,10 @@ let internal compileGlobToRegex pattern =
     let escapedPattern = (Regex.Escape pattern)
     let regexPattern = 
         let xTOy = 
-            [
-                "dirwildcard", (@"\\\*\\\*(/|\\\\)", @"(.*(/|\\))?")
-                "stardotstar", (@"\\\*\\.\\\*", @"([^\\/]*)")
-                "wildcard", (@"\\\*", @"([^\\/]*)")
-            ] |> List.map(fun (key, reg) ->
+            [   "dirwildcard"   , (@"\\\*\\\*(/|\\\\)"  , @"(.*(/|\\))?")
+                "stardotstar"   , (@"\\\*\\.\\\*"       , @"([^\\/]*)"  )
+                "wildcard"      , (@"\\\*"              , @"([^\\/]*)"  )
+            ] |> List.map (fun (key, reg) ->
                 let pattern, replace = reg
                 let pattern = sprintf "(?<%s>%s)" key pattern
                 key, (pattern, replace)
