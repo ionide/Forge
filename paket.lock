@@ -27,6 +27,7 @@ NUGET
       NUnit.Console (3.0.1)
     Octokit (0.18.0)
       Microsoft.Net.Http
+    SharpZipLib (0.86.0)
     SourceLink.Fake (1.1.0)
 GITHUB
   remote: fsharp/FAKE

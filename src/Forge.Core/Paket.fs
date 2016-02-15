@@ -1,8 +1,6 @@
-﻿module Paket
+﻿module Forge.Paket
 
-open Fake
 open System.IO
-open Common
 
 let location = templatesLocation </> ".paket"
 

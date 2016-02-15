@@ -142,16 +142,16 @@ Target "ReleaseDocs" (fun _ ->
 )
 
 Target "ZipRelease" (fun _ ->
-    Zip "temp" ("temp" </> "forge.zip")
-        (!! (buildDir </> "*.dll")
-         ++ (tempDir </> "forge.sh")
-         ++ (tempDir </> "forge.cmd")
-         ++ (buildDir </> "*.exe")
-         ++ (buildDir </> "*.config")
-         -- (buildDir </> "*templates*")
-         -- (buildDir </> "*Tests*")
-         ++ (buildDir </> "Tools" </> "Paket" </> "paket.bootstrapper.exe")
-        )
+    !! (tempDir  </> "forge.sh")
+    ++ (tempDir  </> "forge.cmd")
+    ++ (buildDir </> "*.exe")
+    ++ (buildDir </> "*.config")
+    -- (buildDir </> "Forge.Core.dll.config")
+    -- (buildDir </> "*templates*")
+    -- (buildDir </> "*Tests*")
+    ++ (buildDir </> "Tools" </> "Paket" </> "paket.bootstrapper.exe")
+    |> Zip "temp" ("temp" </> "forge.zip")
+
 )
 
 Target "Release" (fun _ ->

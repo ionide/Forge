@@ -1,9 +1,9 @@
-module Commands
+﻿module Forge.Commands
 
 open System
 open System.Text
 open Argu
-open Common
+
 
 /// Custom Command Line Argument
 type CLIArg = CustomCommandLineAttribute
@@ -153,5 +153,7 @@ let update (results : ParseResults<_>) =
     | _, true -> Fake.Update ()
     | false, false -> ()
     0
+
+
 
 

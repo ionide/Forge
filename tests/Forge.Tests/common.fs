@@ -1,6 +1,6 @@
 module Forge.Tests.Common
+open Forge
 
-open Forge.ProjectSystem
 open NUnit.Framework
 
 

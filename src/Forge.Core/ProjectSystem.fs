@@ -1,18 +1,18 @@
 ﻿/// Contains project file comparion tools for MSBuild project files.
 module Forge.ProjectSystem
 
-open Fake
+
 open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
-open XMLHelper
+
 
 /// A small abstraction over MSBuild project files.
 type ProjectFile(projectFileName:string,documentContent : string) =
     let document = XMLDoc documentContent
 
     let nsmgr =
-        let nsmgr = new XmlNamespaceManager(document.NameTable)
+        let nsmgr = XmlNamespaceManager document.NameTable
         nsmgr.AddNamespace("default", document.DocumentElement.NamespaceURI)
         nsmgr
 
@@ -82,7 +82,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         | _ -> new ProjectFile(projectFileName,document.OuterXml)
 
     /// Read a Project from a FileName
-    static member FromFile(projectFileName) = new ProjectFile(projectFileName,ReadFileAsString projectFileName)
+    static member FromFile(projectFileName) = new ProjectFile(projectFileName,readFileAsString projectFileName)
 
     /// Saves the project file
     member x.Save(?fileName) =
@@ -194,7 +194,7 @@ let findMissingFiles templateProject projects =
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
 let FixMissingFiles templateProject projects =
     let addMissing (project:ProjectFile) missingFile =
-        tracefn "Adding %s to %s" missingFile project.ProjectFileName
+        printfn "Adding %s to %s" missingFile project.ProjectFileName
         project.AddFile missingFile "Compile"
 
     findMissingFiles templateProject projects
@@ -235,5 +235,4 @@ let CompareProjectsTo templateProject projects =
                     |> toLines)
         |> toLines
 
-    if isNotNullOrEmpty errors then
-        failwith errors
+    if isNotNullOrEmpty errors then failwith errors

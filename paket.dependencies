@@ -8,6 +8,7 @@ nuget FsUnit
 nuget NUnit
 nuget NUnit.Runners
 nuget FAKE
+nuget SharpZipLib
 nuget SourceLink.Fake
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
