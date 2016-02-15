@@ -35,7 +35,7 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Release\Forge.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--standalone</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
@@ -50,7 +50,10 @@
   <ItemGroup>
     <Compile Include="Commands.fs" />
     <Compile Include="Program.fs" />
-    <None Include="App.config" />
+    <None Include="app.config" />
+    <Content Include="Tools\Paket\paket.bootstrapper.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Forge.Core\Forge.Core.fsproj">

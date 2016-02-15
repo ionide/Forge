@@ -77,10 +77,6 @@
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
-    <Content Include="app.config" />
-    <Content Include="Tools\Paket\paket.bootstrapper.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
