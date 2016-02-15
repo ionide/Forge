@@ -9,6 +9,6 @@ let Refresh () =
     cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
 let GetList () =
-    Directory.GetDirectories(templatesLocation)
+    Directory.GetDirectories templatesLocation
     |> Seq.map Path.GetFileName
-    |> Seq.where (fun x -> not ^ x.StartsWith("."))
+    |> Seq.filter (fun x -> not ^ x.StartsWith ".")

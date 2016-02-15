@@ -17,7 +17,7 @@ let directoryExists dir = Directory.Exists dir
 
 /// Ensure that directory chain exists. Create necessary directories if necessary.
 let inline ensureDirExists (dir : DirectoryInfo) = 
-    if not dir.Exists then dir.Create()
+    if not dir.Exists then dir.Create ()
 
 /// Checks if the given directory exists. If not then this functions creates the directory.
 let inline ensureDirectory dir = DirectoryInfo dir |> ensureDirExists
@@ -25,25 +25,23 @@ let inline ensureDirectory dir = DirectoryInfo dir |> ensureDirExists
 /// Creates a file if it does not exist.
 let createFile fileName = 
     let file = FileInfo fileName
-    if not file.Exists then 
-        logfn "Creating %s" file.FullName
-        let newFile = file.Create()
-        newFile.Close()
-    else logfn "%s already exists." file.FullName
+    if file.Exists then logfn "%s already exists." file.FullName else
+    logfn "Creating %s" file.FullName
+    let newFile = file.Create ()
+    newFile.Close ()
 
 /// Deletes a file if it exists.
 let deleteFile fileName = 
     let file = FileInfo fileName
-    if file.Exists then 
-        logfn "Deleting %s" file.FullName
-        file.Delete()
-    else logfn "%s does not exist." file.FullName
+    if not ^ file.Exists then logfn "%s does not exist." file.FullName else
+    logfn "Deleting %s" file.FullName
+    file.Delete ()
 
 /// Gets the list of valid directories included in the PATH environment variable.
 let pathDirectories =
     splitEnvironVar "PATH"
     |> Seq.map (fun value -> value.Trim())
-    |> Seq.filter (fun value -> not <| isNullOrEmpty value)
+    |> Seq.filter isNotNullOrEmpty 
     |> Seq.filter isValidPath
 
 
@@ -51,23 +49,21 @@ let pathDirectories =
 /// [omit]
 let tryFindFile dirs file = 
     let files = 
-        dirs
+        dirs 
         |> Seq.map (fun (path : string) -> 
-               let dir = 
-                   path
-                   |> replace "[ProgramFiles]" ProgramFiles
-                   |> replace "[ProgramFilesX86]" ProgramFilesX86
-                   |> replace "[SystemRoot]" SystemRoot
-                   |> DirectoryInfo
-               if not dir.Exists then ""
-               else 
-                   let fi = dir.FullName @@ file
-                            |> FileInfo
-                   if fi.Exists then fi.FullName
-                   else "")
+            let dir = 
+                path
+                |> replace "[ProgramFiles]" ProgramFiles
+                |> replace "[ProgramFilesX86]" ProgramFilesX86
+                |> replace "[SystemRoot]" SystemRoot
+                |> DirectoryInfo
+            if not dir.Exists then "" else 
+            let fi = dir.FullName @@ file |> FileInfo
+            if fi.Exists then fi.FullName else ""
+        )
         |> Seq.filter ((<>) "")
         |> Seq.cache
-    if not (Seq.isEmpty files) then Some(Seq.head files)
+    if not ^ Seq.isEmpty files then Some ^ Seq.head files
     else None
 
 /// Searches the given directories for the given file, failing if not found.
@@ -95,9 +91,9 @@ let appSettings (key : string) (fallbackValue : string) =
             try 
                 System.Configuration.ConfigurationManager.AppSettings.[key]
             with exn -> ""
-        if not (isNullOrWhiteSpace setting) then setting
+        if not ^ isNullOrWhiteSpace setting then setting
         else fallbackValue
-    value.Split([| ';' |], StringSplitOptions.RemoveEmptyEntries)
+    value.Split ([| ';' |], StringSplitOptions.RemoveEmptyEntries)
 
 
 /// Tries to find the tool via AppSettings. If no path has the right tool we are trying the PATH system variable.
@@ -133,19 +129,17 @@ type FileIncludes =
     /// Checks if a particular file is matched
     member this.IsMatch (path : string) =
         let fullDir pattern = 
-            if Path.IsPathRooted(pattern) then
-                pattern
-            else
-                System.IO.Path.Combine(this.BaseDirectory, pattern)
+            if Path.IsPathRooted pattern then pattern  else
+            System.IO.Path.Combine (this.BaseDirectory, pattern)
 
         let included = 
             this.Includes
-            |> Seq.exists(fun fileInclude ->
+            |> Seq.exists (fun fileInclude ->
                 Globbing.isMatch (fullDir fileInclude) path
             )
         let excluded = 
             this.Excludes
-            |> Seq.exists(fun fileExclude ->
+            |> Seq.exists (fun fileExclude ->
                 Globbing.isMatch (fullDir fileExclude) path
             )
 
@@ -154,26 +148,22 @@ type FileIncludes =
     interface IEnumerable<string> with
         
         member this.GetEnumerator() = 
-            let hashSet = HashSet()
+            let hashSet = HashSet<_> ()
             
             let excludes = 
-                seq { 
-                    for pattern in this.Excludes do
+                seq { for pattern in this.Excludes do
                         yield! Globbing.search this.BaseDirectory pattern
-                }
-                |> Set.ofSeq
+                } |> Set.ofSeq
             
             let files = 
-                seq { 
-                    for pattern in this.Includes do
+                seq { for pattern in this.Includes do
                         yield! Globbing.search this.BaseDirectory pattern
-                }
-                |> Seq.filter (fun x -> not (Set.contains x excludes))
-                |> Seq.filter (fun x -> hashSet.Add x)
+                } |> Seq.filter (fun x -> not ^ Set.contains x excludes)
+                |> Seq.filter hashSet.Add
             
-            files.GetEnumerator()
+            files.GetEnumerator ()
         
-        member this.GetEnumerator() = (this :> IEnumerable<string>).GetEnumerator() :> System.Collections.IEnumerator
+        member this.GetEnumerator () = (this :> seq<string>).GetEnumerator() :> System.Collections.IEnumerator
 
 let private defaultBaseDir = Path.GetFullPath "."
 
@@ -229,12 +219,8 @@ let inline filesInDir (dir : DirectoryInfo) = dir.GetFiles()
 let rec recursively dirF fileF (dir : DirectoryInfo) = 
     dir
     |> subDirectories
-    |> Seq.iter (fun dir -> 
-           recursively dirF fileF dir
-           dirF dir)
-    dir
-    |> filesInDir
-    |> Seq.iter fileF
+    |> Seq.iter (fun dir -> recursively dirF fileF dir; dirF dir)
+    dir |> filesInDir |> Seq.iter fileF
 
 /// Finds all the files in the directory matching the search pattern.
 let filesInDirMatching pattern (dir : DirectoryInfo) = 
@@ -255,32 +241,30 @@ let setDirReadOnly readOnly dir =
 /// Sets all given files readonly.
 let setReadOnly readOnly (files : string seq) = 
     files |> Seq.iter (fun file -> 
-                 let fi = FileInfo file
-                 if fi.Exists then fi.IsReadOnly <- readOnly
-                 else 
-                     file
-                     |> DirectoryInfo
-                     |> setDirectoryReadOnly readOnly)
+        let fi = FileInfo file
+        if fi.Exists then fi.IsReadOnly <- readOnly else 
+        file
+        |> DirectoryInfo
+        |> setDirectoryReadOnly readOnly
+    )
 
 /// Deletes a directory if it exists.
 let deleteDir path = 
     let dir = DirectoryInfo path
-    if dir.Exists then 
-        // set all files readonly = false
-        !!"/**/*.*"
-        |> SetBaseDir dir.FullName
-        |> (setReadOnly false)
-        printfn "Deleting %s" dir.FullName
-        dir.Delete true
-    else printfn "%s does not exist." dir.FullName
+    if not dir.Exists then printfn "%s does not exist." dir.FullName else
+    // set all files readonly = false
+    !!"/**/*.*"
+    |> SetBaseDir dir.FullName
+    |> setReadOnly false
+    printfn "Deleting %s" dir.FullName
+    dir.Delete true
 
 /// Creates a directory if it does not exist.
 let createDir path = 
     let dir = DirectoryInfo path
-    if not dir.Exists then 
-        printfn "Creating %s" dir.FullName
-        dir.Create()
-    else printfn "%s already exists." dir.FullName
+    if dir.Exists then printfn "%s already exists." dir.FullName else
+    printfn "Creating %s" dir.FullName
+    dir.Create ()
 
 /// Copies a directory recursivly. If the target directory does not exist, it will be created.
 /// ## Parameters
@@ -293,34 +277,30 @@ let copyDir target source filterFile =
     Directory.GetFiles(source, "*.*", SearchOption.AllDirectories)
     |> Seq.filter filterFile
     |> Seq.iter (fun file -> 
-           let fi = 
-               file
-               |> replaceFirst source ""
-               |> trimSeparator
-           
-           let newFile = target @@ fi
-           printfn "%s => %s" file newFile
-           directoryName newFile |> ensureDirectory
-           File.Copy(file, newFile, true))
-    |> ignore
+        let fi = file |> replaceFirst source "" |> trimSeparator
+        let newFile = target @@ fi
+        printfn "%s => %s" file newFile
+        directoryName newFile |> ensureDirectory
+        File.Copy (file, newFile, true)
+    ) |> ignore
 
 /// Cleans a directory by removing all files and sub-directories.
 let cleanDir path = 
     let di = DirectoryInfo path
-    if di.Exists then 
-        printfn "Deleting contents of %s" path
-        // delete all files
-        Directory.GetFiles(path, "*.*", SearchOption.AllDirectories) 
-        |> Seq.iter (fun file -> 
-            let fi = FileInfo file
-            fi.IsReadOnly <- false
-            fi.Delete()
-        )
-        // deletes all subdirectories
-        let rec deleteDirs actDir = 
-            Directory.GetDirectories(actDir) |> Seq.iter deleteDirs
-            Directory.Delete(actDir, true)
-        Directory.GetDirectories path |> Seq.iter deleteDirs
-    else createDir path
+    if not di.Exists then createDir path else
+    printfn "Deleting contents of %s" path
+    // delete all files
+    Directory.GetFiles(path, "*.*", SearchOption.AllDirectories) 
+    |> Seq.iter (fun file -> 
+        let fi = FileInfo file
+        fi.IsReadOnly <- false
+        fi.Delete ()
+    )
+    // deletes all subdirectories
+    let rec deleteDirs actDir = 
+        Directory.GetDirectories actDir |> Seq.iter deleteDirs
+        Directory.Delete (actDir, true)
+    Directory.GetDirectories path |> Seq.iter deleteDirs
+ 
     // set writeable
-    File.SetAttributes(path, FileAttributes.Normal)
+    File.SetAttributes (path, FileAttributes.Normal)

@@ -12,43 +12,42 @@ open System.Threading
 /// This flag can be specified by setting the *verbose* build parameter.
 let mutable verbose = hasBuildParam "verbose"
 
-let private openTags = new ThreadLocal<list<string>>(fun _ -> [])
+let private openTags = new ThreadLocal<string list>(fun _ -> [])
 
 /// Logs the specified string        
-let log message = LogMessage(message, true) |> postMessage
+let log message = postMessage ^ LogMessage (message, true)
 
 /// Logs the specified message
 let logfn fmt = Printf.ksprintf log fmt
 
 /// Logs the specified message (without line break)
-let logf fmt = Printf.ksprintf (fun text -> postMessage (LogMessage(text, false))) fmt
+let logf fmt = Printf.ksprintf (fun text -> postMessage ^ LogMessage (text, false)) fmt
 
 /// Logs the specified string if the verbose mode is activated.
 let logVerbosefn fmt = 
-    Printf.ksprintf (if verbose then log
-                     else ignore) fmt
+    Printf.ksprintf (if verbose then log else ignore) fmt
 
 /// Writes a trace to the command line (in green)
-let trace message = postMessage (TraceMessage(message, true))
+let trace message = postMessage ^ TraceMessage (message, true)
 
 /// Writes a message to the command line (in green)
 let tracefn fmt = Printf.ksprintf trace fmt
 
 /// Writes a message to the command line (in green) and without a line break
-let tracef fmt = Printf.ksprintf (fun text -> postMessage (TraceMessage(text, false))) fmt
+let tracef fmt = Printf.ksprintf (fun text -> postMessage ^ TraceMessage (text, false)) fmt
 
 /// Writes a trace to the command line (in green) if the verbose mode is activated.
 let traceVerbose s = 
     if verbose then trace s
 
 /// Writes a trace to stderr (in yellow)  
-let traceImportant text = postMessage (ImportantMessage text)
+let traceImportant text = postMessage ^ ImportantMessage text
 
 /// Writes a trace to the command line (in yellow)
-let traceFAKE fmt = Printf.ksprintf (fun text -> postMessage (ImportantMessage text)) fmt
+let traceFAKE fmt = Printf.ksprintf (fun text -> postMessage ^ ImportantMessage text) fmt
 
 /// Traces an error (in red)
-let traceError error = postMessage (ErrorMessage error)
+let traceError error = postMessage ^ ErrorMessage error
 
 open Microsoft.FSharp.Core.Printf
 
@@ -61,7 +60,7 @@ let exceptionAndInnersToString (ex:Exception) =
         if (e :? TargetException && e.InnerException <> null)
         then printException (e.InnerException) count
         else
-            if (count = 1) then bprintf sb "Exception Message:%s%s%s" e.Message nl delimeter
+            if count = 1 then bprintf sb "Exception Message:%s%s%s" e.Message nl delimeter
             else bprintf sb "%s%s%d)Exception Message:%s%s%s" nl nl count e.Message nl delimeter
             bprintf sb "%sType: %s" nl (e.GetType().FullName)
             // Loop through the public properties of the exception object
@@ -70,19 +69,21 @@ let exceptionAndInnersToString (ex:Exception) =
             |> Array.iter (fun p ->
                 // Do not log information for the InnerException or StackTrace.
                 // This information is captured later in the process.
-                if (p.Name <> "InnerException" && p.Name <> "StackTrace" &&
-                    p.Name <> "Message" && p.Name <> "Data") then
+                if  p.Name <> "InnerException" 
+                 && p.Name <> "StackTrace" 
+                 && p.Name <> "Message" 
+                 && p.Name <> "Data" then
                     try
                         let value = p.GetValue(e, null)
-                        if (value <> null)
-                        then bprintf sb "%s%s: %s" nl p.Name (value.ToString())
+                        if value <> null then 
+                            bprintf sb "%s%s: %s" nl p.Name (value.ToString())
                     with
                     | e2 -> bprintf sb "%s%s: %s" nl p.Name e2.Message
             )
-            if (e.StackTrace <> null) then
+            if e.StackTrace <> null then
                 bprintf sb "%s%sStackTrace%s%s%s" nl nl nl delimeter nl
                 bprintf sb "%s%s" nl e.StackTrace
-            if (e.InnerException <> null)
+            if e.InnerException <> null
             then printException e.InnerException (count+1)
     printException ex 1
     sb.ToString()
@@ -99,14 +100,14 @@ let TraceEnvironmentVariables() =
 
 
 /// Traces a line
-let traceLine() = trace "---------------------------------------------------------------------"
+let traceLine () = trace "---------------------------------------------------------------------"
 
 /// Traces a header
 let traceHeader name = 
     trace ""
-    traceLine()
+    traceLine ()
     trace name
-    traceLine()
+    traceLine ()
 
 /// Traces the begin of the build
 let traceStartBuild() = postMessage StartMessage
@@ -124,12 +125,12 @@ let closeTag tag =
     | _ -> failwithf "Invalid tag structure. Trying to close %s tag but stack is %A" tag openTags
     CloseTag tag |> postMessage
 
-let closeAllOpenTags() = Seq.iter closeTag openTags.Value
+let closeAllOpenTags () = Seq.iter closeTag openTags.Value
 
 /// Traces the begin of a target
 let traceStartTarget name description dependencyString = 
     openTag "target"
-    OpenTag("target", name) |> postMessage
+    OpenTag ("target", name) |> postMessage
     tracefn "Starting Target: %s %s" name dependencyString
     if description <> null then tracefn "  %s" description
    // ReportProgressStart <| sprintf "Target: %s" name
@@ -143,7 +144,7 @@ let traceEndTarget name =
 /// Traces the begin of a task
 let traceStartTask task description = 
     openTag "task"
-    OpenTag("task", task) |> postMessage
+    OpenTag ("task", task) |> postMessage
    // ReportProgressStart <| sprintf "Task: %s %s" task description
 
 /// Traces the end of a task
@@ -159,9 +160,9 @@ open System.Diagnostics
 let logToConsole (msg, eventLogEntry : EventLogEntryType) = 
     match eventLogEntry with
     | EventLogEntryType.Error -> ErrorMessage msg
-    | EventLogEntryType.Information -> TraceMessage(msg, true)
+    | EventLogEntryType.Information -> TraceMessage (msg, true)
     | EventLogEntryType.Warning -> ImportantMessage msg
-    | _ -> LogMessage(msg, true)
+    | _ -> LogMessage (msg, true)
     |> console.Write
 
 /// Logs the given files with the message.

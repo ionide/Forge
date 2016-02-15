@@ -9,21 +9,20 @@ let private GitPath = @"[ProgramFiles]\Git\cmd\;[ProgramFilesX86]\Git\cmd\;[Prog
 
 /// Tries to locate the git.exe via the eviroment variable "GIT".
 let gitPath = 
-    if isUnix then
-        "git"
-    else
-        let ev = environVar "GIT"
-        if not (isNullOrEmpty ev) then ev else findPath "GitPath" GitPath "git.exe"   
+    if isUnix then "git" else
+    let ev = environVar "GIT"
+    if not ^ isNullOrEmpty ev then ev else 
+    findPath "GitPath" GitPath "git.exe"   
 
 /// Runs git.exe with the given command in the given repository directory.
 let runGitCommand repositoryDir command = 
     let processResult = 
         ExecProcessAndReturnMessages (fun info ->  
-          info.FileName <- gitPath
-          info.WorkingDirectory <- repositoryDir
-          info.Arguments <- command) gitTimeOut
+            info.FileName <- gitPath
+            info.WorkingDirectory <- repositoryDir
+            info.Arguments <- command) gitTimeOut
 
-    processResult.OK,processResult.Messages,toLines processResult.Errors
+    processResult.OK, processResult.Messages, toLines processResult.Errors
 
 /// [omit]
 let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
@@ -31,12 +30,9 @@ let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
 /// Runs the git command and returns the first line of the result.
 let runSimpleGitCommand repositoryDir command =
     try
-        let _,msg,errors = runGitCommand repositoryDir command
-               
+        let _, msg, errors = runGitCommand repositoryDir command
         let errorText = toLines msg + Environment.NewLine + errors
-        if errorText.Contains "fatal: " then
-            failwith errorText
-
+        if errorText.Contains "fatal: " then  failwith errorText
         if msg.Count = 0 then "" else
         msg |> Seq.iter (logfn "%s")
         msg.[0]

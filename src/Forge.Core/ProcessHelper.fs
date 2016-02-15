@@ -2,15 +2,12 @@
 module Forge.ProcessHelper
 
 open System
-open System.ComponentModel
 open System.Diagnostics
 open System.IO
-open System.Threading
 open System.Collections.Generic
-//open System.ServiceProcess
 
 /// [omit]
-let startedProcesses = HashSet()
+let startedProcesses = HashSet<_>()
 
 /// [omit]
 let start (proc : Process) = 
@@ -18,8 +15,8 @@ let start (proc : Process) =
         proc.StartInfo.Arguments <- "--debug \"" + proc.StartInfo.FileName + "\" " + proc.StartInfo.Arguments
         proc.StartInfo.FileName <- monoPath
 
-    proc.Start() |> ignore
-    startedProcesses.Add(proc.Id, proc.StartTime) |> ignore
+    ignore ^ proc.Start() 
+    ignore ^ startedProcesses.Add(proc.Id, proc.StartTime) 
 
 /// [omit]
 let mutable redirectOutputToTrace = false
@@ -36,8 +33,8 @@ type ConsoleMessage =
 /// A process result including error code, message log and errors.
 type ProcessResult = 
     { ExitCode : int
-      Messages : List<string>
-      Errors : List<string> }
+      Messages : ResizeArray<string>
+      Errors : ResizeArray<string> }
     member x.OK = x.ExitCode = 0
     static member New exitCode messages errors = 
         { ExitCode = exitCode
@@ -67,8 +64,8 @@ let ExecProcessWithLambdas configProcessStartInfoF (timeOut : TimeSpan) silent e
     proc.StartInfo.UseShellExecute <- false
     configProcessStartInfoF proc.StartInfo
     platformInfoAction proc.StartInfo
-    if isNullOrEmpty proc.StartInfo.WorkingDirectory |> not then 
-        if Directory.Exists proc.StartInfo.WorkingDirectory |> not then 
+    if not ^ isNullOrEmpty proc.StartInfo.WorkingDirectory then 
+        if not ^ Directory.Exists proc.StartInfo.WorkingDirectory then 
             failwithf "Start of process %s failed. WorkingDir %s does not exist." proc.StartInfo.FileName 
                 proc.StartInfo.WorkingDirectory
     if silent then 
@@ -79,23 +76,22 @@ let ExecProcessWithLambdas configProcessStartInfoF (timeOut : TimeSpan) silent e
         proc.OutputDataReceived.Add(fun d -> 
             if d.Data <> null then messageF d.Data)
     try 
-        if enableProcessTracing && (not <| proc.StartInfo.FileName.EndsWith "fsi.exe") then 
+        if enableProcessTracing && not ^ proc.StartInfo.FileName.EndsWith "fsi.exe" then 
             tracefn "%s %s" proc.StartInfo.FileName proc.StartInfo.Arguments
         start proc
     with exn -> failwithf "Start of process %s failed. %s" proc.StartInfo.FileName exn.Message
     if silent then 
-        proc.BeginErrorReadLine()
-        proc.BeginOutputReadLine()
-    if timeOut = TimeSpan.MaxValue then proc.WaitForExit()
-    else 
-        if not <| proc.WaitForExit(int timeOut.TotalMilliseconds) then 
-            try 
-                proc.Kill()
-            with exn -> 
-                traceError 
-                <| sprintf "Could not kill process %s  %s after timeout." proc.StartInfo.FileName 
-                       proc.StartInfo.Arguments
-            failwithf "Process %s %s timed out." proc.StartInfo.FileName proc.StartInfo.Arguments
+        proc.BeginErrorReadLine ()
+        proc.BeginOutputReadLine ()
+    if timeOut = TimeSpan.MaxValue then proc.WaitForExit () 
+    elif not ^ proc.WaitForExit (int timeOut.TotalMilliseconds) then 
+        try 
+            proc.Kill()
+        with exn -> 
+            traceError 
+            <| sprintf "Could not kill process %s  %s after timeout." proc.StartInfo.FileName 
+                    proc.StartInfo.Arguments
+        failwithf "Process %s %s timed out." proc.StartInfo.FileName proc.StartInfo.Arguments
     proc.ExitCode
 
 
@@ -105,9 +101,9 @@ let ExecProcessWithLambdas configProcessStartInfoF (timeOut : TimeSpan) silent e
 ///  - `configProcessStartInfoF` - A function which overwrites the default ProcessStartInfo.
 ///  - `timeOut` - The timeout for the process.
 let ExecProcessAndReturnMessages configProcessStartInfoF timeOut = 
-    let errors = new List<_>()
-    let messages = new List<_>()
-    let exitCode = ExecProcessWithLambdas configProcessStartInfoF timeOut true (errors.Add) (messages.Add)
+    let errors   = ResizeArray<_>()
+    let messages = ResizeArray<_>()
+    let exitCode = ExecProcessWithLambdas configProcessStartInfoF timeOut true errors.Add messages.Add
     ProcessResult.New exitCode messages errors
 
 /// Runs the given process and returns the process result.
@@ -125,10 +121,7 @@ let ExecProcessRedirected configProcessStartInfoF timeOut =
     
     let exitCode = 
         ExecProcessWithLambdas configProcessStartInfoF timeOut true (appendMessage true) (appendMessage false)
-    exitCode = 0, 
-    (!messages
-     |> List.rev
-     |> Seq.ofList)
+    (exitCode = 0, !messages |> List.rev |> Seq.ofList)
 
 
 /// Runs the given process and returns the exit code.
@@ -154,17 +147,19 @@ let ExecProcess configProcessStartInfoF timeOut =
 ///  - `args` - The process arguments.
 ///  - `timeOut` - The timeout for the process.
 let ExecProcessElevated cmd args timeOut = 
-    ExecProcess (fun si -> 
-        si.Verb <- "runas"
-        si.Arguments <- args
-        si.FileName <- cmd
-        si.UseShellExecute <- true) timeOut
+    timeOut
+    |> ExecProcess (fun info -> 
+        info.Verb            <- "runas"
+        info.Arguments       <- args
+        info.FileName        <- cmd
+        info.UseShellExecute <- true
+    ) 
 
 /// Gets the list of valid directories included in the PATH environment variable.
 let pathDirectories =
     splitEnvironVar "PATH"
     |> Seq.map (fun value -> value.Trim())
-    |> Seq.filter (fun value -> not <| isNullOrEmpty value)
+    |> Seq.filter (fun value -> isNotNullOrEmpty value)
     |> Seq.filter isValidPath
 
 /// Sets the environment Settings for the given startInfo.
@@ -172,8 +167,10 @@ let pathDirectories =
 /// [omit]
 let setEnvironmentVariables (startInfo : ProcessStartInfo) environmentSettings = 
     for key, value in environmentSettings do
-        if startInfo.EnvironmentVariables.ContainsKey key then startInfo.EnvironmentVariables.[key] <- value
-        else startInfo.EnvironmentVariables.Add(key, value)
+        if startInfo.EnvironmentVariables.ContainsKey key then 
+            startInfo.EnvironmentVariables.[key] <- value
+        else 
+            startInfo.EnvironmentVariables.Add(key, value)
 
 /// Runs the given process and returns true if the exit code was 0.
 /// [omit]
@@ -181,7 +178,7 @@ let execProcess configProcessStartInfoF timeOut = ExecProcess configProcessStart
 
 /// Starts the given process and returns immediatly.
 let fireAndForget configProcessStartInfoF = 
-    use proc = new Process()
+    use proc = new Process ()
     proc.StartInfo.UseShellExecute <- false
     configProcessStartInfoF proc.StartInfo
     try 
@@ -190,13 +187,13 @@ let fireAndForget configProcessStartInfoF =
 
 /// Runs the given process, waits for its completion and returns if it succeeded.
 let directExec configProcessStartInfoF = 
-    use proc = new Process()
+    use proc = new Process ()
     proc.StartInfo.UseShellExecute <- false
     configProcessStartInfoF proc.StartInfo
     try 
         start proc
     with exn -> failwithf "Start of process %s failed. %s" proc.StartInfo.FileName exn.Message
-    proc.WaitForExit()
+    proc.WaitForExit ()
     proc.ExitCode = 0
 
 /// Starts the given process and forgets about it.
@@ -210,7 +207,7 @@ let StartProcess configProcessStartInfoF =
 let run cmd args dir =
     if execProcess( fun info ->
         info.FileName <- cmd
-        if not ^ String.IsNullOrWhiteSpace dir then
+        if not ^ isNullOrWhiteSpace dir then
             info.WorkingDirectory <- dir
         info.Arguments <- args
     ) System.TimeSpan.MaxValue = false then

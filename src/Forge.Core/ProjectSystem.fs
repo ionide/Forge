@@ -12,7 +12,7 @@ type ProjectFile(projectFileName:string,documentContent : string) =
     let document = XMLDoc documentContent
 
     let nsmgr =
-        let nsmgr = new XmlNamespaceManager(document.NameTable)
+        let nsmgr = XmlNamespaceManager document.NameTable
         nsmgr.AddNamespace("default", document.DocumentElement.NamespaceURI)
         nsmgr
 

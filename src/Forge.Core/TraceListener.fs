@@ -7,13 +7,13 @@ open System
 /// Defines Tracing information for TraceListeners
 type TraceData = 
     | StartMessage
-    | ImportantMessage of string
-    | ErrorMessage of string
-    | LogMessage of string * bool
-    | TraceMessage of string * bool
+    | ImportantMessage of msg:string
+    | ErrorMessage of msg:string
+    | LogMessage of msg:string * newline:bool
+    | TraceMessage of msg:string * newLine:bool
     | FinishedMessage
-    | OpenTag of string * string
-    | CloseTag of string
+    | OpenTag of tag:string * name:string
+    | CloseTag of tag:string
     member x.NewLine =
         match x with
         | ImportantMessage _
@@ -77,9 +77,11 @@ type ConsoleTraceListener(importantMessagesToStdErr, colorMap) =
             | StartMessage -> ()
             | OpenTag _ -> ()
             | CloseTag _ -> ()
-            | ImportantMessage text | ErrorMessage text ->
+            | ImportantMessage text 
+            | ErrorMessage text ->
                 writeText importantMessagesToStdErr color true text
-            | LogMessage(text, newLine) | TraceMessage(text, newLine) ->
+            | LogMessage (text, newLine) 
+            | TraceMessage (text, newLine) ->
                 writeText false color newLine text
             | FinishedMessage -> ()
 

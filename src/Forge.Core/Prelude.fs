@@ -38,7 +38,7 @@ let environVarOrNone name =
 let splitEnvironVar name =
     let var = environVarOrNone name
     if var = None then [ ]
-    else var.Value.Split([| Path.PathSeparator |]) |> Array.toList
+    else var.Value.Split [| Path.PathSeparator |] |> Array.toList
 
 /// The system root environment variable. Typically "C:\Windows"
 let SystemRoot = environVar "SystemRoot"
@@ -154,22 +154,21 @@ let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
 let prompt text =
     printfn text
     Console.Write "> "
-    Console.ReadLine()
+    Console.ReadLine ()
 
 let promptSelect text list =
     printfn text
     list |> Seq.iter (printfn " - %s")
     printfn ""
     Console.Write "> "
-    Console.ReadLine()
+    Console.ReadLine ()
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text = 
-    if isNullOrEmpty text then null
-    else 
-        let xmlDocument = new XmlDocument()
-        xmlDocument.LoadXml text
-        xmlDocument
+    if isNullOrEmpty text then null else 
+    let xmlDocument = XmlDocument ()
+    xmlDocument.LoadXml text
+    xmlDocument
 
 
 // Environment Config
