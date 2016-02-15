@@ -18,4 +18,4 @@ run() {
   fi
 }
 
-run "${CURRENT_DIR}/bin/forge.exe" "$@"
+run "${CURRENT_DIR}/bin/Forge.exe" "$@"
