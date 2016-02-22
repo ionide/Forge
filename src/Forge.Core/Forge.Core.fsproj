@@ -69,10 +69,10 @@
     <Compile Include="Globbing.fs" />
     <Compile Include="FileHelper.fs" />
     <Compile Include="ZipHelper.fs" />
-    <Compile Include="ProjectSystem.fs" />
-    <Compile Include="Paket.fs" />
     <Compile Include="Fake.fs" />
+    <Compile Include="Paket.fs" />
     <Compile Include="Git.fs" />
+    <Compile Include="ProjectSystem.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
@@ -90,9 +90,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'" />
-  </Choose>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
       <ItemGroup>
