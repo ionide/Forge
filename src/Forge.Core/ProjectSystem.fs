@@ -1,7 +1,15 @@
-﻿/// Contains project file comparion tools for MSBuild project files.
+﻿#if INTERACTIVE
+/// Contains project file comparion tools for MSBuild project files.
+#r "System.Xml"
+#r "System.Xml.Linq"
+#load "Prelude.fs"
+open Forge.Prelude
+#else
 module Forge.ProjectSystem
+#endif
 
 
+open System
 open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
