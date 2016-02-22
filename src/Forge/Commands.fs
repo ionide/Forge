@@ -33,12 +33,12 @@ with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | New -> "[project|file] Create new file or project"
-            | Add -> "[file|reference] Adds file or reference"
-            | Remove -> "[file|reference] Removes file or refrence"
-            | Rename -> "[project|file] Renames file or project"
-            | List -> "[project|file|reference] List files or refrences"
-            | Update -> "[paket|fake] Updates Paket or FAKE"
+            | New -> "<project|file> Create new file or project"
+            | Add -> "<file|reference> Adds file or reference"
+            | Remove -> "<file|reference> Removes file or refrence"
+            | Rename -> "<project|file> Renames file or project"
+            | List -> "<project|file|reference> List files or refrences"
+            | Update -> "<paket|fake> Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
             | Refresh -> "Refreshes the template cache"
@@ -50,7 +50,7 @@ with
         :?> CustomCommandLineAttribute).Name
 
 //-----------------------------------------------------------------
-// New
+// New Commands
 //-----------------------------------------------------------------
 
 type NewCommand =
