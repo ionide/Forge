@@ -1,3 +1,7 @@
+### 0.7.0 - 2016-02-22
+* Split into core and CLI
+* Multiple small fixes
+
 ### 0.6.0 - 2016-02-14
 * Rename to Forge
 
