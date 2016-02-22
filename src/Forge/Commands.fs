@@ -187,23 +187,23 @@ with
 
 type RenameFileArgs =
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "-N">] New of string
+    | [<CLIAlt "-r">] Rename of string
 with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "File name"
-            | New _ -> "New file name"
+            | Rename _ -> "New file name"
 
 type RenameProjectArgs =
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "-N">] New of string
+    | [<CLIAlt "-r">] Rename of string
 with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "Project name"
-            | New _ -> "New name"
+            | Rename _ -> "New name"
 
 //-----------------------------------------------------------------
 // List commands
@@ -476,7 +476,7 @@ let processMain args =
                         | Command.New -> processNew
                         | Add -> processAdd
                         | Remove -> processRemove
-                        | Rename -> processRename
+                        | Command.Rename -> processRename
                         | List -> processList
                         | Update -> processUpdate
                         | Command.Fake -> fun a -> Fake.Run a; Some Continue
