@@ -3,7 +3,9 @@
 #r "System.Xml"
 #r "System.Xml.Linq"
 #load "Prelude.fs"
+#load "Extensions.fs"
 open Forge.Prelude
+open Forge.Extensions
 #else
 module Forge.ProjectSystem
 #endif
@@ -14,6 +16,83 @@ open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
 
+(*  Settings Unions
+    ===============
+
+    The following discriminated unions represent settings that will reoccur throughout the AST
+    represented in a type safe manner
+
+    These will map to XML elements and attributes in the .fsproj file
+*)
+
+/// Sets the platform for a Build Configuration
+///     x86,  x64, or AnyCPU. 
+/// The default is AnyCPU.
+type PlatformType = 
+    | X86 |  X64 | AnyCpu
+    override self.ToString () =
+        match self with
+        | X86                  -> "x86" 
+        | X64                  -> "x64"
+        | AnyCpu               -> "AnyCPU"
+
+
+[<RequireQualifiedAccess>]
+type BuildAction =
+    /// Represents the source files for the compiler.
+    | Compile 
+    /// Represents files that are not compiled into the project, but may be embedded or published together with it.
+    | Content 
+    /// Represents an assembly (managed) reference in the project.
+    | Reference 
+    /// Represents files that should have no role in the build process
+    | None
+    | Resource
+    /// Represents resources to be embedded in the generated assembly.
+    | EmbeddedResource
+    override self.ToString() = self |> function
+        | Compile          -> "Compile"
+        | Content          -> "Content"
+        | Reference        -> "Reference"
+        | None             -> "None"
+        | Resource         -> "Resource"
+        | EmbeddedResource -> "EmbeddedResource"
+
+
+// Under "Compile" in https://msdn.microsoft.com/en-us/library/bb629388.aspx
+type CopyToOutputDirectory =
+    | Never
+    | Always
+    | PreserveNewest    
+    override self.ToString() = self |> function
+        | Never -> "Never"
+        | Always -> "Always"
+        | PreserveNewest -> "PreserveNewest"
+
+
+[<RequireQualifiedAccess>]
+type DebugType =
+    | None
+    | PdbOnly
+    | Full
+
+
+/// Determines the output of compiling the F# Project
+type OutputType = 
+    /// Build a console executable
+    | Exe
+    ///  Build a Windows executable
+    | Winexe
+    /// Build a library
+    | Library
+    /// Build a module that can be added to another assembly (.netmodule)
+    | Module
+    override self.ToString () =
+        match self with
+        | Exe     -> "Exe"
+        | Winexe  -> "Winexe"
+        | Library -> "Library"
+        | Module  -> "Module"
 
 /// A small abstraction over MSBuild project files.
 type ProjectFile(projectFileName:string,documentContent : string) =
