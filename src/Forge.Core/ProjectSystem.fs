@@ -94,6 +94,108 @@ type OutputType =
         | Library -> "Library"
         | Module  -> "Module"
 
+
+
+
+// Common MSBuild Project Items
+// https://msdn.microsoft.com/en-us/library/bb629388.aspx
+
+type Reference =
+    {   Include : string
+        /// Relative or absolute path of the assembly
+        HintPath : string option
+        /// Optional string. The display name of the assembly, for example, "System.Windows.Forms."
+        Name : string option
+        /// Optional boolean. Specifies whether only the version in the fusion name should be referenced.
+        SpecificVesion : bool option
+        /// Optional boolean. Specifies whether the reference should be copied to the output folder. 
+        /// This attribute matches the Copy Local property of the reference that's in the Visual Studio IDE.                 
+        // if CopyLocal is true shown as "<Private>false</Private>" in XML)
+        CopyLocal : bool option
+    } 
+
+        
+
+
+/// Represents a reference to another project
+// https://msdn.microsoft.com/en-us/library/bb629388.aspx
+type ProjectReference =
+    {   /// Path to the project file to include
+        /// translates to the `Include` attribute in MSBuild XML
+        Path : string
+        /// Optional string. The display name of the reference.
+        Name : string option
+        /// Optional Guid of the referenced project
+        // will be project in the MSBuild XML
+        Guid : Guid option
+        /// Should the assemblies of this project be copied Locally 
+        // if CopyLocal is true shown as "<Private>false</Private>" in XML)
+        CopyLocal : bool option
+    }
+
+type SourceFile =
+    {   Path    : string
+        Link    : string
+        Copy    : CopyToOutputDirectory
+        OnBuild : BuildAction
+    }
+
+
+type SourcePair =
+    {   Module  : SourceFile
+        Sig     : SourceFile
+    }
+
+
+type SourceElement =
+    | File      of SourceFile
+    | Pair      of SourcePair
+    | Directory of SourceElement list
+
+
+
+
+
+type ProjectSettings =
+    {   Name : string
+        AssemblyName : string
+        RootNamespace : string
+        Configuration : string
+        Platform : string
+        SchemaVersion : decimal
+        ProjectGuid : Guid
+        ProjectType : Guid list option
+        OutputType : OutputType
+        TargetFrameworkVersion : string
+        AutoGenerateBindingRedirects : bool
+        TargetFSharpCoreVersion :string
+    }
+
+
+type ConfigurationSettings =
+    {   Condition            : string
+        DebugSymbols         : bool
+        DebugType            : string
+        Optimize             : bool
+        Tailcalls            : bool
+        OutputPath           : string
+        CompilationConstants : string list
+        WarningLevel         : int
+        PlatformTarget       : PlatformType
+        Documentationfile    : string
+        Prefer32Bit          : bool
+    }
+
+
+    
+
+type FsProject =
+    {   References          : Reference list
+        ProjectReferences   : ProjectReference list
+        SourceFiles         : SourceElement list
+        Settings            : ProjectSettings    
+    
+    }    
 /// A small abstraction over MSBuild project files.
 type ProjectFile(projectFileName:string,documentContent : string) =
     let document = XMLDoc documentContent
