@@ -18,8 +18,7 @@ let sed (find:string) replace folder =
                     File.WriteAllText(x, contents))
 
 let relative (path1 : string) (path2 : string) =
-    let p1 = Uri(path1)
-    let p2 = Uri(path2)
+    let p1, p2 = Uri path1, Uri path2
     Uri.UnescapeDataString(
         p2.MakeRelativeUri(p1)
           .ToString()

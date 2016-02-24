@@ -196,8 +196,75 @@ type FsProject =
         Settings            : ProjectSettings    
     
     }    
+
+
+// Records -> XML
+// =======================
+
+type SourceFile with
+    member self.ToXml() =
+        let copyElem value = xelem "CopyToOutputDirectory" [value]
+        
+        let addCopyNode xmlnode =
+            match self.Copy with
+            | Never -> xmlnode
+            | Always ->  addElement (copyElem ^ string Always) xmlnode
+            | PreserveNewest -> addElement (copyElem ^ string PreserveNewest) xmlnode
+       
+        let addLinkNode xmlnode =
+            if String.IsNullOrWhiteSpace self.Link then xmlnode else
+            addElement (xelem "Link" [self.Link]) xmlnode
+
+        xelem (string self.OnBuild) []
+        |> setAttribute "Include" self.Path
+        |> addCopyNode
+        |> addLinkNode
+
+(* ^ will produce an xml node like
+
+    <Compile Include="path.fs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Common/path.fs</Link>
+    </Compile>
+*)
+
+
+type ProjectReference with
+    member self.ToXml() =
+        let addNameNode xmlnode =
+            match self.Name with
+            | None -> xmlnode
+            | Some name -> addElement (xelem "Name" [name]) xmlnode
+
+        let addGuidNode xmlnode =            
+            match self.Guid with
+            | None -> xmlnode
+            | Some guid ->  
+                addElement (xelem "Project" [sprintf "{%s}" (string guid)]) xmlnode
+        
+        let addPrivateNode xmlnode =
+            match self.CopyLocal with
+            | None -> xmlnode
+            | Some b ->  
+                addElement (xelem "Private" [string b]) xmlnode
+
+        xelem "ProjectReference" []
+        |> setAttribute "Include" self.Path
+        |> addNameNode
+        |> addGuidNode
+        |> addPrivateNode
+
+(*
+    <ProjectReference Include="..\some.fsproj">
+      <Name>The-Some</Name>
+      <Project>{17b0907c-699a-4e40-a2b6-8caf53cbd004}</Project>
+      <Private>False</Private>
+    </ProjectReference>
+*)
+
+
 /// A small abstraction over MSBuild project files.
-type ProjectFile(projectFileName:string,documentContent : string) =
+type ProjectFile (projectFileName:string, documentContent:string) =
     let document = XMLDoc documentContent
 
     let nsmgr =
@@ -281,8 +348,8 @@ type ProjectFile(projectFileName:string,documentContent : string) =
         document.Save(writer)
 
     member x.Content =
-        let utf8 = new System.Text.UTF8Encoding(false)
-        let settings = new XmlWriterSettings()
+        let utf8 = System.Text.UTF8Encoding false
+        let settings = XmlWriterSettings()
         settings.Encoding <- utf8
         settings.Indent <- true
         use ms = new System.IO.MemoryStream()
