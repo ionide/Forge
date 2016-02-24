@@ -41,6 +41,7 @@
 | Test	                                        | {3AC096D0-A1C2-E12C-1390-A8335801FDAB} |
 | VB.NET	                                    | {F184B08F-C81C-45F6-A57F-5ABD9991F28F} |
 | Visual Database Tools	                        | {C252FEB5-A946-4202-B1D4-9916A0590387} |
+| Visual Studio Extensibility (VSIX)            | {82B43B9B-A64C-4715-B499-D71E9CA2BD60} |
 | Visual Studio Tools for Applications (VSTA)	| {A860303F-1F3F-4691-B57E-529FC101A107} |
 | Visual Studio Tools for Office (VSTO)	        | {BAA0C2D2-18E2-41B9-852F-F413020CAA33} |
 | Web Application	                            | {349C5851-65DF-11DA-9384-00065B846F21} |
