@@ -21,6 +21,7 @@ build/
 [Oo]bj/
 src/*/[Bb]in/
 src/*/[Oo]bj/
+src/*/Scratch/
 
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
