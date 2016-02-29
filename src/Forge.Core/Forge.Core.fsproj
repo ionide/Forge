@@ -79,6 +79,9 @@
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
     <None Include="Scratch\xlinq.fsx" />
+    <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Commontypes.xsd" />
+    <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Core.xsd" />
+    <EmbeddedResource Include="XmlSchemas\Microsoft.Build.xsd" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
