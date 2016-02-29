@@ -4,20 +4,22 @@ open System.Runtime.CompilerServices
 open System.Xml.Linq
 
 
-let xelem (name:string) (content:seq<'a>)  = XElement (XName.Get name, Seq.toArray content)
+
 let xattr (name:string) value    = XAttribute (XName.Get name, value)
 
 
-let inline private matchName (name:string) (xelem:#XElement) = name = xelem.Name.LocalName
+let inline localName x = (^a:(member Name:XName) x).LocalName
+
+let inline private matchName (name:string) x = name = (localName x)
 
 /// Helper function to filter a seq of XElements by matching their local name against the provided string
-let private nameFilter name sqs = sqs |> Seq.filter ^ matchName name
+let inline private nameFilter name sqs = sqs |> Seq.filter ^ matchName name
 
-let private hasNamed name sqs = sqs |> Seq.exists ^ matchName name
+let inline private hasNamed name sqs = sqs |> Seq.exists ^ matchName name
 
-let private getNamed name sqs = sqs |> Seq.find ^ matchName name
+let inline private getNamed name sqs = sqs |> Seq.find ^ matchName name
 
-let private tryGetNamed name sqs = 
+let  inline private tryGetNamed name sqs = 
     (None, sqs) ||> Seq.fold (fun acc elm ->
         match acc with
         | Some _ -> acc
@@ -127,15 +129,29 @@ module XElem =
     let getElement name (xelem:#XElement) =
         elements xelem |> getNamed name
 
+    let getElementValue name (xelem:#XElement) =
+        elements xelem |> getNamed name |> value
+
     let tryGetElement name (xelem:#XElement) =
         elements xelem |> tryGetNamed name
+
+    let tryGetElementValue name (xelem:#XElement) =
+        elements xelem |> tryGetNamed name |> Option.map value
 
     let getElements name (xelem:#XElement) =
         elements xelem |> nameFilter name
 
+    let attributes (xelem:#XElement) =
+        xelem.Attributes()
+    
+    let hasAttribute name (xelem:#XElement) =
+        attributes xelem |> hasNamed name
 
     let getAttribute name (xelem:#XElement) =
         xelem.Attribute ^ XName.Get name
+
+    let tryGetAttribute name (xelem:#XElement) =
+        attributes xelem |> tryGetNamed name
 
     let setAttribute name value (xelem:#XElement) =
         xelem.SetAttributeValue(XName.Get name, value)

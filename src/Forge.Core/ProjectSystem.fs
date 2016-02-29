@@ -56,9 +56,10 @@ open System.Xml.Linq
 type PlatformType = 
     | X86 |  X64 | AnyCpu
     override self.ToString () = self |> function
-        | X86                  -> "x86" 
-        | X64                  -> "x64"
-        | AnyCpu               -> "AnyCPU"
+        | X86     -> "x86" 
+        | X64     -> "x64"
+        | AnyCpu  -> "AnyCPU"
+
 
 
 [<RequireQualifiedAccess>]
@@ -74,6 +75,7 @@ type BuildAction =
     | Resource
     /// Represents resources to be embedded in the generated assembly.
     | EmbeddedResource
+
     override self.ToString() = self |> function
         | Compile          -> "Compile"
         | Content          -> "Content"
@@ -82,24 +84,53 @@ type BuildAction =
         | Resource         -> "Resource"
         | EmbeddedResource -> "EmbeddedResource"
 
+    static member Parse text = text |> function
+        | "Compile"          -> Compile          
+        | "Content"          -> Content          
+        | "Reference"        -> Reference        
+        | "None"             -> None             
+        | "Resource"         -> Resource         
+        | "EmbeddedResource" -> EmbeddedResource 
+        | _                  -> failwithf "Could not parse '%s' into a `BuildAction`" text
+
+    static member TryParse text = text |> function
+        | "Compile"          -> Some Compile          
+        | "Content"          -> Some Content          
+        | "Reference"        -> Some Reference        
+        | "None"             -> Some None             
+        | "Resource"         -> Some Resource         
+        | "EmbeddedResource" -> Some EmbeddedResource 
+        | _                  -> Option.None
 
 
 // Under "Compile" in https://msdn.microsoft.com/en-us/library/bb629388.aspx
 type CopyToOutputDirectory =
-    | Never
-    | Always
-    | PreserveNewest    
+    | Never | Always | PreserveNewest    
     override self.ToString() = self |> function
-        | Never -> "Never"
-        | Always -> "Always"
+        | Never          -> "Never"
+        | Always         -> "Always"
         | PreserveNewest -> "PreserveNewest"
+
+    static member Parse text = text |> function
+        | "Never"          -> Never
+        | "Always"         -> Always
+        | "PreserveNewest" -> PreserveNewest
+        | _                -> failwithf "Could not parse '%s' into a `CopyToOutputDirectory`" text
+
+    static member TryParse text = text |> function
+        | "Never"          -> Some Never
+        | "Always"         -> Some Always
+        | "PreserveNewest" -> Some PreserveNewest
+        | _                -> None
 
 
 [<RequireQualifiedAccess>]
 type DebugType =
-    | None
-    | PdbOnly
-    | Full
+    | None | PdbOnly | Full
+    override self.ToString () = self |> function
+        | None    -> "None"   
+        | PdbOnly -> "PdbOnly"
+        | Full    -> "Full"   
 
 
 /// Determines the output of compiling the F# Project
@@ -118,6 +149,21 @@ type OutputType =
         | Library -> "Library"
         | Module  -> "Module"
 
+    static member Parse text = text |> function
+        | "Exe"     -> Exe     
+        | "Winexe"  -> Winexe  
+        | "Library" -> Library 
+        | "Module"  -> Module  
+        | _         -> failwithf "Could not parse '%s' into a `OutputType`" text
+
+    static member TryParse text = text |> function
+        | "Exe"     -> Some Exe     
+        | "Winexe"  -> Some Winexe  
+        | "Library" -> Some Library 
+        | "Module"  -> Some Module  
+        | _         -> None 
+
+
 
 [<Struct>]
 type WarningLevel (x:int) =
@@ -129,6 +175,7 @@ type WarningLevel (x:int) =
 
 type Reference =
     {   Include : string
+        Condition : string option
         /// Relative or absolute path of the assembly
         HintPath : string option
         /// Optional string. The display name of the assembly, for example, "System.Windows.Forms."
@@ -140,23 +187,37 @@ type Reference =
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
     } 
+
+    static member fromXElem (xelem:XElement) =
+        let name =  xelem.Name.LocalName 
+        if name <> "Reference" then 
+            failwithf "XElement provided was not a `Reference` was `%s` instead" name 
+        else
+        {   Include         = XElem.getAttribute  "Include"         xelem |> XAttr.value
+            HintPath        = XElem.tryGetElement "HintPath"        xelem |> Option.map XElem.value
+            Condition       = XElem.tryGetElement "Condition"       xelem |> Option.map XElem.value
+            Name            = XElem.tryGetElement "Name"            xelem |> Option.map XElem.value
+            CopyLocal       = XElem.tryGetElement "Private"         xelem |> Option.bind (XElem.value >> parseBool)
+            SpecificVersion = XElem.tryGetElement "SpecificVersion" xelem |> Option.bind (XElem.value >> parseBool)
+        }
+
     member self.ToXElem() =
         XElem.create "Reference" []
         |> XElem.setAttribute "Include" self.Include
+        |> mapOpt self.Condition        ^ XElem.setAttribute "Condition"
         |> mapOpt self.Name             ^ XElem.addElem "Name"
-        |> mapOpt self.HintPath         ^ XElem.addElem "HintPath"
+        |> mapOpt self.HintPath         ^ XElem.addElem "HintPath"        
         |> mapOpt self.SpecificVersion  ^ fun b node -> XElem.addElem "SpecificVersion" (string b) node
         |> mapOpt self.CopyLocal        ^ fun b node -> XElem.addElem "Private" (string b) node
 
         
-
-
 /// Represents a reference to another project
 // https://msdn.microsoft.com/en-us/library/bb629388.aspx
 type ProjectReference =
     {   /// Path to the project file to include
         /// translates to the `Include` attribute in MSBuild XML
         Include : string
+        Condition : string option
         /// Optional string. The display name of the reference.
         Name : string option
         /// Optional Guid of the referenced project
@@ -172,15 +233,17 @@ type ProjectReference =
         if name <> "ProjectReference" then 
             failwithf "XElement provided was not a `ProjectReference` was `%s` instead" name 
         else
-        {   Include     = XElem.getAttribute  "Include" xelem |> XAttr.value
-            Name        = XElem.tryGetElement "Name"    xelem |> Option.map XElem.value
-            CopyLocal   = XElem.tryGetElement "Private" xelem |> Option.bind (XElem.value >> parseBool)
-            Guid        = XElem.tryGetElement "Project" xelem |> Option.bind (XElem.value >> parseGuid)
+        {   Include     = XElem.getAttribute  "Include"   xelem |> XAttr.value
+            Condition   = XElem.tryGetElement "Condition" xelem |> Option.map XElem.value
+            Name        = XElem.tryGetElement "Name"      xelem |> Option.map XElem.value
+            CopyLocal   = XElem.tryGetElement "Private"   xelem |> Option.bind (XElem.value >> parseBool)
+            Guid        = XElem.tryGetElement "Project"   xelem |> Option.bind (XElem.value >> parseGuid)
         }
         
     member self.ToXElem() =
         XElem.create "ProjectReference" []
         |> XElem.setAttribute "Include" self.Include
+        |> mapOpt self.Condition ^ XElem.setAttribute "Condition"
         |> mapOpt self.Name      ^ XElem.addElem "Name"
         |> mapOpt self.Guid      ^ fun guid node -> XElem.addElem "Project" (sprintf "{%s}" ^ string guid) node
         |> mapOpt self.CopyLocal ^ fun b node -> XElem.addElem "Private" (string b) node
@@ -202,22 +265,40 @@ let isSrcFile = function
     | "EmbeddedResource" -> true
     | _ -> false
 
+
 type SourceFile =
-    {   Include : string
-        OnBuild : BuildAction
-        Link    : string option
-        Copy    : CopyToOutputDirectory option         
+    {   Include     : string
+        Condition   : string option
+        OnBuild     : BuildAction
+        Link        : string option
+        Copy        : CopyToOutputDirectory option         
     }
+
+    static member fromXElem (xelem:XElement) =
+        let buildtype =  xelem.Name.LocalName 
+        if not ^ isSrcFile buildtype then 
+            failwithf "XElement provided was not `Compile|Content|None|Resource|EmbeddedResource` was `%s` instead" buildtype 
+        else
+        {   Include   = XElem.getAttribute  "Include" xelem |> XAttr.value
+            OnBuild   = BuildAction.Parse buildtype
+            Link      = XElem.tryGetElement "Link" xelem    |> Option.map XElem.value
+            Condition = XElem.tryGetElement "Condition" xelem    |> Option.map XElem.value
+            Copy      = 
+                XElem.tryGetElement "CopyToOutputDirectory" xelem 
+                |> Option.bind (XElem.value >> CopyToOutputDirectory.TryParse)
+        }
 
     member self.ToXElem() =
         XElem.create (string self.OnBuild) []        
         |> XElem.setAttribute "Include" self.Include
-        |> mapOpt self.Link ^ XElem.addElem "Link"
+        |> mapOpt self.Condition ^ XElem.setAttribute "Condition"
+        |> mapOpt self.Link      ^ XElem.addElem "Link"
         |> mapOpt self.Copy ^ fun copy node ->
             match copy with 
             | Never          -> node
             | Always         -> XElem.addElem "CopyToOutputDirectory" (string Always) node
             | PreserveNewest -> XElem.addElem "CopyToOutputDirectory" (string PreserveNewest) node
+
 (* ^ will produce an xml node like
 
     <Compile Include="path.fs">
@@ -228,8 +309,8 @@ type SourceFile =
 
 
 type SourcePair =
-    {   Module  : SourceFile
-        Sig     : SourceFile
+    {   Sig     : SourceFile
+        Module  : SourceFile
     }
 
 
@@ -239,25 +320,111 @@ type SourceElement =
     | Directory of SourceElement list
 
 
+type Property<'a> =
+    {   /// The name of the element tag in XML
+        Name      : string
+        /// The condition attribute
+        Condition : string option
+        /// Value stored withing tag
+        Data     : 'a option
+    }
+    static member fromXElem (xelem:XElement) =
+        {   Name      = xelem.Name.LocalName
+            Condition = XElem.tryGetAttribute "Condition" xelem |> Option.map XAttr.value
+            Data      = 
+                if String.IsNullOrWhiteSpace xelem.Value then None else 
+                Some xelem.Value                
+        }
+    static member fromXElem (xelem:XElement, mapString:string -> 'a)=
+        printfn "fromXElem in Property\n%s\n%A" xelem.Name.LocalName xelem
+        {   Name      = xelem.Name.LocalName
+            Condition = XElem.tryGetAttribute "Condition" xelem |> Option.map XAttr.value
+            Data      = 
+                if String.IsNullOrWhiteSpace xelem.Value then None else 
+                Some <| mapString xelem.Value                
+        }
 
+    member self.ToXElem() =
+        XElem.create self.Name (if self.Data.IsSome then [self.Data.Value] else [])
+        |> mapOpt self.Condition ^ XElem.setAttribute "Condition"
 
 
 type ProjectSettings =
-    {   Name : string
-        AssemblyName : string
-        RootNamespace : string
-        Configuration : string
-        Platform : string
-        SchemaVersion : decimal
-        ProjectGuid : Guid option
-        ProjectType : Guid list option
-        OutputType : OutputType
-        TargetFrameworkVersion : string option
-        TargetFrameworkProfile : string option
-        AutoGenerateBindingRedirects : bool
-        TargetFSharpCoreVersion :string
+    {   Name                         : Property<string>
+        AssemblyName                 : Property<string>
+        RootNamespace                : Property<string>
+        Configuration                : Property<string>
+        Platform                     : Property<string>
+        SchemaVersion                : Property<string>
+        ProjectGuid                  : Property<Guid>
+        ProjectType                  : Property<Guid list>
+        OutputType                   : Property<OutputType>
+        TargetFrameworkVersion       : Property<string>
+        TargetFrameworkProfile       : Property<string> 
+        AutoGenerateBindingRedirects : Property<bool>
+        TargetFSharpCoreVersion      : Property<string>
     }
+    static member fromXElem (xelem:XElement) =     
+        
+        let splitGuids (str:string) =
+            if String.IsNullOrWhiteSpace str then [] else
+            str.Split(';') |> Array.choose parseGuid |> List.ofArray   
+    
+        if not ("PropertyGroup" = xelem.Name.LocalName) 
+            || XElem.hasAttribute "Condition" xelem then 
+            failwithf "XElement provided was not `PropertyGroup` without a condition was `%s` instead" xelem.Name.LocalName
+        else
 
+        let elem name = 
+            match XElem.tryGetElement name xelem with
+            | Some x -> Property<string>.fromXElem x
+            | None   -> 
+                {   Name      = name
+                    Condition = None
+                    Data      = None    }
+
+        let elemmap name (mapfn:string -> 'a) = 
+            match XElem.tryGetElement name xelem with
+            | Some x -> Property<'a>.fromXElem(x,mapfn)
+            | None   -> 
+                {   Name      = name
+                    Condition = None
+                    Data      = None    }
+
+        {   Name                         = elem    "Name"                                  
+            AssemblyName                 = elem    "AssemblyName"  
+            RootNamespace                = elem    "RootNamespace" 
+            Configuration                = elem    "Configuration" 
+            Platform                     = elem    "Platform"      
+            SchemaVersion                = elem    "SchemaVersion"            
+            ProjectGuid                  = elemmap "ProjectGuid" Guid.Parse
+            ProjectType                  = elemmap "ProjectType" splitGuids
+            OutputType                   = elemmap "OutputType" OutputType.Parse
+            TargetFrameworkVersion       = elem    "TargetFrameworkVersion"      
+            TargetFrameworkProfile       = elem    "TargetFrameworkProfile"     
+            AutoGenerateBindingRedirects = elemmap "AutoGenerateBindingRedirects" Boolean.Parse
+            TargetFSharpCoreVersion      = elem    "TargetFSharpCoreVersion"            
+        }
+
+        member self.ToXElem() =
+            XElem.create "PropertyGroup" []        
+            |> XElem.addElement ^ self.Name.ToXElem ()
+            |> XElem.addElement ^ self.AssemblyName.ToXElem ()
+            |> XElem.addElement ^ self.RootNamespace.ToXElem ()
+            |> XElem.addElement ^ self.Configuration.ToXElem ()
+            |> XElem.addElement ^ self.Platform.ToXElem ()
+            |> XElem.addElement ^ self.SchemaVersion.ToXElem ()
+            |> XElem.addElement ^ self.ProjectGuid.ToXElem ()
+            |> XElem.addElement ^ self.ProjectType.ToXElem ()
+            |> XElem.addElement ^ self.OutputType.ToXElem ()
+            |> XElem.addElement ^ self.TargetFrameworkVersion.ToXElem ()
+            |> XElem.addElement ^ self.TargetFrameworkProfile.ToXElem ()
+            |> XElem.addElement ^ self.AutoGenerateBindingRedirects.ToXElem ()
+            |> XElem.addElement ^ self.TargetFSharpCoreVersion.ToXElem ()
+
+
+// parse the condition strings in property groups to create config settings
+// maybe even map those strings across the properties and then sort them to create config sets?
 
 type ConfigSettings =
     {   Condition            : string
@@ -275,26 +442,36 @@ type ConfigSettings =
     }
 
 
-    
-
 type FsProject =
     {   References          : Reference list
         ProjectReferences   : ProjectReference list
         SourceFiles         : SourceElement list
-        Settings            : ProjectSettings    
+        Settings            : ProjectSettings 
         BuildConfigs        : ConfigSettings list
     }    
 
 
 
-
 let readfsproj path =
+    let print sqs = sqs |> Seq.iter ^ printfn "%A"
+
     printfn "parsing - %s" path
     use reader = XmlReader.Create  path
-    let xdoc =  (reader |> XDocument.Load).Root
-    let propertyGroups    = XElem.descendantsNamed "PropertyGroup" xdoc
+    let xdoc   = (reader |> XDocument.Load).Root
+    
     let itemGroups        = XElem.descendantsNamed "ItemGroup" xdoc
 
+    let projectSettingsSqs = 
+        XElem.descendantsNamed "PropertyGroup" xdoc
+        |> Seq.filter (fun pg -> not ^ XElem.hasAttribute "Condition" pg)
+        
+    print projectSettingsSqs
+
+    let projectSettings = projectSettingsSqs |> Seq.head |> ProjectSettings.fromXElem
+
+//    let buildConfigs = 
+//        XElem.descendantsNamed "PropertyGroup" xdoc
+//        |> Seq.filter (fun pg -> XElem.hasAttribute "Condition" pg)
 
     let projectReferences = 
         XElem.descendantsNamed "ProjectReference" xdoc
@@ -306,21 +483,33 @@ let readfsproj path =
     let references = 
         filterItems "Reference"
         |> Seq.filter  (not << XElem.hasElement "Paket") // we only manage references paket isn't already managing
+        |> Seq.map Reference.fromXElem
     
     let srcFiles = 
         itemGroups  
         |> Seq.collect (fun itemgroup -> 
             XElem.descendants itemgroup 
             |> Seq.filter (fun x -> isSrcFile x.Name.LocalName)
-        )
+        ) |> Seq.map SourceFile.fromXElem
 
+//    printfn "\n - PROJECT SETTINGS - \n"
+//    print [projectSettings]
+//    printfn "\n - PROPERTY GROUPS - \n"    
+//    print propertyGroups
+//    printfn "\n - PROJECT REFERENCES - \n"
+//    print projectReferences
+//    printfn "\n - REFERENCES - \n"
+//    print references
+//    printfn "\n - SOURCE FILES - \n"
+//    print srcFiles
 
+    {   References  = references |> List.ofSeq
+        Settings    = projectSettings
+        SourceFiles = srcFiles |> Seq.map File |> List.ofSeq
+        ProjectReferences = projectReferences |> List.ofSeq
+        BuildConfigs = []
+    }
 
-    let print sqs = sqs |> Seq.iter ^ printfn "%A"
-    print propertyGroups
-    print projectReferences
-    print references
-    print srcFiles
 
 // A small abstraction over MSBuild project files.
 type ProjectFile (projectFileName:string, documentContent:string) =

@@ -196,3 +196,15 @@ let parseGuid text =
 let parseBool text =
     let mutable b = Unchecked.defaultof<bool>
     if Boolean.TryParse(text,&b) then Some b else None
+
+[<RequireQualifiedAccess>]
+module Option =
+
+    /// Gets the value associated with the option or the supplied default value.
+    let inline getOrElse v = function Some x -> x | None -> v
+
+    /// Gets the value associated with the option or the supplied default value.
+    let inline mapOrDefault mapfn v =
+        function
+        | Some x -> mapfn x
+        | None -> v
