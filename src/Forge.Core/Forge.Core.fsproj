@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d28ce980-2040-4b62-aca6-f07eb6b31920</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Fix</RootNamespace>
+    <RootNamespace>Forge</RootNamespace>
     <AssemblyName>Forge.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
@@ -62,7 +62,7 @@
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Compile Include="Prelude.fs" />
-    <Compile Include="Extensions.fs" />
+    <Compile Include="XLinq.fs" />
     <Compile Include="TraceListener.fs" />
     <Compile Include="TraceHelper.fs" />
     <Compile Include="ProcessHelper.fs" />
@@ -73,15 +73,20 @@
     <Compile Include="Paket.fs" />
     <Compile Include="Git.fs" />
     <Compile Include="ProjectSystem.fs" />
+    <Compile Include="ProjectValidation.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
+    <None Include="Scratch\xlinq.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build.Engine" />
+    <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
