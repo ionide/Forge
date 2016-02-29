@@ -3,18 +3,43 @@
 #r "System.Xml"
 #r "System.Xml.Linq"
 #load "Prelude.fs"
-#load "Extensions.fs"
+#load "XLinq.fs"
 open Forge.Prelude
-open Forge.Extensions
+open Forge.XLinq
 #else
 module Forge.ProjectSystem
 #endif
-
 
 open System
 open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
+
+(*  Project System AST
+    ==================
+    
+    The project System AST is a strongly representation of the settings relevant to an F# project
+    that can be serialized into the xml format of a .fsproj file
+
+    The records and discriminated unions that build up this AST are not a direct mapping to the MSBuild Schema
+    There are additional constructs to enforce rules specific to the F# compilation rules
+    Constructs that are superfluous for F# compilation are excluded
+
+    This AST is being constructed with the hopes for functioning as an abstraction layer over both
+    the MSBuild XML schema and the project.json schema with the possibility of supporting future formats
+    that may be constructed to save us from this nonsense.
+
+    Rough Architecture 
+    ------------------
+
+    [ Project AST ]
+    \_ Project Settings
+        -
+
+
+
+*)
+
 
 (*  Settings Unions
     ===============
@@ -30,8 +55,7 @@ open System.Xml.Linq
 /// The default is AnyCPU.
 type PlatformType = 
     | X86 |  X64 | AnyCpu
-    override self.ToString () =
-        match self with
+    override self.ToString () = self |> function
         | X86                  -> "x86" 
         | X64                  -> "x64"
         | AnyCpu               -> "AnyCPU"
@@ -57,6 +81,7 @@ type BuildAction =
         | None             -> "None"
         | Resource         -> "Resource"
         | EmbeddedResource -> "EmbeddedResource"
+
 
 
 // Under "Compile" in https://msdn.microsoft.com/en-us/library/bb629388.aspx
@@ -87,15 +112,17 @@ type OutputType =
     | Library
     /// Build a module that can be added to another assembly (.netmodule)
     | Module
-    override self.ToString () =
-        match self with
+    override self.ToString () = self |> function
         | Exe     -> "Exe"
         | Winexe  -> "Winexe"
         | Library -> "Library"
         | Module  -> "Module"
 
 
-
+[<Struct>]
+type WarningLevel (x:int) =
+    member __.Value = 
+        if x < 0 then 0 elif x > 5 then 5 else x
 
 // Common MSBuild Project Items
 // https://msdn.microsoft.com/en-us/library/bb629388.aspx
@@ -107,12 +134,19 @@ type Reference =
         /// Optional string. The display name of the assembly, for example, "System.Windows.Forms."
         Name : string option
         /// Optional boolean. Specifies whether only the version in the fusion name should be referenced.
-        SpecificVesion : bool option
+        SpecificVersion : bool option
         /// Optional boolean. Specifies whether the reference should be copied to the output folder. 
         /// This attribute matches the Copy Local property of the reference that's in the Visual Studio IDE.                 
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
     } 
+    member self.ToXElem() =
+        XElem.create "Reference" []
+        |> XElem.setAttribute "Include" self.Include
+        |> mapOpt self.Name             ^ XElem.addElem "Name"
+        |> mapOpt self.HintPath         ^ XElem.addElem "HintPath"
+        |> mapOpt self.SpecificVersion  ^ fun b node -> XElem.addElem "SpecificVersion" (string b) node
+        |> mapOpt self.CopyLocal        ^ fun b node -> XElem.addElem "Private" (string b) node
 
         
 
@@ -122,7 +156,7 @@ type Reference =
 type ProjectReference =
     {   /// Path to the project file to include
         /// translates to the `Include` attribute in MSBuild XML
-        Path : string
+        Include : string
         /// Optional string. The display name of the reference.
         Name : string option
         /// Optional Guid of the referenced project
@@ -132,13 +166,65 @@ type ProjectReference =
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
     }
+    /// Constructs a ProjectReference from an XElement
+    static member fromXElem (xelem:XElement) =
+        let name =  xelem.Name.LocalName 
+        if name <> "ProjectReference" then 
+            failwithf "XElement provided was not a `ProjectReference` was `%s` instead" name 
+        else
+        {   Include     = XElem.getAttribute  "Include" xelem |> XAttr.value
+            Name        = XElem.tryGetElement "Name"    xelem |> Option.map XElem.value
+            CopyLocal   = XElem.tryGetElement "Private" xelem |> Option.bind (XElem.value >> parseBool)
+            Guid        = XElem.tryGetElement "Project" xelem |> Option.bind (XElem.value >> parseGuid)
+        }
+        
+    member self.ToXElem() =
+        XElem.create "ProjectReference" []
+        |> XElem.setAttribute "Include" self.Include
+        |> mapOpt self.Name      ^ XElem.addElem "Name"
+        |> mapOpt self.Guid      ^ fun guid node -> XElem.addElem "Project" (sprintf "{%s}" ^ string guid) node
+        |> mapOpt self.CopyLocal ^ fun b node -> XElem.addElem "Private" (string b) node
+
+(*
+    <ProjectReference Include="..\some.fsproj">
+      <Name>The-Some</Name>
+      <Project>{17b0907c-699a-4e40-a2b6-8caf53cbd004}</Project>
+      <Private>False</Private>
+    </ProjectReference>
+*)
+
+/// use to match against the name of an xelement to see if it represents a source file
+let isSrcFile = function
+    | "Compile"
+    | "Content"
+    | "None"
+    | "Resource"
+    | "EmbeddedResource" -> true
+    | _ -> false
 
 type SourceFile =
-    {   Path    : string
-        Link    : string
-        Copy    : CopyToOutputDirectory
+    {   Include : string
         OnBuild : BuildAction
+        Link    : string option
+        Copy    : CopyToOutputDirectory option         
     }
+
+    member self.ToXElem() =
+        XElem.create (string self.OnBuild) []        
+        |> XElem.setAttribute "Include" self.Include
+        |> mapOpt self.Link ^ XElem.addElem "Link"
+        |> mapOpt self.Copy ^ fun copy node ->
+            match copy with 
+            | Never          -> node
+            | Always         -> XElem.addElem "CopyToOutputDirectory" (string Always) node
+            | PreserveNewest -> XElem.addElem "CopyToOutputDirectory" (string PreserveNewest) node
+(* ^ will produce an xml node like
+
+    <Compile Include="path.fs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Common/path.fs</Link>
+    </Compile>
+*)
 
 
 type SourcePair =
@@ -163,16 +249,17 @@ type ProjectSettings =
         Configuration : string
         Platform : string
         SchemaVersion : decimal
-        ProjectGuid : Guid
+        ProjectGuid : Guid option
         ProjectType : Guid list option
         OutputType : OutputType
-        TargetFrameworkVersion : string
+        TargetFrameworkVersion : string option
+        TargetFrameworkProfile : string option
         AutoGenerateBindingRedirects : bool
         TargetFSharpCoreVersion :string
     }
 
 
-type ConfigurationSettings =
+type ConfigSettings =
     {   Condition            : string
         DebugSymbols         : bool
         DebugType            : string
@@ -180,10 +267,11 @@ type ConfigurationSettings =
         Tailcalls            : bool
         OutputPath           : string
         CompilationConstants : string list
-        WarningLevel         : int
+        WarningLevel         : WarningLevel
         PlatformTarget       : PlatformType
         Documentationfile    : string
         Prefer32Bit          : bool
+        OtherFlags           : string list
     }
 
 
@@ -194,76 +282,47 @@ type FsProject =
         ProjectReferences   : ProjectReference list
         SourceFiles         : SourceElement list
         Settings            : ProjectSettings    
-    
+        BuildConfigs        : ConfigSettings list
     }    
 
 
-// Records -> XML
-// =======================
-
-type SourceFile with
-    member self.ToXml() =
-        let copyElem value = xelem "CopyToOutputDirectory" [value]
-        
-        let addCopyNode xmlnode =
-            match self.Copy with
-            | Never -> xmlnode
-            | Always ->  addElement (copyElem ^ string Always) xmlnode
-            | PreserveNewest -> addElement (copyElem ^ string PreserveNewest) xmlnode
-       
-        let addLinkNode xmlnode =
-            if String.IsNullOrWhiteSpace self.Link then xmlnode else
-            addElement (xelem "Link" [self.Link]) xmlnode
-
-        xelem (string self.OnBuild) []
-        |> setAttribute "Include" self.Path
-        |> addCopyNode
-        |> addLinkNode
-
-(* ^ will produce an xml node like
-
-    <Compile Include="path.fs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Common/path.fs</Link>
-    </Compile>
-*)
 
 
-type ProjectReference with
-    member self.ToXml() =
-        let addNameNode xmlnode =
-            match self.Name with
-            | None -> xmlnode
-            | Some name -> addElement (xelem "Name" [name]) xmlnode
-
-        let addGuidNode xmlnode =            
-            match self.Guid with
-            | None -> xmlnode
-            | Some guid ->  
-                addElement (xelem "Project" [sprintf "{%s}" (string guid)]) xmlnode
-        
-        let addPrivateNode xmlnode =
-            match self.CopyLocal with
-            | None -> xmlnode
-            | Some b ->  
-                addElement (xelem "Private" [string b]) xmlnode
-
-        xelem "ProjectReference" []
-        |> setAttribute "Include" self.Path
-        |> addNameNode
-        |> addGuidNode
-        |> addPrivateNode
-
-(*
-    <ProjectReference Include="..\some.fsproj">
-      <Name>The-Some</Name>
-      <Project>{17b0907c-699a-4e40-a2b6-8caf53cbd004}</Project>
-      <Private>False</Private>
-    </ProjectReference>
-*)
+let readfsproj path =
+    printfn "parsing - %s" path
+    use reader = XmlReader.Create  path
+    let xdoc =  (reader |> XDocument.Load).Root
+    let propertyGroups    = XElem.descendantsNamed "PropertyGroup" xdoc
+    let itemGroups        = XElem.descendantsNamed "ItemGroup" xdoc
 
 
-/// A small abstraction over MSBuild project files.
+    let projectReferences = 
+        XElem.descendantsNamed "ProjectReference" xdoc
+        |> Seq.map ProjectReference.fromXElem
+
+    let filterItems name =
+        itemGroups |> Seq.collect ^ XElem.descendantsNamed name
+
+    let references = 
+        filterItems "Reference"
+        |> Seq.filter  (not << XElem.hasElement "Paket") // we only manage references paket isn't already managing
+    
+    let srcFiles = 
+        itemGroups  
+        |> Seq.collect (fun itemgroup -> 
+            XElem.descendants itemgroup 
+            |> Seq.filter (fun x -> isSrcFile x.Name.LocalName)
+        )
+
+
+
+    let print sqs = sqs |> Seq.iter ^ printfn "%A"
+    print propertyGroups
+    print projectReferences
+    print references
+    print srcFiles
+
+// A small abstraction over MSBuild project files.
 type ProjectFile (projectFileName:string, documentContent:string) =
     let document = XMLDoc documentContent
 
@@ -492,3 +551,6 @@ let CompareProjectsTo templateProject projects =
         |> toLines
 
     if isNotNullOrEmpty errors then failwith errors
+#if INTERACTIVE
+;; readfsproj ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+#endif

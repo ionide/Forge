@@ -109,4 +109,16 @@
       </ItemGroup>
     </When>
   </Choose>
+  
+  <ProjectReference Include="fake1.fsproj">
+      <Name>ItAintReal</Name>
+      <Project>{17b0907c-699a-4e40-a2b6-8caf53cbd004}</Project>
+      <Private>False</Private>
+  </ProjectReference>
+  
+  <ProjectReference Include="fake2.fsproj">
+      <Name>JustAFantasy</Name>
+      <Project>{17b0907c-699a-4e40-a2b6-8caf53cbd004}</Project>
+      <Private>True</Private>
+  </ProjectReference>
 </Project>

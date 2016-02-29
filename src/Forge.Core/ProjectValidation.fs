@@ -63,13 +63,9 @@ let ignoreFSharpElements (o:Object) (e:ValidationEventArgs) =
     | "FSharpTargetsPath" -> ()
     | _ -> 
         let info = xelem :> IXmlLineInfo
-        printfn "-- %s --\n" ^ string e.Severity
-        printfn 
-            "The element '%s' has an invalid child element\
-            \n    %s\n\
-            Error Located at Line - %i Pos %i\n" 
-                xelem.Parent.Name.LocalName xelem.Name.LocalName
-                info.LineNumber info.LinePosition
+        printfn "-- %s --\n"  (string e.Severity)
+        printfn "The element '%s' has an invalid child element\n    %s"  xelem.Parent.Name.LocalName xelem.Name.LocalName
+        printfn "Located at Line - %i Pos %i\n" info.LineNumber info.LinePosition
         
 //        printfn "%s" e.Message
 

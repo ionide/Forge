@@ -182,3 +182,17 @@ let packagesDirectory = directory </> "packages"
 let paketLocation     = exeLocation </> "Tools" </> "Paket"
 let fakeLocation      = exeLocation </> "Tools" </> "FAKE"
 let fakeToolLocation  = fakeLocation </> "tools"
+
+
+let inline mapOpt (opt:'a option) mapfn (x:'b) =
+    match opt with
+    | None -> x
+    | Some a -> mapfn a x 
+
+let parseGuid text = 
+    let mutable g = Unchecked.defaultof<Guid>
+    if Guid.TryParse(text,&g) then Some g else None
+
+let parseBool text =
+    let mutable b = Unchecked.defaultof<bool>
+    if Boolean.TryParse(text,&b) then Some b else None

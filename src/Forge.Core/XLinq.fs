@@ -13,10 +13,16 @@ let inline private matchName (name:string) (xelem:#XElement) = name = xelem.Name
 /// Helper function to filter a seq of XElements by matching their local name against the provided string
 let private nameFilter name sqs = sqs |> Seq.filter ^ matchName name
 
-let private firstNamed name sqs = sqs |> Seq.find ^ matchName name
-
 let private hasNamed name sqs = sqs |> Seq.exists ^ matchName name
 
+let private getNamed name sqs = sqs |> Seq.find ^ matchName name
+
+let private tryGetNamed name sqs = 
+    (None, sqs) ||> Seq.fold (fun acc elm ->
+        match acc with
+        | Some _ -> acc
+        | None   -> if matchName name elm then Some elm else None
+    )
 
 [<RequireQualifiedAccess>]
 /// Functions for operating on XNodes
@@ -41,7 +47,7 @@ module XNode =
 
     /// Returns the first ancestor of the XNode with a local name matching `name`
     let ancestorNamed (name:string) (node:#XNode) =
-        ancestors node |> firstNamed name
+        ancestors node |> tryGetNamed name
 
     /// Returns all ancestors of the XNode with a local name matching `name`
     let ancestorsNamed (name:string) (node:#XNode) =
@@ -73,7 +79,7 @@ module XCont =
     let descendants (cont:#XContainer) = cont.Descendants()
     
     let descendantNamed name (cont:#XContainer) =
-        descendants cont |> firstNamed name
+        descendants cont |> tryGetNamed name
 
     let descendantsNamed name (cont:#XContainer) = 
         descendants cont |> nameFilter name
@@ -83,10 +89,13 @@ module XCont =
     let hasElement name (cont:#XContainer) =
         elements cont |> hasNamed name
 
-    let elementNamed name (cont:#XContainer) =
-        elements cont |> firstNamed name
+    let getElement name (cont:#XContainer) =
+        elements cont |> getNamed name
 
-    let elementsNamed name (cont:#XContainer) =
+    let tryGetElement name (cont:#XContainer) =
+        elements cont |> tryGetNamed name
+
+    let getElements name (cont:#XContainer) =
         elements cont |> nameFilter name
 
     let nodes (cont:#XContainer) = cont.Nodes()
@@ -95,11 +104,17 @@ module XCont =
 [<RequireQualifiedAccess>]
 /// Functions for operating on XElements
 module XElem =
+    let create (name:string) (content:seq<'a>) = 
+        XElement (XName.Get name, Seq.toArray content)
 
+    let value (xelem:#XElement) = xelem.Value
+
+    let nodes (xelem:#XElement) = xelem.Nodes()
+    
     let descendants (xelem:#XElement) = xelem.Descendants()
     
     let descendantNamed name (xelem:#XElement) =
-        descendants xelem |> firstNamed name
+        descendants xelem |> tryGetNamed name
 
     let descendantsNamed name (xelem:#XElement) = 
         descendants xelem |> nameFilter name
@@ -109,13 +124,18 @@ module XElem =
     let hasElement name (xelem:#XElement) =
         elements xelem |> hasNamed name
 
-    let elementNamed name (xelem:#XElement) =
-        elements xelem |> firstNamed name
+    let getElement name (xelem:#XElement) =
+        elements xelem |> getNamed name
 
-    let elementsNamed name (xelem:#XElement) =
+    let tryGetElement name (xelem:#XElement) =
+        elements xelem |> tryGetNamed name
+
+    let getElements name (xelem:#XElement) =
         elements xelem |> nameFilter name
 
-    let nodes (xelem:#XElement) = xelem.Nodes()
+
+    let getAttribute name (xelem:#XElement) =
+        xelem.Attribute ^ XName.Get name
 
     let setAttribute name value (xelem:#XElement) =
         xelem.SetAttributeValue(XName.Get name, value)
@@ -128,6 +148,17 @@ module XElem =
     let addElement (child:XElement) (parent:XElement) =
         parent.Add child
         parent
+
+    /// Creates a new XElement and adds it as a child
+    let inline addElem elmName value xelem =
+        addElement (create elmName [value]) xelem
+
+[<RequireQualifiedAccess>]
+module XAttr =
+    let value (xattr:XAttribute) = xattr.Value
+    let parent (xattr:XAttribute) = xattr.Parent
+    let previous (xattr:XAttribute) = xattr.PreviousAttribute
+    let next (xattr:XAttribute) = xattr.NextAttribute
 
     
 [<Extension>]
