@@ -548,7 +548,7 @@ type FsProject =
         Settings            : ProjectSettings 
         BuildConfigs        : ConfigSettings list
         ProjectReferences   : ProjectReference list
-        References          : Reference list        
+        References          : Reference list     
         SourceFiles         : SourceElement list
     }   
 
@@ -572,6 +572,23 @@ type FsProject =
 
         projxml
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module FsProject =
+
+    let addReference (refr:Reference) (proj:FsProject) =
+        if proj.References |> List.exists ((=) refr) then proj else
+        { proj with References = refr::proj.References }
+
+    let removeReference (refr:Reference) (proj:FsProject) =
+        if not (proj.References |> List.exists ((=) refr)) then proj else
+        { proj with References = proj.References |> List.filter ((<>) refr) }
+
+
+
+// eventually the xelems that Forge manages will be removed from the overarching
+// xelem, the remaining nodes will be stored for later
+// after forge is done managing the project AST it will xform to an xelment and
+// add this back to the stored nodes.
 
 let readfsproj path =
     let print sqs = sqs |> Seq.iter ^ printfn "%A"
