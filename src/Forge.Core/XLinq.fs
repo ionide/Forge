@@ -157,12 +157,20 @@ module XElem =
         xelem.SetAttributeValue(XName.Get name, value)
         xelem
     
+    let addAttribute (xattr:#XAttribute) (xelem:#XElement) =
+        xelem.Add xattr
+        xelem
+
     let setElement name value (xelem:#XElement) =
         xelem.SetElementValue(XName.Get name, value)
         xelem
 
     let addElement (child:XElement) (parent:XElement) =
         parent.Add child
+        parent
+
+    let addElements (children:#seq<XElement>) (parent:XElement) =
+        parent.Add children
         parent
 
     /// Creates a new XElement and adds it as a child
