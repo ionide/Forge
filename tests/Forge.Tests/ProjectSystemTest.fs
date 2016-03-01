@@ -58,6 +58,15 @@ let ``ProjectSystem - remove not existing file``() =
     pf'.SourceFiles |> Seq.length |> should be (equal 3)
 
 [<Test>]
+let ``ProjectSystem - order file``() =
+    let pf = FsProject.parse astInput
+    let f = File {SourceFile.Include = "a_file.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+    let bf = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+    let pf' = FsProject.orderFile f bf pf
+    pf'.SourceFiles.Head |> should be (equal f)
+    pf'.SourceFiles |> Seq.length |> should be (equal 3)
+
+[<Test>]
 let ``ProjectSystem - add reference``() =
     let pf = FsProject.parse astInput
     let r = {Reference.Include = "System.Xml"; Name = None; Condition = None; HintPath = None; SpecificVersion = None; CopyLocal = None}
