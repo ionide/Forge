@@ -104,6 +104,13 @@ module XCont =
 
 
 [<RequireQualifiedAccess>]
+module XAttr =
+    let value (xattr:XAttribute) = xattr.Value
+    let parent (xattr:XAttribute) = xattr.Parent
+    let previous (xattr:XAttribute) = xattr.PreviousAttribute
+    let next (xattr:XAttribute) = xattr.NextAttribute
+
+[<RequireQualifiedAccess>]
 /// Functions for operating on XElements
 module XElem =
     let create (name:string) (content:seq<'a>) = 
@@ -150,8 +157,14 @@ module XElem =
     let getAttribute name (xelem:#XElement) =
         xelem.Attribute ^ XName.Get name
 
+    let getAttributeValue name (xelem:#XElement) =
+        xelem.Attribute ^ XName.Get name |> XAttr.value
+
     let tryGetAttribute name (xelem:#XElement) =
         attributes xelem |> tryGetNamed name
+
+    let tryGetAttributeValue name (xelem:#XElement) =
+        tryGetAttribute name xelem |> Option.map XAttr.value
 
     let setAttribute name value (xelem:#XElement) =
         xelem.SetAttributeValue(XName.Get name, value)
@@ -177,12 +190,7 @@ module XElem =
     let inline addElem elmName value xelem =
         addElement (create elmName [value]) xelem
 
-[<RequireQualifiedAccess>]
-module XAttr =
-    let value (xattr:XAttribute) = xattr.Value
-    let parent (xattr:XAttribute) = xattr.Parent
-    let previous (xattr:XAttribute) = xattr.PreviousAttribute
-    let next (xattr:XAttribute) = xattr.NextAttribute
+
 
     
 [<Extension>]

@@ -73,6 +73,7 @@
     <Compile Include="Fake.fs" />
     <Compile Include="Paket.fs" />
     <Compile Include="Git.fs" />
+    <Compile Include="Constants.fs" />
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="ProjectValidation.fs" />
     <Compile Include="Templates.fs" />
