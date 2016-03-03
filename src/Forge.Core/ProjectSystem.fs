@@ -4,13 +4,17 @@
 #r "System.Xml.Linq"
 #load "Prelude.fs"
 #load "XLinq.fs"
+#load "Constants.fs"
+#load "ResizeArray.fs"
 open Forge.Prelude
 open Forge.XLinq
+open Forge
 #else
 module Forge.ProjectSystem
 #endif
 
 open System
+open System.IO
 open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
@@ -32,11 +36,13 @@ open System.Xml.Linq
     Rough Architecture
     ------------------
 
-    [ Project AST ]
-    \_ Project Settings
-        -
-
-
+    [ FsProject ]
+        `-- Project Settings
+        `-- ConfigSettings
+        `-- Project References
+        `-- References
+        `-- SourceFiles
+            `-- Directory | Single File | .fsi & .fs src pair
 
 *)
 
@@ -329,7 +335,7 @@ type SourceFile =
         }
 
     member self.ToXElem () =
-        XElem.create (string self.OnBuild) []
+          XElem.create (string self.OnBuild) []
         |> XElem.setAttribute Constants.Include self.Include
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
         |> mapOpt self.Link      ^ XElem.addElem Constants.Link
@@ -360,15 +366,28 @@ type SourcePair =
 
 
 type SourceElement =
-    | File      of SourceFile
-    | Pair      of SourcePair
-    | Directory of SourceElement list
+    | File      of fileName:string
+    | Pair      of sigfile:string * modfile:string
+    | Directory of dirName:string
 
-    member self.ToXElem () : XElement list =
-        match self with
-        | File  x       -> [x.ToXElem()]
-        | Pair  x       -> x.ToXElem()
-        | Directory x   -> x |> List.collect (fun e -> e.ToXElem())
+//type SourceElement =
+//    | File      of SourceFile
+//    | Pair      of SourcePair
+//    | Directory of SourceElement list
+
+//    member self.ToXElem () : XElement list =
+//        match self with
+//        | File  x       -> [x.ToXElem()]
+//        | Pair  x       -> x.ToXElem()
+//        | Directory (content=x)   -> 
+//            let rec loop acc (srcls:SourceElement list) =
+//                match srcls with
+//                | [] -> acc
+//                | File s::tl -> loop (toXElem s ::acc) tl
+//                | Pair s::tl -> loop (toXElem s @ acc) tl
+//                | Directory (content=s)::tl -> loop ((loop [] s)@acc) tl
+//            loop [] x
+//        
 
 
 type Property<'a> =
