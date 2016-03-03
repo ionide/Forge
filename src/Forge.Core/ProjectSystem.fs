@@ -1,11 +1,11 @@
 ﻿#if INTERACTIVE
 /// Contains project file comparion tools for MSBuild project files.
-#r "System.Xml"
+#r "bin/Release/Forge.Core.dll"
 #r "System.Xml.Linq"
-#load "Prelude.fs"
-#load "XLinq.fs"
-#load "Constants.fs"
-#load "ResizeArray.fs"
+//#load "Prelude.fs"
+//#load "XLinq.fs"
+//#load "Constants.fs"
+//#load "ResizeArray.fs"
 open Forge.Prelude
 open Forge.XLinq
 open Forge
@@ -14,6 +14,7 @@ module Forge.ProjectSystem
 #endif
 
 open System
+open System.Text
 open System.IO
 open System.Collections.Generic
 open System.Xml
@@ -57,7 +58,9 @@ open System.Xml.Linq
 *)
 
 
-
+let (|InvariantEqual|_|) (str:string) arg =
+  if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
+    then Some() else None
 
 /// Sets the platform for a Build Configuration
 ///     x86,  x64, or AnyCPU.
@@ -66,21 +69,21 @@ type PlatformType =
     | X86 |  X64 | AnyCPU
 
     override self.ToString () = self |> function
-        | X86     -> Constants.X86    
-        | X64     -> Constants.X64    
-        | AnyCPU  -> Constants.AnyCPU 
+        | X86     -> Constants.X86
+        | X64     -> Constants.X64
+        | AnyCPU  -> Constants.AnyCPU
 
     static member Parse text = text |> function
-        | Constants.X86     -> X86
-        | Constants.X64     -> X64
-        | Constants.AnyCPU  -> AnyCPU
-        | _ -> 
+        | InvariantEqual Constants.X86     -> X86
+        | InvariantEqual Constants.X64     -> X64
+        | InvariantEqual Constants.AnyCPU  -> AnyCPU
+        | _ ->
             failwithf "Could not parse '%s' into a `PlatformType`" text
 
     static member TryParse text = text |> function
-        | Constants.X86     -> Some X86
-        | Constants.X64     -> Some X64
-        | Constants.AnyCPU  -> Some AnyCPU
+        | InvariantEqual Constants.X86     -> Some X86
+        | InvariantEqual Constants.X64     -> Some X64
+        | InvariantEqual Constants.AnyCPU  -> Some AnyCPU
         | _                 -> None
 
 
@@ -107,22 +110,22 @@ type BuildAction =
         | EmbeddedResource -> Constants.EmbeddedResource
 
     static member Parse text = text |> function
-        | Constants.Compile          -> Compile
-        | Constants.Content          -> Content
-        | Constants.Reference        -> Reference
-        | Constants.None             -> None
-        | Constants.Resource         -> Resource
-        | Constants.EmbeddedResource -> EmbeddedResource
-        | _ -> 
+        | InvariantEqual Constants.Compile          -> Compile
+        | InvariantEqual Constants.Content          -> Content
+        | InvariantEqual Constants.Reference        -> Reference
+        | InvariantEqual Constants.None             -> None
+        | InvariantEqual Constants.Resource         -> Resource
+        | InvariantEqual Constants.EmbeddedResource -> EmbeddedResource
+        | _ ->
             failwithf "Could not parse '%s' into a `BuildAction`" text
 
     static member TryParse text = text |> function
-        | Constants.Compile          -> Some Compile
-        | Constants.Content          -> Some Content
-        | Constants.Reference        -> Some Reference
-        | Constants.None             -> Some None
-        | Constants.Resource         -> Some Resource
-        | Constants.EmbeddedResource -> Some EmbeddedResource
+        | InvariantEqual Constants.Compile          -> Some Compile
+        | InvariantEqual Constants.Content          -> Some Content
+        | InvariantEqual Constants.Reference        -> Some Reference
+        | InvariantEqual Constants.None             -> Some None
+        | InvariantEqual Constants.Resource         -> Some Resource
+        | InvariantEqual Constants.EmbeddedResource -> Some EmbeddedResource
         | _                          -> Option.None
 
 
@@ -136,16 +139,16 @@ type CopyToOutputDirectory =
         | PreserveNewest -> Constants.PreserveNewest
 
     static member Parse text = text |> function
-        | Constants.Never          -> Never
-        | Constants.Always         -> Always
-        | Constants.PreserveNewest -> PreserveNewest
-        | _ -> 
+        | InvariantEqual Constants.Never          -> Never
+        | InvariantEqual Constants.Always         -> Always
+        | InvariantEqual Constants.PreserveNewest -> PreserveNewest
+        | _ ->
             failwithf "Could not parse '%s' into a `CopyToOutputDirectory`" text
 
     static member TryParse text = text |> function
-        | Constants.Never          -> Some Never
-        | Constants.Always         -> Some Always
-        | Constants.PreserveNewest -> Some PreserveNewest
+        | InvariantEqual Constants.Never          -> Some Never
+        | InvariantEqual Constants.Always         -> Some Always
+        | InvariantEqual Constants.PreserveNewest -> Some PreserveNewest
         | _                        -> None
 
 
@@ -159,16 +162,16 @@ type DebugType =
         | Full    -> Constants.Full
 
     static member Parse text = text |> function
-        | Constants.None    -> DebugType.None
-        | Constants.PdbOnly -> DebugType.PdbOnly
-        | Constants.Full    -> DebugType.Full
-        | _ -> 
+        | InvariantEqual Constants.None    -> DebugType.None
+        | InvariantEqual Constants.PdbOnly -> DebugType.PdbOnly
+        | InvariantEqual Constants.Full    -> DebugType.Full
+        | _ ->
             failwithf "Could not parse '%s' into a `DebugType`" text
 
     static member TryParse text = text |> function
-        | Constants.None    -> Some DebugType.None
-        | Constants.PdbOnly -> Some DebugType.PdbOnly
-        | Constants.Full    -> Some DebugType.Full
+        | InvariantEqual Constants.None    -> Some DebugType.None
+        | InvariantEqual Constants.PdbOnly -> Some DebugType.PdbOnly
+        | InvariantEqual Constants.Full    -> Some DebugType.Full
         | _                 -> Option.None
 
 
@@ -184,24 +187,24 @@ type OutputType =
     | Module
 
     override self.ToString () = self |> function
-        | Exe     -> Constants.Exe     
-        | Winexe  -> Constants.Winexe  
-        | Library -> Constants.Library 
-        | Module  -> Constants.Module  
+        | Exe     -> Constants.Exe
+        | Winexe  -> Constants.Winexe
+        | Library -> Constants.Library
+        | Module  -> Constants.Module
 
     static member Parse text = text |> function
-        | Constants.Exe     -> Exe
-        | Constants.Winexe  -> Winexe
-        | Constants.Library -> Library
-        | Constants.Module  -> Module
-        | _ -> 
+        | InvariantEqual Constants.Exe     -> Exe
+        | InvariantEqual Constants.Winexe  -> Winexe
+        | InvariantEqual Constants.Library -> Library
+        | InvariantEqual Constants.Module  -> Module
+        | _ ->
             failwithf "Could not parse '%s' into a `OutputType`" text
 
     static member TryParse text = text |> function
-        | Constants.Exe     -> Some Exe
-        | Constants.Winexe  -> Some Winexe
-        | Constants.Library -> Some Library
-        | Constants.Module  -> Some Module
+        | InvariantEqual Constants.Exe     -> Some Exe
+        | InvariantEqual Constants.Winexe  -> Some Winexe
+        | InvariantEqual Constants.Library -> Some Library
+        | InvariantEqual Constants.Module  -> Some Module
         | _                 -> None
 
 
@@ -289,9 +292,9 @@ type ProjectReference =
         |> XElem.setAttribute Constants.Include self.Include
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
         |> mapOpt self.Name      ^ XElem.addElem Constants.Name
-        |> mapOpt self.Guid      ^ fun guid node -> 
+        |> mapOpt self.Guid      ^ fun guid node ->
             XElem.addElem Constants.Private (sprintf "{%s}" ^ string guid) node
-        |> mapOpt self.CopyLocal ^ fun b node -> 
+        |> mapOpt self.CopyLocal ^ fun b node ->
             XElem.addElem Constants.Private (string b) node
 
 (*
@@ -326,8 +329,8 @@ type SourceFile =
             failwithf "XElement provided was not `Compile|Content|None|Resource|EmbeddedResource` was `%s` instead" buildtype
         else
         {   OnBuild   = BuildAction.Parse buildtype
-            Include   = XElem.getAttributeValue  Constants.Include xelem             
-            Link      = XElem.tryGetElementValue Constants.Link xelem    
+            Include   = XElem.getAttributeValue  Constants.Include xelem
+            Link      = XElem.tryGetElementValue Constants.Link xelem
             Condition = XElem.tryGetElementValue Constants.Condition xelem
             Copy      =
                 XElem.tryGetElement Constants.CopyToOutputDirectory xelem
@@ -379,7 +382,7 @@ type SourceElement =
 //        match self with
 //        | File  x       -> [x.ToXElem()]
 //        | Pair  x       -> x.ToXElem()
-//        | Directory (content=x)   -> 
+//        | Directory (content=x)   ->
 //            let rec loop acc (srcls:SourceElement list) =
 //                match srcls with
 //                | [] -> acc
@@ -387,13 +390,13 @@ type SourceElement =
 //                | Pair s::tl -> loop (toXElem s @ acc) tl
 //                | Directory (content=s)::tl -> loop ((loop [] s)@acc) tl
 //            loop [] x
-//        
+//
 
 [<AutoOpen>]
-module private PathHelpers =
+module internal PathHelpers =
 
-    let normalizeFileName (fileName : string) = 
-        let file = fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()   
+    let normalizeFileName (fileName : string) =
+        let file = fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()
         match file with
         | "/" -> "/"
         | f -> f.TrimStart '/'
@@ -401,7 +404,7 @@ module private PathHelpers =
 
     let hasRoot (path:string) =
         match Path.GetDirectoryName path with
-        | "" | @"\" | "/" -> false 
+        | "" | @"\" | "/" -> false
         | _ -> true
 
     /// gets the name of the root directory of a file with a `/` a the end
@@ -423,35 +426,37 @@ module private PathHelpers =
 
 
     let getParentDir (path:string) =
-        match path with 
+        match path with
         | "/" | @"\" | "" -> "/"
         | _ ->
             let path = path.TrimEnd('/','\\')
             (normalizeFileName ^ Path.GetDirectoryName path) + "/"
-     
+
 
     let removeParentDir (path:string) =
         let path = normalizeFileName path
         match getParentDir path with
         | "/" -> path
-        | parent -> 
-            if  isDirectory path && not (path.EndsWith"/") then  
-                path.[parent.Length..] + "/" 
+        | parent ->
+            if  isDirectory path && not (path.EndsWith"/") then
+                path.[parent.Length..] + "/"
             else
                 path.[parent.Length..]
+
+
     let removeRoot (path:string) =
         match getRoot path with
-        | "" | "/" -> path 
+        | "" | "/" -> path
         | root -> path.[root.Length..]
 
 
-    let fixDir (path:string) = 
+    let fixDir (path:string) =
         if path.EndsWith "/" then getDirectory path else
         getDirectory (path+"/")
 
     let dirOrder (paths:string list) =
         paths |> List.map (fun p -> getRoot p |> function "" | "/" -> p | d -> d)
-        |> List.distinct 
+        |> List.distinct
 
 
     let treeOrder (paths:string list) =
@@ -460,11 +465,11 @@ module private PathHelpers =
         let rec loop root acc paths =
             match List.filter hasRoot paths with
             | [] -> acc
-            | ps ->   
-                let r = List.head ps |> getRoot         
+            | ps ->
+                let r = List.head ps |> getRoot
                 let ordered =
                     ps |> List.groupBy getRoot
-                    |> List.map (fun (dir,elems) -> 
+                    |> List.map (fun (dir,elems) ->
                         root+dir, dirOrder (elems |> List.map removeRoot)
                     )
                 loop (root+r) (ordered@acc) (ps |> List.map removeRoot)
@@ -479,12 +484,12 @@ type SourceTree (files:SourceFile list) =
     let data = Dictionary<string,SourceFile>()
 
     do
-        files |> List.map (fun x -> 
+        files |> List.map (fun x ->
             let path = normalizeFileName x.Include
             data.Add (path, {x with Include = path})
             path)
-        |> treeOrder 
-        |> List.iter (fun (dir,files) -> 
+        |> treeOrder
+        |> List.iter (fun (dir,files) ->
             tree.Add(dir,ResizeArray files)
         )
 
@@ -493,14 +498,14 @@ type SourceTree (files:SourceFile list) =
         let parent = getParentDir path
 
         if tree.ContainsKey parent then
-            let arr = tree.[parent]  
+            let arr = tree.[parent]
             let bound = if shift = 1 then arr.Count-1 else 0
             let idx = ResizeArray.indexOf (removeParentDir path) arr
             if idx = bound then () else
             tree.[parent] <- ResizeArray.swap (idx+shift) idx arr
 
     member __.MoveUp (target:string) = moveFile (-1) target
-        
+
     member __.MoveDown (target:string) = moveFile 1 target
 
     member self.AddAbove (target:string) (srcFile:SourceFile) =
@@ -508,7 +513,7 @@ type SourceTree (files:SourceFile list) =
         let fileName = removeParentDir srcFile.Include
         let srcFile = {srcFile with Include = parent + fileName}
         if tree.ContainsKey parent then
-            let arr = tree.[parent] 
+            let arr = tree.[parent]
             let idx = ResizeArray.indexOf (removeParentDir target) arr
             tree.[parent] <- ResizeArray.insert idx fileName arr
             data.[parent+fileName] <- srcFile
@@ -519,29 +524,24 @@ type SourceTree (files:SourceFile list) =
         let fileName = removeParentDir srcFile.Include
         let srcFile = {srcFile with Include = parent + fileName}
         if tree.ContainsKey parent then
-            let arr = tree.[parent] 
+            let arr = tree.[parent]
             let idx = ResizeArray.indexOf (removeParentDir target) arr
             if idx = arr.Count then
-                tree.[parent] <- ResizeArray.add fileName arr    
+                tree.[parent] <- ResizeArray.add fileName arr
             else
                 tree.[parent] <- ResizeArray.insert (idx+1) fileName arr
             data.[parent+fileName] <- srcFile
 
 
-    member __.AddSourceFile (dir:string) (fileName:string) =
+    member __.AddSourceFile (dir:string) (srcFile:SourceFile) =
         let dir = fixDir dir
-        let keyPath = dir + fileName
-        let srcFile = {
-            Include = keyPath
-            Condition = None
-            OnBuild = BuildAction.Compile
-            Link = None
-            Copy = None
-        }
-        if  tree.ContainsKey dir 
+        let fileName = removeParentDir srcFile.Include
+        let keyPath  = dir + fileName
+        let srcFile = { srcFile with Include = keyPath }
+        if  tree.ContainsKey dir
          && not ^ data.ContainsKey keyPath then
             let arr = tree.[dir]
-            tree.[dir] <- ResizeArray.add fileName arr            
+            tree.[dir] <- ResizeArray.add fileName arr
             data.[keyPath] <- srcFile
 
 
@@ -552,6 +552,36 @@ type SourceTree (files:SourceFile list) =
         let parent = getParentDir path
         let arr = tree.[parent]
         tree.[parent] <- ResizeArray.remove (removeParentDir path) arr
+
+
+    member __.RemoveDirectory (path:string) =
+        let dir = fixDir path
+        let parent = getParentDir dir
+
+        let rec updateLoop root (keys:ResizeArray<string>) =
+            let subDirs,files = keys |> ResizeArray.partition (fun x -> x.EndsWith "/")
+
+            files |> ResizeArray.iter (fun file ->
+                if data.ContainsKey (root+file) then
+                    data.Remove (root+file) |> ignore
+            )
+
+            subDirs |> ResizeArray.iter (fun dir ->
+                if tree.ContainsKey (root+dir) then
+                    let arr = tree.[root+dir]
+                    tree.Remove (root+dir) |> ignore
+                    updateLoop (root+dir)  arr
+            )
+        // remove the directory from the parent's list
+        if tree.ContainsKey parent  then
+            let arr = tree.[parent]
+            tree.[parent] <-  ResizeArray.remove dir arr
+
+        // traverse downwards removing all paths from sourcetree
+        if tree.ContainsKey dir then
+            let arr = tree.[dir]
+            tree.Remove dir |> ignore
+            updateLoop dir  arr
 
 
     member __.RenameFile (path:string) (newName:string) =
@@ -566,13 +596,13 @@ type SourceTree (files:SourceFile list) =
             data.Remove path |> ignore
             data.[dir+newName]  <- srcfile
         // update the file position listing
-        if tree.ContainsKey dir then 
+        if tree.ContainsKey dir then
             let arr = tree.[dir]
             printfn "%A" arr
             let idx = ResizeArray.findIndex ((=) file) arr
             arr.[idx] <- newName
             tree.[dir] <- arr
-        
+
         // TODO add railway result/errors
 
 
@@ -590,7 +620,7 @@ type SourceTree (files:SourceFile list) =
                     data.[newDir+file] <- srcFile
             )
 
-            subDirs |> ResizeArray.iter (fun dir -> 
+            subDirs |> ResizeArray.iter (fun dir ->
                 if tree.ContainsKey (oldDir+dir) then
                     let arr = tree.[oldDir+dir]
                     tree.Remove (oldDir+dir) |> ignore
@@ -599,7 +629,7 @@ type SourceTree (files:SourceFile list) =
             )
 
         // update the name in the directory's parent
-        if tree.ContainsKey parent  then 
+        if tree.ContainsKey parent  then
             let arr = tree.[parent]
             let idx = ResizeArray.findIndex ((=) dir) arr
             arr.[idx] <- newName
@@ -610,24 +640,37 @@ type SourceTree (files:SourceFile list) =
             let arr = tree.[dir]
             tree.Remove dir |> ignore
             tree.[newName] <- arr
-            updateLoop dir newName arr    
+            updateLoop dir newName arr
+
+
+    member __.DirContents (dir:string) =
+        let dir = fixDir dir
+        let rec loop dir (arr:ResizeArray<string>) =
+            seq { for x in arr do
+                    if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
+                    else yield data.[dir+x].Include
+            }
+        if not ^ tree.ContainsKey dir then Seq.empty else
+        let arr = tree.[dir]
+        loop dir arr
 
 
     member __.Data with get() = data
     member __.Tree with get() = tree
 
-      
+
     override self.ToString() =
         let a = tree |> Seq.map (sprintf "%A") |> String.concat "\n"
         let b = data |> Seq.map (sprintf "%A") |> String.concat "\n"
         a + "\n\n" + b
 
+
     member self.ToXElem() =
         let rootlist = tree.["/"]
-        let rec loop dir (arr:ResizeArray<string>) = 
+        let rec loop dir (arr:ResizeArray<string>) =
             seq { for x in arr do
                     if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
-                    else yield (toXElem data.[dir+x])                        
+                    else yield (toXElem data.[dir+x])
             }
         XElem.create "ItemGroup" [loop "" rootlist]
 
@@ -643,7 +686,7 @@ type Property<'a> =
 
     static member fromXElem (xelem:XElement) =
         {   Name      = xelem.Name.LocalName
-            Condition = XElem.tryGetAttributeValue Constants.Condition xelem 
+            Condition = XElem.tryGetAttributeValue Constants.Condition xelem
             Data      =
                 if String.IsNullOrWhiteSpace xelem.Value then None else
                 Some xelem.Value
@@ -651,7 +694,7 @@ type Property<'a> =
 
     static member fromXElem (xelem:XElement, mapString: string -> 'a) =
         {   Name      = xelem.Name.LocalName
-            Condition = XElem.tryGetAttributeValue Constants.Condition xelem 
+            Condition = XElem.tryGetAttributeValue Constants.Condition xelem
             Data      =
                 if String.IsNullOrWhiteSpace xelem.Value then None else
                 Some <| mapString xelem.Value
@@ -660,6 +703,13 @@ type Property<'a> =
     member self.ToXElem () =
         XElem.create self.Name (if self.Data.IsSome then [self.Data.Value] else [])
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
+
+
+let property name data =
+    {   Name        = name
+        Condition   = None
+        Data        = Some data
+    }
 
 
 type ProjectSettings =
@@ -722,19 +772,19 @@ type ProjectSettings =
 
         member self.ToXElem () =
             XElem.create Constants.PropertyGroup []
-            |> XElem.addElement ^ toXElem self.Name                        
-            |> XElem.addElement ^ toXElem self.AssemblyName                
-            |> XElem.addElement ^ toXElem self.RootNamespace               
-            |> XElem.addElement ^ toXElem self.Configuration               
-            |> XElem.addElement ^ toXElem self.Platform                    
-            |> XElem.addElement ^ toXElem self.SchemaVersion               
-            |> XElem.addElement ^ toXElem self.ProjectGuid                 
-            |> XElem.addElement ^ toXElem self.ProjectType                 
-            |> XElem.addElement ^ toXElem self.OutputType                  
-            |> XElem.addElement ^ toXElem self.TargetFrameworkVersion      
-            |> XElem.addElement ^ toXElem self.TargetFrameworkProfile      
+            |> XElem.addElement ^ toXElem self.Name
+            |> XElem.addElement ^ toXElem self.AssemblyName
+            |> XElem.addElement ^ toXElem self.RootNamespace
+            |> XElem.addElement ^ toXElem self.Configuration
+            |> XElem.addElement ^ toXElem self.Platform
+            |> XElem.addElement ^ toXElem self.SchemaVersion
+            |> XElem.addElement ^ toXElem self.ProjectGuid
+            |> XElem.addElement ^ toXElem self.ProjectType
+            |> XElem.addElement ^ toXElem self.OutputType
+            |> XElem.addElement ^ toXElem self.TargetFrameworkVersion
+            |> XElem.addElement ^ toXElem self.TargetFrameworkProfile
             |> XElem.addElement ^ toXElem self.AutoGenerateBindingRedirects
-            |> XElem.addElement ^ toXElem self.TargetFSharpCoreVersion     
+            |> XElem.addElement ^ toXElem self.TargetFSharpCoreVersion
 
 
 // parse the condition strings in property groups to create config settings
@@ -744,7 +794,7 @@ type ConfigSettings =
     {   /// The Condition attribute on the PropertyGroup
         Condition            : string
         DebugSymbols         : Property<bool>
-        DebugType            : Property<string>
+        DebugType            : Property<DebugType>
         Optimize             : Property<bool>
         Tailcalls            : Property<bool>
         OutputPath           : Property<string>
@@ -755,6 +805,20 @@ type ConfigSettings =
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
     }
+    static member Debug =
+        {   Condition            = " '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "
+            DebugSymbols         = property Constants.DebugSymbols true
+            DebugType            = property Constants.DebugType DebugType.Full
+            Optimize             = property Constants.Optimize false
+            Tailcalls            = property Constants.Tailcalls false
+            OutputPath           = property Constants.OutputPath "/bin/Debug"
+            CompilationConstants = property Constants.CompilationConstants ["DEBUG;TRACE"]
+            WarningLevel         = property Constants.WarningLevel ^ WarningLevel 3
+            PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
+            Documentationfile    = property Constants.DocumentationFile ""
+            Prefer32Bit          = property Constants.Prefer32Bit false
+            OtherFlags           = property Constants.OtherFlags []
+        }
 
     static member fromXElem (xelem:XElement) =
 
@@ -783,16 +847,16 @@ type ConfigSettings =
                     Condition = None
                     Data      = None    }
 
-        {   Condition            = XElem.getAttributeValue Constants.Condition xelem 
+        {   Condition            = XElem.getAttributeValue Constants.Condition xelem
             DebugSymbols         = elemmap Constants.DebugSymbols Boolean.Parse
-            DebugType            = elem    Constants.DebugType
+            DebugType            = elemmap Constants.DebugType DebugType.Parse
             Optimize             = elemmap Constants.Optimize Boolean.Parse
             Tailcalls            = elemmap Constants.Tailcalls Boolean.Parse
             OutputPath           = elem    Constants.OutputPath
             CompilationConstants = elemmap Constants.CompilationConstants split
             WarningLevel         = elemmap Constants.WarningLevel (Int32.Parse>>WarningLevel)
             PlatformTarget       = elemmap Constants.PlatformTarget PlatformType.Parse
-            Documentationfile    = elem    Constants.Documentationfile
+            Documentationfile    = elem    Constants.DocumentationFile
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
         }
@@ -813,17 +877,19 @@ type ConfigSettings =
         |> XElem.addElement ^ toXElem self.OtherFlags
 
 
+// TODO - Check for duplicate files
+
 type FsProject =
     {   ToolsVersion        : string
         DefaultTargets      : string list
         Settings            : ProjectSettings
         BuildConfigs        : ConfigSettings list
         ProjectReferences   : ProjectReference list
-        References          : Reference list
+        References          : Reference ResizeArray
         SourceFiles         : SourceTree
     }
 
-    member __.xmlns = XNamespace.Get @"http://schemas.microsoft.com/developer/msbuild/2003"
+    member private __.xmlns = XNamespace.Get Constants.Xmlns
 
     member self.ToXElem () =
         let projxml =
@@ -833,7 +899,7 @@ type FsProject =
             |> XElem.addElement  ^ toXElem self.Settings
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
             |> XElem.addElement  ^
-               XElem.create Constants.ItemGroup (self.References |> List.map toXElem)
+               XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
             |> XElem.addElement  ^ toXElem self.SourceFiles
 
 
@@ -843,52 +909,46 @@ type FsProject =
 
         projxml
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module FsProject =
 
-    let addReference (refr:Reference) (proj:FsProject) =
-        if proj.References |> List.exists ((=) refr) then proj else
-        { proj with References = refr::proj.References }
+    member self.ToXDoc() = toXElem self |> XDocument
 
-    let removeReference (refr:Reference) (proj:FsProject) =
-        if not (proj.References |> List.exists ((=) refr)) then proj else
-        { proj with References = proj.References |> List.filter ((<>) refr) }
 
-//    let addFile (file : SourceElement) (proj:FsProject) =
-//        if proj.SourceFiles |> List.exists ((=) file) then proj else
-//        { proj with SourceFiles = file::proj.SourceFiles }
-//
-//    let removeFile (file : SourceElement) (proj:FsProject) =
-//        if not (proj.SourceFiles |> List.exists ((=) file)) then proj else
-//        { proj with SourceFiles = proj.SourceFiles |> List.filter ((<>) file) }
-//
-//    let orderFile (fileToMove : SourceElement) (putBefore : SourceElement) (proj : FsProject) =
-//         if not (proj.SourceFiles |> List.exists ((=) fileToMove) ||proj.SourceFiles |> List.exists ((=) putBefore)) then proj else
-//         let filesBefore = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.takeWhile ((<>) putBefore)
-//         let filesAfter = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.skipWhile ((<>) putBefore)
-//         let filesNew = seq {yield! filesBefore; yield fileToMove; yield! filesAfter } |> Seq.toList
-//         { proj with SourceFiles = filesNew }
+    member self.ToXmlString() =
+        let doc = self.ToXDoc()
+        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
 
-    let parse content =
-        let xdoc = (XDocument.Parse content).Root
+
+    member self.ToXmlString (extraElems:XElement seq) =
+        let doc = self.ToXDoc()
+        doc.LastNode.AddAfterSelf extraElems
+        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
+
+
+    static member fromXDoc (xdoc:XDocument) =
+        let xdoc = xdoc.Root
+        let fselems =
+            xdoc |> XElem.elements
+            |> Seq.filter (fun (xelem:XElement) ->
+                xelem
+                |>( XElem.isNamed Constants.Project
+                |?| XElem.isNamed Constants.PropertyGroup
+                |?| XElem.isNamed Constants.ItemGroup
+                |?| XElem.isNamed Constants.ProjectReference
+                ) )
+
+        let projectSetting, buildconfigs =
+            let psettings, bconfigs =
+                fselems |> Seq.toList |> List.partition (fun pg ->
+                not ^ XElem.hasAttribute Constants.Condition pg)
+            let proj =
+                psettings
+                |> Seq.collect XElem.elements
+                |> XElem.create Constants.PropertyGroup
+                |> ProjectSettings.fromXElem
+            let configs = bconfigs  |> List.map ConfigSettings.fromXElem
+            proj, configs
+
         let itemGroups = XElem.descendantsNamed Constants.ItemGroup xdoc
-
-        let projectSettingsSqs =
-            XElem.descendantsNamed Constants.PropertyGroup xdoc
-            #if INTERACTIVE
-            |> Seq.map (fun x -> printfn "%A" x ; x)
-            #endif
-            |> Seq.filter (fun pg -> not ^ XElem.hasAttribute Constants.Condition pg)
-        
-        #if INTERACTIVE
-        projectSettingsSqs |> Seq.iter (printfn "%A") 
-        #endif
-
-        let projectSettings = projectSettingsSqs |> Seq.head |> ProjectSettings.fromXElem
-
-    //    let buildConfigs =
-    //        XElem.descendantsNamed "PropertyGroup" xdoc
-    //        |> Seq.filter (fun pg -> XElem.hasAttribute "Condition" pg)
 
         let projectReferences =
             XElem.descendantsNamed Constants.ProjectReference xdoc
@@ -910,24 +970,88 @@ module FsProject =
             |> Seq.map SourceFile.fromXElem
             |> Seq.toList |> SourceTree
 
-        let proj =
-            {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc 
-                DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
-                References        = references |> List.ofSeq
-                Settings          = projectSettings
-                SourceFiles       = srcTree 
-                ProjectReferences = projectReferences |> List.ofSeq
-                BuildConfigs      = []
-            }
+        {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc
+            DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
+            References        = references |> ResizeArray
+            Settings          = projectSetting
+            SourceFiles       = srcTree
+            ProjectReferences = projectReferences |> List.ofSeq
+            BuildConfigs      = buildconfigs
+        }
 
+
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module FsProject =
+
+
+    let addReference (refr:Reference) (proj:FsProject) =
+        if proj.References |> ResizeArray.contains refr then proj
+        else
+        { proj with References = ResizeArray.add refr proj.References }
+
+
+    let removeReference (refr:Reference) (proj:FsProject) =
+        if not (proj.References |> ResizeArray.contains refr) then proj
+        else
+        { proj with References = ResizeArray.remove refr proj.References }
+
+
+    let moveUp target (proj:FsProject) =
+        proj.SourceFiles.MoveUp target
         proj
 
+
+    let moveDown target (proj:FsProject) =
+        proj.SourceFiles.MoveDown target
+        proj
+
+
+    let addAbove target (srcFile:SourceFile) (proj:FsProject) =
+        proj.SourceFiles.AddAbove target srcFile
+        proj
+
+
+    let addBelow target (srcFile:SourceFile) (proj:FsProject) =
+        proj.SourceFiles.AddBelow target srcFile
+        proj
+
+
+    let addSourceFile dir srcFile (proj:FsProject) =
+        proj.SourceFiles.AddSourceFile dir srcFile
+        proj
+
+
+    let removeSourceFile path (proj:FsProject) =
+        proj.SourceFiles.RemoveSourceFile path
+        proj
+
+
+    let removeDirectory path (proj:FsProject) =
+        proj.SourceFiles.RemoveDirectory path
+        proj
+
+
+    let renameFile target newName (proj:FsProject) =
+        proj.SourceFiles.RenameFile target newName
+        proj
+
+
+    let renameDir target newName (proj:FsProject) =
+        proj.SourceFiles.RenameDir target newName
+        proj
+
+
+    let parse (text:string) =
+        XDocument.Parse(text,LoadOptions.SetLineInfo)
+        |> FsProject.fromXDoc
+
+
     let load path =
-        let content = System.IO.File.ReadAllText path
-//        #if INTERACTIVE
-//        printfn "%A" content
-//        #endif
-        parse content
+        use reader = XmlReader.Create(path:string)
+        (reader |> XDocument.Load)
+        |> FsProject.fromXDoc
+
 
 // A small abstraction over MSBuild project files.
 type ProjectFile (projectFileName:string, documentContent:string) =
@@ -1071,6 +1195,6 @@ type ProjectFile (projectFileName:string, documentContent:string) =
 
 
 #if INTERACTIVE
-;; 
-FsProject.load ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+;;
+let doc = FsProject.parse ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
 #endif

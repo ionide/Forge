@@ -26,6 +26,25 @@ let  inline private tryGetNamed name sqs =
         | None   -> if matchName name elm then Some elm else None
     )
 
+
+[<RequireQualifiedAccess>]
+module XDoc =
+
+    let elements (xdoc:#XDocument) = xdoc.Elements()
+
+    let hasElement name (xdoc:#XDocument) =
+        elements xdoc |> hasNamed name
+
+    let getElement name (xdoc:#XDocument)  =
+        elements xdoc |> getNamed name
+
+    let tryGetElement name (xdoc:#XDocument)  =
+        elements xdoc |> tryGetNamed name
+
+    let getElements name (xdoc:#XDocument)  =
+        elements xdoc |> nameFilter name
+
+
 [<RequireQualifiedAccess>]
 /// Functions for operating on XNodes
 module XNode =
@@ -113,6 +132,10 @@ module XAttr =
 [<RequireQualifiedAccess>]
 /// Functions for operating on XElements
 module XElem =
+
+    let inline isNamed name (xelem:#XElement) = 
+        matchName name xelem
+
     let create (name:string) (content:seq<'a>) = 
         XElement (XName.Get name, Seq.toArray content)
 

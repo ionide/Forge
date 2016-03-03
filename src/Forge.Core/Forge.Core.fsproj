@@ -74,13 +74,15 @@
     <Compile Include="Paket.fs" />
     <Compile Include="Git.fs" />
     <Compile Include="Constants.fs" />
-    <Compile Include="ProjectSystem.fs" />
     <Compile Include="ProjectValidation.fs" />
+    <Compile Include="ProjectSystem.fs" />
+    <Compile Include="ProjectManager.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
     <None Include="Scratch\xlinq.fsx" />
+    <None Include="Scratch\sourcetree.fsx" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Commontypes.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Core.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.xsd" />
