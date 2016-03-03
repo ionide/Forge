@@ -309,6 +309,10 @@ let findIndex (predicate : 'T -> bool) (resizeArray : ResizeArray<'T>) : int =
     | index -> index
 
 
+let indexOf elem (resizeArray : ResizeArray<'T>) =
+    resizeArray.FindIndex ^ System.Predicate ((=) elem)
+
+
 /// Return the index of the first element in the array
 /// that satisfies the given predicate.
 let tryFindIndexi predicate (resizeArray : ResizeArray<'T>) : int option =
@@ -361,6 +365,19 @@ let tryPick (picker : 'T -> 'U option) (resizeArray : ResizeArray<'T>) : 'U opti
         result <- picker resizeArray.[index]
         index <- index + 1
     result
+
+
+let swap (index1:int) (index2:int) (resizeArray : ResizeArray<'T>) =
+    checkNonNull "resizeArray" resizeArray
+    if index1 < 0 || index1 > resizeArray.Count then
+        argOutOfRange "index1" (sprintf "'%i' - is outside the range of the resizeArray" index1)
+    if index2 < 0 || index2 > resizeArray.Count then
+        argOutOfRange "index1" (sprintf "'%i' - is outside the range of the resizeArray" index2)
+
+    let t1,t2 = resizeArray.[index1], resizeArray.[index2]
+    resizeArray.[index1] <- t2
+    resizeArray.[index2] <- t1
+    resizeArray
 
 /// <summary>
 /// Applies the given function to successive elements, returning the first
@@ -423,150 +440,6 @@ let inline map (mapping : 'T -> 'U) (resizeArray : ResizeArray<'T>) : ResizeArra
     resizeArray.ConvertAll (System.Converter mapping)
 
 
-/// <summary>
-/// Build a new array whose elements are the results of applying the given function
-/// to each of the elements of the array. The integer index passed to the
-/// function indicates the index of element being transformed.
-/// </summary>
-/// <param name="mapping"></param>
-/// <param name="resizeArray"></param>
-/// <returns></returns>
-let mapi (mapping : int -> 'T -> 'U) (resizeArray : ResizeArray<'T>) : ResizeArray<'U> =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let mapping = FSharpFunc<_,_,_>.Adapt mapping
-    let count = resizeArray.Count
-    let result = ResizeArray (count)
-
-    for i = 0 to count - 1 do
-        result.Add <| mapping.Invoke (i, resizeArray.[i])
-    result
-
-
-/// <summary>
-/// Apply a function to each element of the collection, threading an accumulator argument
-/// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c> 
-/// then computes <c>f (... (f s i0)...) iN</c>.
-/// </summary>
-/// <param name="folder"></param>
-/// <param name="state"></param>
-/// <param name="resizeArray"></param>
-/// <returns></returns>
-let fold (folder : 'State -> 'T -> 'State) state (resizeArray : ResizeArray<'T>) : 'State =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let folder = FSharpFunc<_,_,_>.Adapt folder
-
-    let mutable state = state
-    let count = resizeArray.Count
-    for i = 0 to count - 1 do
-        state <- folder.Invoke (state, resizeArray.[i])
-    state
-
-
-/// Applies a function to each element of the collection, threading an accumulator argument
-/// through the computation. The integer index passed to the function indicates the
-/// index of the element within the collection.
-let foldi (folder : 'State -> int -> 'T -> 'State) state (resizeArray : ResizeArray<'T>) : 'State =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let folder = FSharpFunc<_,_,_,_>.Adapt folder
-
-    let mutable state = state
-    let count = resizeArray.Count
-    for i = 0 to count - 1 do
-        state <- folder.Invoke (state, i, resizeArray.[i])
-    state
-
-
-
-/// Apply a function to each element of the array, threading an accumulator argument
-/// through the computation. If the input function is <c>f</c> and the elements are
-/// <c>i0...iN</c> then computes <c>f i0 (...(f iN s))</c>.
-/// </summary>
-/// <param name="folder"></param>
-/// <param name="resizeArray"></param>
-/// <param name="state"></param>
-/// <returns></returns>
-let foldBack (folder : 'T -> 'State -> 'State) (resizeArray : ResizeArray<'T>) state : 'State =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let folder = FSharpFunc<_,_,_>.Adapt folder
-
-    let mutable state = state
-    for i = resizeArray.Count - 1 downto 0 do
-        state <- folder.Invoke (resizeArray.[i], state)
-    state
-
-
-/// <summary></summary>
-/// <param name="folder"></param>
-/// <param name="resizeArray"></param>
-/// <param name="state"></param>
-/// <returns></returns>
-let foldiBack (folder : int -> 'T -> 'State -> 'State) (resizeArray : ResizeArray<'T>) state : 'State =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let folder = FSharpFunc<_,_,_,_>.Adapt folder
-
-    let mutable state = state
-    for i = resizeArray.Count - 1 downto 0 do
-        state <- folder.Invoke (i, resizeArray.[i], state)
-    state
-
-
-/// <summary>
-/// Apply a function to each element of the array, threading an accumulator argument
-/// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c> 
-/// then computes <c>f (... (f i0 i1)...) iN</c>.
-/// Raises <c>ArgumentException</c> if the array has size zero.
-/// <summary>
-/// <param name="reduction"></param>
-/// <param name="resizeArray"></param>
-/// <returns></returns>
-let reduce (reduction : 'T -> 'T -> 'T) (resizeArray : ResizeArray<'T>) =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    if isEmpty resizeArray then
-        invalidArg "resizeArray" "The ResizeArray is empty."
-
-    let reduction = FSharpFunc<_,_,_>.Adapt reduction
-
-    let mutable state = resizeArray.[0]
-    let count = resizeArray.Count
-    for i = 1 to count - 1 do
-        state <- reduction.Invoke (state, resizeArray.[i])
-    state
-
-/// <summary>
-/// Apply a function to each element of the array, threading an accumulator argument
-/// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c> then 
-/// computes <c>f i0 (...(f iN-1 iN))</c>.
-/// Raises <c>ArgumentException</c> if the array has size zero.
-/// </summary>
-/// <param name="reduction"></param>
-/// <param name="resizeArray"></param>
-/// <returns></returns>
-let reduceBack (reduction : 'T -> 'T -> 'T) (resizeArray : ResizeArray<'T>) : 'T =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    if isEmpty resizeArray then
-        invalidArg "resizeArray" "The ResizeArray is empty."
-
-    let reduction = FSharpFunc<_,_,_>.Adapt reduction
-
-    let count = resizeArray.Count
-    let mutable state = resizeArray.[count - 1]
-
-    for i = count - 2 downto 0 do
-        state <- reduction.Invoke (resizeArray.[i], state)
-    state
-
 
 /// <summary>
 /// Split the collection into two collections, containing the elements for which
@@ -592,95 +465,6 @@ let partition predicate (resizeArray : ResizeArray<'T>) : ResizeArray<'T> * Resi
 
     trueResults, falseResults
 
-/// <summary>
-/// Splits the collection into two (2) collections, containing the elements for which the
-/// given function returns <c>Choice1Of2</c> or <c>Choice2Of2</c>, respectively. This function is similar to
-/// <c>ResizeArray.partition</c>, but it allows the returned collections to have different element types.
-/// </summary>
-/// <param name="partitioner"></param>
-/// <param name="resizeArray"></param>
-/// <returns></returns>
-let mapPartition partitioner (resizeArray : ResizeArray<'T>) : ResizeArray<'U1> * ResizeArray<'U2> =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-
-    let results1 = ResizeArray ()
-    let results2 = ResizeArray ()
-
-    let len = length resizeArray
-    for i = 0 to len - 1 do
-        match partitioner resizeArray.[i] with
-        | Choice1Of2 value ->
-            results1.Add value
-        | Choice2Of2 value ->
-            results2.Add value
-
-    results1, results2
-
-/// <summary>Returns the sum of the elements in the ResizeArray.</summary>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The resulting sum.</returns>
-let inline sum (resizeArray : ResizeArray< ^T>) : ^T = 
-    checkNonNull "resizeArray" resizeArray
-
-    let mutable acc = LanguagePrimitives.GenericZero< (^T) >
-//    for x in resizeArray do
-//        acc <- Checked.(+) acc x
-    for i = 0 to resizeArray.Count - 1 do
-        acc <- Checked.(+) acc resizeArray.[i]
-    acc
-
-/// <summary>Returns the sum of the results generated by applying the function to each element of the ResizeArray.</summary>
-/// <param name="projection">The function to transform the ResizeArray elements into the type to be summed.</param>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The resulting sum.</returns>
-let inline sumBy (projection : 'T -> ^U) (resizeArray : ResizeArray<'T>) : ^U = 
-    checkNonNull "resizeArray" resizeArray
-
-    let mutable acc = LanguagePrimitives.GenericZero< (^U) >
-//    for x in resizeArray do
-//        acc <- Checked.(+) acc (projection x)
-    for i = 0 to resizeArray.Count - 1 do
-        acc <- Checked.(+) acc (projection resizeArray.[i])
-    acc
-
-/// <summary>Returns the lowest of all elements of the ResizeArray, compared via Operators.min.</summary>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The minimum element.</returns>
-/// <exception cref="System.ArgumentException">Thrown when <paramref name="resizeArray"/> is empty.</exception>
-let inline min (resizeArray : ResizeArray<'T>) =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    if resizeArray.Count = 0 then
-        invalidArg "resizeArray" "The input collection is empty."
-
-    let mutable acc = resizeArray.[0]
-    for i = 1 to resizeArray.Count - 1 do
-        let curr = resizeArray.[i]
-        if curr < acc then
-            acc <- curr
-    acc
-
-/// <summary>Returns the lowest of all elements of the ResizeArray, compared via Operators.min on the function result.</summary>
-/// <param name="projection">The function to transform the elements into a type supporting comparison.</param>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The minimum element.</returns>
-/// <exception cref="System.ArgumentException">Thrown when <paramref name="resizeArray"/> is empty.</exception>
-let inline minBy (projection : 'T -> 'U) (resizeArray : ResizeArray<'T>) =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    if resizeArray.Count = 0 then
-        invalidArg "resizeArray" "The input collection is empty."
-
-    let mutable accv = resizeArray.[0]
-    let mutable acc = projection accv
-    for i = 1 to resizeArray.Count - 1 do
-        let currv = resizeArray.[i]
-        let curr = projection currv
-        if curr < acc then
-            acc <- curr
-            accv <- currv
-    accv
 
 /// <summary>Returns the greatest of all elements of the ResizeArray, compared via Operators.max on the function result.</summary>
 /// <param name="resizeArray">The input ResizeArray.</param>
@@ -698,43 +482,3 @@ let inline max (resizeArray : ResizeArray<'T>) =
         if curr > acc then
             acc <- curr
     acc
-
-/// <summary>Returns the greatest of all elements of the ResizeArray, compared via Operators.max on the function result.</summary>
-/// <param name="projection">The function to transform the elements into a type supporting comparison.</param>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The maximum element.</returns>
-/// <exception cref="System.ArgumentException">Thrown when <paramref name="resizeArray"/> is empty.</exception>
-let inline maxBy (projection : 'T -> 'U) (resizeArray : ResizeArray<'T>) =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    if resizeArray.Count = 0 then
-        invalidArg "resizeArray" "The input collection is empty."
-
-    let mutable accv = resizeArray.[0]
-    let mutable acc = projection accv
-    for i = 1 to resizeArray.Count - 1 do
-        let currv = resizeArray.[i]
-        let curr = projection currv
-        if curr > acc then
-            acc <- curr
-            accv <- currv
-    accv
-
-/// <summary>Returns the average of the elements in the ResizeArray.</summary>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The average of the elements in the ResizeArray.</returns>
-/// <exception cref="System.ArgumentException">Thrown when <paramref name="resizeArray"/> is empty.</exception>
-let inline average (resizeArray : ResizeArray<'T>) : ^T =
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    Seq.average resizeArray
-
-/// <summary>Returns the average of the elements generated by applying the function to each element of the ResizeArray.</summary>
-/// <param name="projection">The function to transform the ResizeArray elements before averaging.</param>
-/// <param name="resizeArray">The input ResizeArray.</param>
-/// <returns>The computed average.</returns>
-/// <exception cref="System.ArgumentException">Thrown when <paramref name="resizeArray"/> is empty.</exception>
-let inline averageBy (projection : 'T -> ^U) (resizeArray : ResizeArray<'T>) : ^U = 
-    // Preconditions
-    checkNonNull "resizeArray" resizeArray
-    Seq.averageBy projection resizeArray
