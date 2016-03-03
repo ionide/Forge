@@ -393,7 +393,7 @@ type SourceElement =
 //        
 
 [<AutoOpen>]
-module private PathHelpers =
+module internal PathHelpers =
 
     let normalizeFileName (fileName : string) = 
         let file = fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()   
@@ -530,7 +530,7 @@ type SourceTree (files:SourceFile list) =
                 tree.[parent] <- ResizeArray.insert (idx+1) fileName arr
             data.[parent+fileName] <- srcFile
 
-
+    
     member __.AddSourceFile (dir:string) (fileName:string) =
         let dir = fixDir dir
         let keyPath = dir + fileName
@@ -665,6 +665,13 @@ type Property<'a> =
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
 
 
+let property name data = 
+    {   Name        = name
+        Condition   = None
+        Data        = Some data
+    }
+
+
 type ProjectSettings =
     {   Name                         : Property<string>
         AssemblyName                 : Property<string>
@@ -747,7 +754,7 @@ type ConfigSettings =
     {   /// The Condition attribute on the PropertyGroup
         Condition            : string
         DebugSymbols         : Property<bool>
-        DebugType            : Property<string>
+        DebugType            : Property<DebugType>
         Optimize             : Property<bool>
         Tailcalls            : Property<bool>
         OutputPath           : Property<string>
@@ -758,6 +765,20 @@ type ConfigSettings =
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
     }
+    static member Debug =
+        {   Condition            = " '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "
+            DebugSymbols         = property Constants.DebugSymbols true
+            DebugType            = property Constants.DebugType DebugType.Full
+            Optimize             = property Constants.Optimize false
+            Tailcalls            = property Constants.Tailcalls false
+            OutputPath           = property Constants.OutputPath "/bin/Debug"
+            CompilationConstants = property Constants.CompilationConstants ["DEBUG;TRACE"]
+            WarningLevel         = property Constants.WarningLevel ^ WarningLevel 3
+            PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
+            Documentationfile    = property Constants.DocumentationFile ""
+            Prefer32Bit          = property Constants.Prefer32Bit false
+            OtherFlags           = property Constants.OtherFlags []
+        }
 
     static member fromXElem (xelem:XElement) =
 
@@ -788,14 +809,14 @@ type ConfigSettings =
 
         {   Condition            = XElem.getAttributeValue Constants.Condition xelem 
             DebugSymbols         = elemmap Constants.DebugSymbols Boolean.Parse
-            DebugType            = elem    Constants.DebugType
+            DebugType            = elemmap Constants.DebugType DebugType.Parse
             Optimize             = elemmap Constants.Optimize Boolean.Parse
             Tailcalls            = elemmap Constants.Tailcalls Boolean.Parse
             OutputPath           = elem    Constants.OutputPath
             CompilationConstants = elemmap Constants.CompilationConstants split
             WarningLevel         = elemmap Constants.WarningLevel (Int32.Parse>>WarningLevel)
             PlatformTarget       = elemmap Constants.PlatformTarget PlatformType.Parse
-            Documentationfile    = elem    Constants.Documentationfile
+            Documentationfile    = elem    Constants.DocumentationFile
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
         }
@@ -822,11 +843,11 @@ type FsProject =
         Settings            : ProjectSettings
         BuildConfigs        : ConfigSettings list
         ProjectReferences   : ProjectReference list
-        References          : Reference list
+        References          : Reference ResizeArray
         SourceFiles         : SourceTree
     }
 
-    member __.xmlns = XNamespace.Get @"http://schemas.microsoft.com/developer/msbuild/2003"
+    member private __.xmlns = XNamespace.Get Constants.Xmlns
 
     member self.ToXElem () =
         let projxml =
@@ -836,7 +857,7 @@ type FsProject =
             |> XElem.addElement  ^ toXElem self.Settings
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
             |> XElem.addElement  ^
-               XElem.create Constants.ItemGroup (self.References |> List.map toXElem)
+               XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
             |> XElem.addElement  ^ toXElem self.SourceFiles
 
 
@@ -846,52 +867,46 @@ type FsProject =
 
         projxml
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module FsProject =
 
-    let addReference (refr:Reference) (proj:FsProject) =
-        if proj.References |> List.exists ((=) refr) then proj else
-        { proj with References = refr::proj.References }
+    member self.ToXDoc() = toXElem self |> XDocument
 
-    let removeReference (refr:Reference) (proj:FsProject) =
-        if not (proj.References |> List.exists ((=) refr)) then proj else
-        { proj with References = proj.References |> List.filter ((<>) refr) }
 
-//    let addFile (file : SourceElement) (proj:FsProject) =
-//        if proj.SourceFiles |> List.exists ((=) file) then proj else
-//        { proj with SourceFiles = file::proj.SourceFiles }
-//
-//    let removeFile (file : SourceElement) (proj:FsProject) =
-//        if not (proj.SourceFiles |> List.exists ((=) file)) then proj else
-//        { proj with SourceFiles = proj.SourceFiles |> List.filter ((<>) file) }
-//
-//    let orderFile (fileToMove : SourceElement) (putBefore : SourceElement) (proj : FsProject) =
-//         if not (proj.SourceFiles |> List.exists ((=) fileToMove) ||proj.SourceFiles |> List.exists ((=) putBefore)) then proj else
-//         let filesBefore = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.takeWhile ((<>) putBefore)
-//         let filesAfter = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.skipWhile ((<>) putBefore)
-//         let filesNew = seq {yield! filesBefore; yield fileToMove; yield! filesAfter } |> Seq.toList
-//         { proj with SourceFiles = filesNew }
+    member self.ToXmlString() =
+        let doc = self.ToXDoc()
+        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
 
-    let parse content =
-        let xdoc = (XDocument.Parse content).Root
+
+    member self.ToXmlString (extraElems:XElement seq) =
+        let doc = self.ToXDoc()
+        doc.LastNode.AddAfterSelf extraElems
+        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
+
+
+    static member fromXDoc (xdoc:XDocument) =
+        let xdoc = xdoc.Root
+        let fselems =
+            xdoc |> XElem.elements
+            |> Seq.filter (fun (xelem:XElement) ->
+                xelem 
+                |>( XElem.isNamed Constants.Project
+                |?| XElem.isNamed Constants.PropertyGroup
+                |?| XElem.isNamed Constants.ItemGroup
+                |?| XElem.isNamed Constants.ProjectReference
+                ) )
+
+        let projectSetting, buildconfigs =
+            let psettings, bconfigs =
+                fselems |> Seq.toList |> List.partition (fun pg -> 
+                not ^ XElem.hasAttribute Constants.Condition pg)
+            let proj = 
+                psettings 
+                |> Seq.collect XElem.elements 
+                |> XElem.create Constants.PropertyGroup
+                |> ProjectSettings.fromXElem
+            let configs = bconfigs  |> List.map ConfigSettings.fromXElem
+            proj, configs
+
         let itemGroups = XElem.descendantsNamed Constants.ItemGroup xdoc
-
-        let projectSettingsSqs =
-            XElem.descendantsNamed Constants.PropertyGroup xdoc
-            #if INTERACTIVE
-            |> Seq.map (fun x -> printfn "%A" x ; x)
-            #endif
-            |> Seq.filter (fun pg -> not ^ XElem.hasAttribute Constants.Condition pg)
-        
-        #if INTERACTIVE
-        projectSettingsSqs |> Seq.iter (printfn "%A") 
-        #endif
-
-        let projectSettings = projectSettingsSqs |> Seq.head |> ProjectSettings.fromXElem
-
-    //    let buildConfigs =
-    //        XElem.descendantsNamed "PropertyGroup" xdoc
-    //        |> Seq.filter (fun pg -> XElem.hasAttribute "Condition" pg)
 
         let projectReferences =
             XElem.descendantsNamed Constants.ProjectReference xdoc
@@ -913,24 +928,55 @@ module FsProject =
             |> Seq.map SourceFile.fromXElem
             |> Seq.toList |> SourceTree
 
-        let proj =
-            {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc 
-                DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
-                References        = references |> List.ofSeq
-                Settings          = projectSettings
-                SourceFiles       = srcTree 
-                ProjectReferences = projectReferences |> List.ofSeq
-                BuildConfigs      = []
-            }
+        {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc 
+            DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
+            References        = references |> ResizeArray
+            Settings          = projectSetting
+            SourceFiles       = srcTree 
+            ProjectReferences = projectReferences |> List.ofSeq
+            BuildConfigs      = buildconfigs
+        }
 
-        proj
 
-    let load path =
-        let content = System.IO.File.ReadAllText path
-//        #if INTERACTIVE
-//        printfn "%A" content
-//        #endif
-        parse content
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module FsProject =
+
+    let addReference (refr:Reference) (proj:FsProject) =
+        if proj.References |> ResizeArray.contains refr then proj 
+        else
+        { proj with References = ResizeArray.add refr proj.References }
+
+    let removeReference (refr:Reference) (proj:FsProject) =
+        if not (proj.References |> ResizeArray.contains refr) then proj 
+        else
+        { proj with References = ResizeArray.remove refr proj.References }
+
+//    let addFile (file : SourceElement) (proj:FsProject) =
+//        if proj.SourceFiles |> List.exists ((=) file) then proj else
+//        { proj with SourceFiles = file::proj.SourceFiles }
+//
+//    let removeFile (file : SourceElement) (proj:FsProject) =
+//        if not (proj.SourceFiles |> List.exists ((=) file)) then proj else
+//        { proj with SourceFiles = proj.SourceFiles |> List.filter ((<>) file) }
+//
+//    let orderFile (fileToMove : SourceElement) (putBefore : SourceElement) (proj : FsProject) =
+//         if not (proj.SourceFiles |> List.exists ((=) fileToMove) ||proj.SourceFiles |> List.exists ((=) putBefore)) then proj else
+//         let filesBefore = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.takeWhile ((<>) putBefore)
+//         let filesAfter = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.skipWhile ((<>) putBefore)
+//         let filesNew = seq {yield! filesBefore; yield fileToMove; yield! filesAfter } |> Seq.toList
+//         { proj with SourceFiles = filesNew }
+
+    let parse (text:string) =
+        XDocument.Parse(text,LoadOptions.SetLineInfo)
+
+    let load path = 
+        //let content = System.IO.File.ReadAllText path
+        //let xdoc = (XDocument.Parse content).Root
+        use reader = XmlReader.Create(path:string)
+        let xdoc   = (reader |> XDocument.Load)
+        FsProject.fromXDoc xdoc
+
 
 // A small abstraction over MSBuild project files.
 type ProjectFile (projectFileName:string, documentContent:string) =
@@ -1075,5 +1121,5 @@ type ProjectFile (projectFileName:string, documentContent:string) =
 
 #if INTERACTIVE
 ;; 
-FsProject.load ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+let doc = FsProject.parse ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
 #endif
