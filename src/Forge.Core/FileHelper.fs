@@ -37,6 +37,14 @@ let deleteFile fileName =
     logfn "Deleting %s" file.FullName
     file.Delete ()
 
+/// Renames the file to the target file name.
+let renameFile target fileName = (FileInfo fileName).MoveTo target
+
+
+/// Renames the directory to the target directory name.
+let renameDir target dirName = (DirectoryInfo dirName).MoveTo target
+
+
 /// Gets the list of valid directories included in the PATH environment variable.
 let pathDirectories =
     splitEnvironVar "PATH"

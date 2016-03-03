@@ -26,18 +26,18 @@ let xsdPaths = [
     __SOURCE_DIRECTORY__ + "/XmlSchemas/Microsoft.Build.Core.xsd"
     __SOURCE_DIRECTORY__ + "/XmlSchemas/Microsoft.Build.xsd"
     #else
-    "Forge.Microsoft.Build.Commontypes.xsd" 
-    "Forge.Microsoft.Build.Core.xsd" 
-    "Forge.Microsoft.Build.xsd" 
+    "Forge.Microsoft.Build.Commontypes.xsd"
+    "Forge.Microsoft.Build.Core.xsd"
+    "Forge.Microsoft.Build.xsd"
     #endif
 ]
 
 
 let buildSchemas =
     let asm = Assembly.GetExecutingAssembly()
-    
+
     let addxsd (schemas:XmlSchemaSet) (path:string) =
-        use reader = 
+        use reader =
         #if INTERACTIVE
             XmlReader.Create path
         #else
@@ -49,30 +49,30 @@ let buildSchemas =
     schema.Compile()
     schema
 
-        
+
 
 
 let ignoreFSharpElements (o:Object) (e:ValidationEventArgs) =
 
     let xelem = o :?> XElement
-    
+
     match xelem.Name.LocalName with
-    | "Paket" 
+    | "Paket"
     | "TargetFSharpCoreVersion"
     | "Tailcalls"
     | "FSharpTargetsPath" -> ()
-    | _ -> 
+    | _ ->
         let info = xelem :> IXmlLineInfo
         printfn "-- %s --\n"  (string e.Severity)
         printfn "The element '%s' has an invalid child element\n    %s"  xelem.Parent.Name.LocalName xelem.Name.LocalName
         printfn "Located at Line - %i Pos %i\n" info.LineNumber info.LinePosition
-        
+
 //        printfn "%s" e.Message
 
 #if INTERACTIVE
 
-let brokenproj = 
-    try 
+let brokenproj =
+    try
         use reader = XmlReader.Create (__SOURCE_DIRECTORY__ + "/broken.fsproj")
         XDocument.Load(reader,LoadOptions.SetLineInfo)
     with
