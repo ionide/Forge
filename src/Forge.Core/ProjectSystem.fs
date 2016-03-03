@@ -389,6 +389,88 @@ type SourceElement =
 //            loop [] x
 //        
 
+[<AutoOpen>]
+module private PathHelpers =
+
+    let normalizeFileName (fileName : string) = 
+        let file = fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()   
+        match file with
+        | "/" -> "/"
+        | f -> f.TrimStart '/'
+
+
+    let hasRoot (path:string) =
+        match Path.GetDirectoryName path with
+        | "" | @"\" | "/" -> false 
+        | _ -> true
+
+    /// gets the name of the root directory of a file with a `/` a the end
+    let getRoot (path:string) =
+        if not ^ hasRoot path then "/" else
+        let rec loop path =
+            match Path.GetDirectoryName path with
+            | "" | "/" -> path + "/"
+            | p   -> loop p
+        loop path
+
+    let isDirectory (path:string) = (normalizeFileName path).EndsWith "/"
+
+    let getDirectory (path:string) =
+        let file = Path.GetFileName path
+        match path.Substring(0,path.Length-file.Length) |> normalizeFileName with
+        | "" -> "/"
+        | dir -> dir
+
+
+    let getParentDir (path:string) =
+        match path with 
+        | "/" | @"\" | "" -> "/"
+        | _ ->
+            let path = path.TrimEnd('/','\\')
+            (normalizeFileName ^ Path.GetDirectoryName path) + "/"
+     
+
+    let removeParentDir (path:string) =
+        let path = normalizeFileName path
+        match getParentDir path with
+        | "/" -> path
+        | parent -> 
+            if  isDirectory path && not (path.EndsWith"/") then  
+                path.[parent.Length..] + "/" 
+            else
+                path.[parent.Length..]
+    let removeRoot (path:string) =
+        match getRoot path with
+        | "" | "/" -> path 
+        | root -> path.[root.Length..]
+
+
+    let fixDir (path:string) = 
+        if path.EndsWith "/" then getDirectory path else
+        getDirectory (path+"/")
+
+    let dirOrder (paths:string list) =
+        paths |> List.map (fun p -> getRoot p |> function "" | "/" -> p | d -> d)
+        |> List.distinct 
+
+
+    let treeOrder (paths:string list) =
+        let paths = paths |> List.map normalizeFileName
+        let rootOrder = ("/", dirOrder paths)
+        let rec loop root acc paths =
+            match List.filter hasRoot paths with
+            | [] -> acc
+            | ps ->   
+                let r = List.head ps |> getRoot         
+                let ordered =
+                    ps |> List.groupBy getRoot
+                    |> List.map (fun (dir,elems) -> 
+                        root+dir, dirOrder (elems |> List.map removeRoot)
+                    )
+                loop (root+r) (ordered@acc) (ps |> List.map removeRoot)
+        loop "" [rootOrder] paths
+        |> List.rev
+
 
 type Property<'a> =
     {   /// The name of the element tag in XML
