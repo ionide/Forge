@@ -13,6 +13,8 @@ open System.Xml
 
 let (^) = (<|)
 
+
+
 /// Combines two path strings using Path.Combine
 let inline combinePaths path1 (path2 : string) = Path.Combine (path1, path2.TrimStart [| '\\'; '/' |])
 let inline combinePathsNoTrim path1 path2 = Path.Combine (path1, path2)
@@ -182,3 +184,51 @@ let packagesDirectory = directory </> "packages"
 let paketLocation     = exeLocation </> "Tools" </> "Paket"
 let fakeLocation      = exeLocation </> "Tools" </> "FAKE"
 let fakeToolLocation  = fakeLocation </> "tools"
+
+
+let inline mapOpt (opt:'a option) mapfn (x:'b) =
+    match opt with
+    | None -> x
+    | Some a -> mapfn a x 
+
+let parseGuid text = 
+    let mutable g = Unchecked.defaultof<Guid>
+    if Guid.TryParse(text,&g) then Some g else None
+
+let parseBool text =
+    let mutable b = Unchecked.defaultof<bool>
+    if Boolean.TryParse(text,&b) then Some b else None
+
+[<RequireQualifiedAccess>]
+module Option =
+
+    /// Gets the value associated with the option or the supplied default value.
+    let inline getOrElse v = function Some x -> x | None -> v
+
+    /// Gets the value associated with the option or the supplied default value.
+    let inline mapOrDefault mapfn v =
+        function
+        | Some x -> mapfn x
+        | None -> v
+
+[<RequireQualifiedAccess>]
+module Dict = 
+    open System.Collections.Generic
+
+    let add key value (dict: Dictionary<_,_>) =
+        dict.[key] <- value
+        dict
+
+    let remove (key: 'k) (dict: Dictionary<'k,_>) =
+        dict.Remove key |> ignore
+        dict
+
+    let tryFind key (dict: Dictionary<'k, 'v>) = 
+        let mutable value = Unchecked.defaultof<_>
+        if dict.TryGetValue (key, &value) then Some value
+        else None
+
+    let ofSeq (xs: ('k * 'v) seq) = 
+        let dict = Dictionary()
+        for k, v in xs do dict.[k] <- v
+        dict
