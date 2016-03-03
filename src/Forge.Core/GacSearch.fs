@@ -26,14 +26,13 @@ let private getAssemblyDirs roots =
     |> Seq.collect (fun dir -> gacDirs |> Seq.map (combinePathsNoTrim dir)) // potential root assembly dirs
     |> Seq.filter directoryExists
     |> Seq.collect subdirs // assembly dirs
-    |> Seq.where (fun x -> x.EndsWith("resources") |> not)
+    |> Seq.where (fun x -> x.EndsWith(".resources") |> not)
     |> Seq.collect subdirs // assembly version dirs
 
 let private getAssemblyFiles dir =
     let strEqual s1 s2 = String.Equals(s1, s2, StringComparison.InvariantCultureIgnoreCase)
     let isAssemblyFile (f : FileInfo) = strEqual f.Extension ".dll" || strEqual f.Extension ".exe"
     let isNotPolicy (f : FileInfo) = policyRegex.IsMatch f.Name |> not
-
     DirectoryInfo dir
     |> filesInDir
     |> Seq.where isAssemblyFile
@@ -45,6 +44,8 @@ let private tryGetAssemblyName (info : FileInfo) =
     with
     | _ -> None //TODO: Add logging
 
+/// Looks for assemblies in GAC
+/// Returns AssemblyName instances for all found assemblies except resource and policy assemblies
 let searchGac () =
     assemblyRoots
     |> getAssemblyDirs

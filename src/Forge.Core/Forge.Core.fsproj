@@ -77,7 +77,6 @@
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
-    <Compile Include="Validation.fs" />
     <Compile Include="GacSearch.fs" />
   </ItemGroup>
   <ItemGroup>
