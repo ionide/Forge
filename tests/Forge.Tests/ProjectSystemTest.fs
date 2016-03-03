@@ -6,10 +6,10 @@ open Forge.ProjectSystem
 open NUnit.Framework
 open FsUnit
 
-[<Test>]
-let ``ProjectSystem parse - AST gets all project files`` () =
-    let projectFile = FsProject.parse astInput
-    projectFile.SourceFiles |> Seq.length |> should be (equal 3)
+//[<Test>]
+//let ``ProjectSystem parse - AST gets all project files`` () =
+//    let projectFile = FsProject.parse astInput
+//    projectFile.SourceFiles |> Seq.length |> should be (equal 3)
 
 [<Test>]
 let ``ProjectSystem parse - AST gets all references`` () =
@@ -29,42 +29,42 @@ let ``ProjectSystem parse - AST gets correct settings`` () =
     s.TargetFrameworkVersion.Data |> should be (equal ^ Some "v4.5")
     s.AssemblyName.Data |> should be (equal ^ Some "Test")
 
-[<Test>]
-let ``ProjectSystem - add new file``() =
-    let pf = FsProject.parse astInput
-    let f = File {SourceFile.Include = "Test"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.addFile f pf
-    pf'.SourceFiles |> Seq.length |> should be (equal 4)
-
-[<Test>]
-let ``ProjectSystem - add duplicate file``() =
-    let pf = FsProject.parse astInput
-    let f = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.addFile f pf
-    pf'.SourceFiles |> Seq.length |> should be (equal 3)
-
-[<Test>]
-let ``ProjectSystem - remove file``() =
-    let pf = FsProject.parse astInput
-    let f = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.removeFile f pf
-    pf'.SourceFiles |> Seq.length |> should be (equal 2)
-
-[<Test>]
-let ``ProjectSystem - remove not existing file``() =
-    let pf = FsProject.parse astInput
-    let f = File {SourceFile.Include = "FixProject2.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.removeFile f pf
-    pf'.SourceFiles |> Seq.length |> should be (equal 3)
-
-[<Test>]
-let ``ProjectSystem - order file``() =
-    let pf = FsProject.parse astInput
-    let f = File {SourceFile.Include = "a_file.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let bf = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.orderFile f bf pf
-    pf'.SourceFiles.Head |> should be (equal f)
-    pf'.SourceFiles |> Seq.length |> should be (equal 3)
+//[<Test>]
+//let ``ProjectSystem - add new file``() =
+//    let pf = FsProject.parse astInput
+//    let f = File {SourceFile.Include = "Test"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let pf' = FsProject.addFile f pf
+//    pf'.SourceFiles |> Seq.length |> should be (equal 4)
+//
+//[<Test>]
+//let ``ProjectSystem - add duplicate file``() =
+//    let pf = FsProject.parse astInput
+//    let f = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let pf' = FsProject.addFile f pf
+//    pf'.SourceFiles |> Seq.length |> should be (equal 3)
+//
+//[<Test>]
+//let ``ProjectSystem - remove file``() =
+//    let pf = FsProject.parse astInput
+//    let f = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let pf' = FsProject.removeFile f pf
+//    pf'.SourceFiles |> Seq.length |> should be (equal 2)
+//
+//[<Test>]
+//let ``ProjectSystem - remove not existing file``() =
+//    let pf = FsProject.parse astInput
+//    let f = File {SourceFile.Include = "FixProject2.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let pf' = FsProject.removeFile f pf
+//    pf'.SourceFiles |> Seq.length |> should be (equal 3)
+//
+//[<Test>]
+//let ``ProjectSystem - order file``() =
+//    let pf = FsProject.parse astInput
+//    let f = File {SourceFile.Include = "a_file.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let bf = File {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+//    let pf' = FsProject.orderFile f bf pf
+//    pf'.SourceFiles.Head |> should be (equal f)
+//    pf'.SourceFiles |> Seq.length |> should be (equal 3)
 
 [<Test>]
 let ``ProjectSystem - add reference``() =

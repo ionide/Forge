@@ -472,6 +472,166 @@ module private PathHelpers =
         |> List.rev
 
 
+type SourceTree (files:SourceFile list) =
+    // for looking up order of directory when given a path
+    let tree = Dictionary<string,ResizeArray<string>>()
+    // stores data at a particular path
+    let data = Dictionary<string,SourceFile>()
+
+    do
+        files |> List.map (fun x -> 
+            let path = normalizeFileName x.Include
+            data.Add (path, {x with Include = path})
+            path)
+        |> treeOrder 
+        |> List.iter (fun (dir,files) -> 
+            tree.Add(dir,ResizeArray files)
+        )
+
+    let moveFile shift target =
+        let path = normalizeFileName target
+        let parent = getParentDir path
+
+        if tree.ContainsKey parent then
+            let arr = tree.[parent]  
+            let bound = if shift = 1 then arr.Count-1 else 0
+            let idx = ResizeArray.indexOf (removeParentDir path) arr
+            if idx = bound then () else
+            tree.[parent] <- ResizeArray.swap (idx+shift) idx arr
+
+    member __.MoveUp (target:string) = moveFile (-1) target
+        
+    member __.MoveDown (target:string) = moveFile 1 target
+
+    member self.AddAbove (target:string) (srcFile:SourceFile) =
+        let parent = getParentDir target
+        let fileName = removeParentDir srcFile.Include
+        let srcFile = {srcFile with Include = parent + fileName}
+        if tree.ContainsKey parent then
+            let arr = tree.[parent] 
+            let idx = ResizeArray.indexOf (removeParentDir target) arr
+            tree.[parent] <- ResizeArray.insert idx fileName arr
+            data.[parent+fileName] <- srcFile
+
+
+    member self.AddBelow (target:string) (srcFile:SourceFile) =
+        let parent = getParentDir target
+        let fileName = removeParentDir srcFile.Include
+        let srcFile = {srcFile with Include = parent + fileName}
+        if tree.ContainsKey parent then
+            let arr = tree.[parent] 
+            let idx = ResizeArray.indexOf (removeParentDir target) arr
+            if idx = arr.Count then
+                tree.[parent] <- ResizeArray.add fileName arr    
+            else
+                tree.[parent] <- ResizeArray.insert (idx+1) fileName arr
+            data.[parent+fileName] <- srcFile
+
+
+    member __.AddSourceFile (dir:string) (fileName:string) =
+        let dir = fixDir dir
+        let keyPath = dir + fileName
+        let srcFile = {
+            Include = keyPath
+            Condition = None
+            OnBuild = BuildAction.Compile
+            Link = None
+            Copy = None
+        }
+        if  tree.ContainsKey dir 
+         && not ^ data.ContainsKey keyPath then
+            let arr = tree.[dir]
+            tree.[dir] <- ResizeArray.add fileName arr            
+            data.[keyPath] <- srcFile
+
+
+    member __.RemoveSourceFile (filePath:string) =
+        let path = normalizeFileName filePath
+        if not ^ data.ContainsKey path then () else
+        data.Remove path |> ignore
+        let parent = getParentDir path
+        let arr = tree.[parent]
+        tree.[parent] <- ResizeArray.remove (removeParentDir path) arr
+
+
+    member __.RenameFile (path:string) (newName:string) =
+        // TODO - check path & name for validity
+        // TODO - if there's a .fs & .fsi pair rename both files
+        let path = normalizeFileName path
+        let dir  = getDirectory path
+        let file = Path.GetFileName path
+        // update the SourceFile record
+        if data.ContainsKey path then
+            let srcfile = {data.[path] with Include = dir+newName}
+            data.Remove path |> ignore
+            data.[dir+newName]  <- srcfile
+        // update the file position listing
+        if tree.ContainsKey dir then 
+            let arr = tree.[dir]
+            printfn "%A" arr
+            let idx = ResizeArray.findIndex ((=) file) arr
+            arr.[idx] <- newName
+            tree.[dir] <- arr
+        
+        // TODO add railway result/errors
+
+
+    member __.RenameDir (dir:string) (newName:string) =
+        let dir,newName = fixDir dir, fixDir newName
+        let parent = getParentDir dir
+
+        let rec updateLoop oldDir newDir (keys:ResizeArray<string>) =
+            let subDirs,files = keys |> ResizeArray.partition (fun x -> x.EndsWith "/")
+            // update the Include paths and keys in SorceFiles inside this Dir
+            files |> ResizeArray.iter (fun file ->
+                if data.ContainsKey (oldDir+file) then
+                    let srcFile = {data.[oldDir+file] with Include = newDir+file}
+                    data.Remove (oldDir+file) |> ignore
+                    data.[newDir+file] <- srcFile
+            )
+
+            subDirs |> ResizeArray.iter (fun dir -> 
+                if tree.ContainsKey (oldDir+dir) then
+                    let arr = tree.[oldDir+dir]
+                    tree.Remove (oldDir+dir) |> ignore
+                    tree.[newDir+dir] <- arr
+                    updateLoop (oldDir+dir) (newDir+dir) arr
+            )
+
+        // update the name in the directory's parent
+        if tree.ContainsKey parent  then 
+            let arr = tree.[parent]
+            let idx = ResizeArray.findIndex ((=) dir) arr
+            arr.[idx] <- newName
+            tree.[parent] <- arr
+
+        // traverse downwards updating all paths
+        if tree.ContainsKey dir then
+            let arr = tree.[dir]
+            tree.Remove dir |> ignore
+            tree.[newName] <- arr
+            updateLoop dir newName arr    
+
+
+    member __.Data with get() = data
+    member __.Tree with get() = tree
+
+      
+    override self.ToString() =
+        let a = tree |> Seq.map (sprintf "%A") |> String.concat "\n"
+        let b = data |> Seq.map (sprintf "%A") |> String.concat "\n"
+        a + "\n\n" + b
+
+    member self.ToXElem() =
+        let rootlist = tree.["/"]
+        let rec loop dir (arr:ResizeArray<string>) = 
+            seq { for x in arr do
+                    if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
+                    else yield (toXElem data.[dir+x])                        
+            }
+        XElem.create "ItemGroup" [loop "" rootlist]
+
+
 type Property<'a> =
     {   /// The name of the element tag in XML
         Name      : string
@@ -660,7 +820,7 @@ type FsProject =
         BuildConfigs        : ConfigSettings list
         ProjectReferences   : ProjectReference list
         References          : Reference list
-        SourceFiles         : SourceElement list
+        SourceFiles         : SourceTree
     }
 
     member __.xmlns = XNamespace.Get @"http://schemas.microsoft.com/developer/msbuild/2003"
@@ -674,8 +834,8 @@ type FsProject =
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
             |> XElem.addElement  ^
                XElem.create Constants.ItemGroup (self.References |> List.map toXElem)
-            |> XElem.addElement  ^
-               XElem.create Constants.ItemGroup (self.SourceFiles |> List.map toXElem)
+            |> XElem.addElement  ^ toXElem self.SourceFiles
+
 
         // add msbuild namespace to XElement representing the project
         projxml.DescendantsAndSelf()
@@ -694,20 +854,20 @@ module FsProject =
         if not (proj.References |> List.exists ((=) refr)) then proj else
         { proj with References = proj.References |> List.filter ((<>) refr) }
 
-    let addFile (file : SourceElement) (proj:FsProject) =
-        if proj.SourceFiles |> List.exists ((=) file) then proj else
-        { proj with SourceFiles = file::proj.SourceFiles }
-
-    let removeFile (file : SourceElement) (proj:FsProject) =
-        if not (proj.SourceFiles |> List.exists ((=) file)) then proj else
-        { proj with SourceFiles = proj.SourceFiles |> List.filter ((<>) file) }
-
-    let orderFile (fileToMove : SourceElement) (putBefore : SourceElement) (proj : FsProject) =
-         if not (proj.SourceFiles |> List.exists ((=) fileToMove) ||proj.SourceFiles |> List.exists ((=) putBefore)) then proj else
-         let filesBefore = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.takeWhile ((<>) putBefore)
-         let filesAfter = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.skipWhile ((<>) putBefore)
-         let filesNew = seq {yield! filesBefore; yield fileToMove; yield! filesAfter } |> Seq.toList
-         { proj with SourceFiles = filesNew }
+//    let addFile (file : SourceElement) (proj:FsProject) =
+//        if proj.SourceFiles |> List.exists ((=) file) then proj else
+//        { proj with SourceFiles = file::proj.SourceFiles }
+//
+//    let removeFile (file : SourceElement) (proj:FsProject) =
+//        if not (proj.SourceFiles |> List.exists ((=) file)) then proj else
+//        { proj with SourceFiles = proj.SourceFiles |> List.filter ((<>) file) }
+//
+//    let orderFile (fileToMove : SourceElement) (putBefore : SourceElement) (proj : FsProject) =
+//         if not (proj.SourceFiles |> List.exists ((=) fileToMove) ||proj.SourceFiles |> List.exists ((=) putBefore)) then proj else
+//         let filesBefore = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.takeWhile ((<>) putBefore)
+//         let filesAfter = proj.SourceFiles |> List.filter ((<>) fileToMove) |> List.skipWhile ((<>) putBefore)
+//         let filesNew = seq {yield! filesBefore; yield fileToMove; yield! filesAfter } |> Seq.toList
+//         { proj with SourceFiles = filesNew }
 
     let parse content =
         let xdoc = (XDocument.Parse content).Root
@@ -715,7 +875,14 @@ module FsProject =
 
         let projectSettingsSqs =
             XElem.descendantsNamed Constants.PropertyGroup xdoc
+            #if INTERACTIVE
+            |> Seq.map (fun x -> printfn "%A" x ; x)
+            #endif
             |> Seq.filter (fun pg -> not ^ XElem.hasAttribute Constants.Condition pg)
+        
+        #if INTERACTIVE
+        projectSettingsSqs |> Seq.iter (printfn "%A") 
+        #endif
 
         let projectSettings = projectSettingsSqs |> Seq.head |> ProjectSettings.fromXElem
 
@@ -735,19 +902,20 @@ module FsProject =
             |> Seq.filter  (not << XElem.hasElement Constants.Paket) // we only manage references paket isn't already managing
             |> Seq.map Reference.fromXElem
 
-        let srcFiles =
+        let srcTree =
             itemGroups
             |> Seq.collect (fun itemgroup ->
                 XElem.descendants itemgroup
                 |> Seq.filter (fun x -> isSrcFile x.Name.LocalName))
             |> Seq.map SourceFile.fromXElem
+            |> Seq.toList |> SourceTree
 
         let proj =
             {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc 
                 DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
                 References        = references |> List.ofSeq
                 Settings          = projectSettings
-                SourceFiles       = srcFiles |> Seq.map File |> List.ofSeq
+                SourceFiles       = srcTree 
                 ProjectReferences = projectReferences |> List.ofSeq
                 BuildConfigs      = []
             }
@@ -756,6 +924,9 @@ module FsProject =
 
     let load path =
         let content = System.IO.File.ReadAllText path
+//        #if INTERACTIVE
+//        printfn "%A" content
+//        #endif
         parse content
 
 // A small abstraction over MSBuild project files.
@@ -900,5 +1071,6 @@ type ProjectFile (projectFileName:string, documentContent:string) =
 
 
 #if INTERACTIVE
-;; readfsproj ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+;; 
+FsProject.load ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
 #endif
