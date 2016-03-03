@@ -13,7 +13,8 @@ open System.Xml
 
 let (^) = (<|)
 
-
+let inline (|?|) (pred1:'a->bool) (pred2:'a->bool)  =
+    fun a -> pred1 a || pred2 a
 
 /// Combines two path strings using Path.Combine
 let inline combinePaths path1 (path2 : string) = Path.Combine (path1, path2.TrimStart [| '\\'; '/' |])
@@ -31,7 +32,7 @@ let inline (</>) path1 path2 = combinePathsNoTrim path1 path2
 /// Retrieves the environment variable with the given name
 let environVar name = Environment.GetEnvironmentVariable name
 
-let environVarOrNone name = 
+let environVarOrNone name =
     let var = environVar name
     if String.IsNullOrEmpty var then None
     else Some var
@@ -71,14 +72,14 @@ let monoPath =
 let ProgramFiles = Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
 
 /// The path of Program Files (x86)
-/// It seems this covers all cases where PROCESSOR\_ARCHITECTURE may misreport and the case where the other variable 
+/// It seems this covers all cases where PROCESSOR\_ARCHITECTURE may misreport and the case where the other variable
 /// PROCESSOR\_ARCHITEW6432 can be null
-let ProgramFilesX86 = 
+let ProgramFilesX86 =
     let wow64 = environVar "PROCESSOR_ARCHITEW6432"
     let globalArch = environVar "PROCESSOR_ARCHITECTURE"
     match wow64, globalArch with
-    | "AMD64", "AMD64" 
-    | null, "AMD64" 
+    | "AMD64", "AMD64"
+    | null, "AMD64"
     | "x86", "AMD64" -> environVar "ProgramFiles(x86)"
     | _ -> environVar "ProgramFiles"
     |> fun detected -> if detected = null then @"C:\Program Files (x86)\" else detected
@@ -92,7 +93,7 @@ let isValidPath (path:string) =
     ||> Array.fold (fun isValid pathChar ->
         if not isValid then false else
         not ^ Array.exists ((=) pathChar) invalidChars
-    ) 
+    )
 
 /// Returns if the build parameter with the given name was set
 let inline hasBuildParam name = environVar name <> null
@@ -101,8 +102,8 @@ let inline hasBuildParam name = environVar name <> null
 type EnvironTarget = EnvironmentVariableTarget
 
 /// Retrieves all environment variables from the given target
-let environVars target = 
-    [ for e in Environment.GetEnvironmentVariables target -> 
+let environVars target =
+    [ for e in Environment.GetEnvironmentVariables target ->
           let e1 = e :?> Collections.DictionaryEntry
           e1.Key, e1.Value ]
 
@@ -131,7 +132,7 @@ let startsWith prefix (text : string) = text.StartsWith prefix
 let endsWith suffix (text : string) = text.EndsWith suffix
 
 /// Determines whether the last character of the given <see cref="string" />
-/// matches Path.DirectorySeparatorChar.         
+/// matches Path.DirectorySeparatorChar.
 let endsWithSlash = endsWith (Path.DirectorySeparatorChar.ToString())
 /// Reads a file as one text
 let inline readFileAsString file = File.ReadAllText file
@@ -140,7 +141,7 @@ let inline readFileAsString file = File.ReadAllText file
 let inline replace (pattern : string) replacement (text : string) = text.Replace(pattern, replacement)
 
 /// Replaces the first occurrence of the pattern with the given replacement.
-let replaceFirst (pattern : string) replacement (text : string) = 
+let replaceFirst (pattern : string) replacement (text : string) =
     let pos = text.IndexOf pattern
     if pos < 0 then text
     else text.Remove(pos, pattern.Length).Insert(pos, replacement)
@@ -166,8 +167,8 @@ let promptSelect text list =
     Console.ReadLine ()
 
 /// Loads the given text into a XmlDocument
-let XMLDoc text = 
-    if isNullOrEmpty text then null else 
+let XMLDoc text =
+    if isNullOrEmpty text then null else
     let xmlDocument = XmlDocument ()
     xmlDocument.LoadXml text
     xmlDocument
@@ -189,9 +190,9 @@ let fakeToolLocation  = fakeLocation </> "tools"
 let inline mapOpt (opt:'a option) mapfn (x:'b) =
     match opt with
     | None -> x
-    | Some a -> mapfn a x 
+    | Some a -> mapfn a x
 
-let parseGuid text = 
+let parseGuid text =
     let mutable g = Unchecked.defaultof<Guid>
     if Guid.TryParse(text,&g) then Some g else None
 
@@ -212,7 +213,7 @@ module Option =
         | None -> v
 
 [<RequireQualifiedAccess>]
-module Dict = 
+module Dict =
     open System.Collections.Generic
 
     let add key value (dict: Dictionary<_,_>) =
@@ -223,12 +224,12 @@ module Dict =
         dict.Remove key |> ignore
         dict
 
-    let tryFind key (dict: Dictionary<'k, 'v>) = 
+    let tryFind key (dict: Dictionary<'k, 'v>) =
         let mutable value = Unchecked.defaultof<_>
         if dict.TryGetValue (key, &value) then Some value
         else None
 
-    let ofSeq (xs: ('k * 'v) seq) = 
+    let ofSeq (xs: ('k * 'v) seq) =
         let dict = Dictionary()
         for k, v in xs do dict.[k] <- v
         dict
