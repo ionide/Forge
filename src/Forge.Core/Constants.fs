@@ -44,11 +44,11 @@ let [<Literal>] ToolsVersion    = "ToolsVersion"
 let [<Literal>] Include         = "Include"        
 let [<Literal>] Condition       = "Condition"  
 
-// XML Element Constants
+// MSBuild XML Element Constants
 
 let [<Literal>] Project          = "Project"
 let [<Literal>] ItemGroup        = "ItemGroup"
-let [<Literal>] PropertyGroup    = "ProperyGroup"
+let [<Literal>] PropertyGroup    = "PropertyGroup"
 let [<Literal>] ProjectReference = "ProjectReference"
 
 
