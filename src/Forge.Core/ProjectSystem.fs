@@ -1,11 +1,11 @@
 ﻿#if INTERACTIVE
 /// Contains project file comparion tools for MSBuild project files.
-#r "System.Xml"
+#r "bin/Release/Forge.Core.dll"
 #r "System.Xml.Linq"
-#load "Prelude.fs"
-#load "XLinq.fs"
-#load "Constants.fs"
-#load "ResizeArray.fs"
+//#load "Prelude.fs"
+//#load "XLinq.fs"
+//#load "Constants.fs"
+//#load "ResizeArray.fs"
 open Forge.Prelude
 open Forge.XLinq
 open Forge
@@ -14,6 +14,7 @@ module Forge.ProjectSystem
 #endif
 
 open System
+open System.Text
 open System.IO
 open System.Collections.Generic
 open System.Xml
@@ -57,7 +58,9 @@ open System.Xml.Linq
 *)
 
 
-
+let (|InvariantEqual|_|) (str:string) arg = 
+  if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
+    then Some() else None
 
 /// Sets the platform for a Build Configuration
 ///     x86,  x64, or AnyCPU.
@@ -71,16 +74,16 @@ type PlatformType =
         | AnyCPU  -> Constants.AnyCPU 
 
     static member Parse text = text |> function
-        | Constants.X86     -> X86
-        | Constants.X64     -> X64
-        | Constants.AnyCPU  -> AnyCPU
+        | InvariantEqual Constants.X86     -> X86
+        | InvariantEqual Constants.X64     -> X64
+        | InvariantEqual Constants.AnyCPU  -> AnyCPU
         | _ -> 
             failwithf "Could not parse '%s' into a `PlatformType`" text
 
     static member TryParse text = text |> function
-        | Constants.X86     -> Some X86
-        | Constants.X64     -> Some X64
-        | Constants.AnyCPU  -> Some AnyCPU
+        | InvariantEqual Constants.X86     -> Some X86
+        | InvariantEqual Constants.X64     -> Some X64
+        | InvariantEqual Constants.AnyCPU  -> Some AnyCPU
         | _                 -> None
 
 
@@ -107,22 +110,22 @@ type BuildAction =
         | EmbeddedResource -> Constants.EmbeddedResource
 
     static member Parse text = text |> function
-        | Constants.Compile          -> Compile
-        | Constants.Content          -> Content
-        | Constants.Reference        -> Reference
-        | Constants.None             -> None
-        | Constants.Resource         -> Resource
-        | Constants.EmbeddedResource -> EmbeddedResource
+        | InvariantEqual Constants.Compile          -> Compile
+        | InvariantEqual Constants.Content          -> Content
+        | InvariantEqual Constants.Reference        -> Reference
+        | InvariantEqual Constants.None             -> None
+        | InvariantEqual Constants.Resource         -> Resource
+        | InvariantEqual Constants.EmbeddedResource -> EmbeddedResource
         | _ -> 
             failwithf "Could not parse '%s' into a `BuildAction`" text
 
     static member TryParse text = text |> function
-        | Constants.Compile          -> Some Compile
-        | Constants.Content          -> Some Content
-        | Constants.Reference        -> Some Reference
-        | Constants.None             -> Some None
-        | Constants.Resource         -> Some Resource
-        | Constants.EmbeddedResource -> Some EmbeddedResource
+        | InvariantEqual Constants.Compile          -> Some Compile
+        | InvariantEqual Constants.Content          -> Some Content
+        | InvariantEqual Constants.Reference        -> Some Reference
+        | InvariantEqual Constants.None             -> Some None
+        | InvariantEqual Constants.Resource         -> Some Resource
+        | InvariantEqual Constants.EmbeddedResource -> Some EmbeddedResource
         | _                          -> Option.None
 
 
@@ -136,16 +139,16 @@ type CopyToOutputDirectory =
         | PreserveNewest -> Constants.PreserveNewest
 
     static member Parse text = text |> function
-        | Constants.Never          -> Never
-        | Constants.Always         -> Always
-        | Constants.PreserveNewest -> PreserveNewest
+        | InvariantEqual Constants.Never          -> Never
+        | InvariantEqual Constants.Always         -> Always
+        | InvariantEqual Constants.PreserveNewest -> PreserveNewest
         | _ -> 
             failwithf "Could not parse '%s' into a `CopyToOutputDirectory`" text
 
     static member TryParse text = text |> function
-        | Constants.Never          -> Some Never
-        | Constants.Always         -> Some Always
-        | Constants.PreserveNewest -> Some PreserveNewest
+        | InvariantEqual Constants.Never          -> Some Never
+        | InvariantEqual Constants.Always         -> Some Always
+        | InvariantEqual Constants.PreserveNewest -> Some PreserveNewest
         | _                        -> None
 
 
@@ -159,16 +162,16 @@ type DebugType =
         | Full    -> Constants.Full
 
     static member Parse text = text |> function
-        | Constants.None    -> DebugType.None
-        | Constants.PdbOnly -> DebugType.PdbOnly
-        | Constants.Full    -> DebugType.Full
+        | InvariantEqual Constants.None    -> DebugType.None
+        | InvariantEqual Constants.PdbOnly -> DebugType.PdbOnly
+        | InvariantEqual Constants.Full    -> DebugType.Full
         | _ -> 
             failwithf "Could not parse '%s' into a `DebugType`" text
 
     static member TryParse text = text |> function
-        | Constants.None    -> Some DebugType.None
-        | Constants.PdbOnly -> Some DebugType.PdbOnly
-        | Constants.Full    -> Some DebugType.Full
+        | InvariantEqual Constants.None    -> Some DebugType.None
+        | InvariantEqual Constants.PdbOnly -> Some DebugType.PdbOnly
+        | InvariantEqual Constants.Full    -> Some DebugType.Full
         | _                 -> Option.None
 
 
@@ -190,18 +193,18 @@ type OutputType =
         | Module  -> Constants.Module  
 
     static member Parse text = text |> function
-        | Constants.Exe     -> Exe
-        | Constants.Winexe  -> Winexe
-        | Constants.Library -> Library
-        | Constants.Module  -> Module
+        | InvariantEqual Constants.Exe     -> Exe
+        | InvariantEqual Constants.Winexe  -> Winexe
+        | InvariantEqual Constants.Library -> Library
+        | InvariantEqual Constants.Module  -> Module
         | _ -> 
             failwithf "Could not parse '%s' into a `OutputType`" text
 
     static member TryParse text = text |> function
-        | Constants.Exe     -> Some Exe
-        | Constants.Winexe  -> Some Winexe
-        | Constants.Library -> Some Library
-        | Constants.Module  -> Some Module
+        | InvariantEqual Constants.Exe     -> Some Exe
+        | InvariantEqual Constants.Winexe  -> Some Winexe
+        | InvariantEqual Constants.Library -> Some Library
+        | InvariantEqual Constants.Module  -> Some Module
         | _                 -> None
 
 
