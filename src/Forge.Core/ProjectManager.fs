@@ -54,18 +54,50 @@ let readFsProject path =
 
 type Furnace =
 
-    static member addReference (refr:Reference) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.addReference refr)  state
-        saveState state
-        state
+    static member addReference 
+        (state: ActiveState, includestr:string,?condition:string,?hintPath:string,?name:string,?specificVersion:bool,?copy:bool) =
+        let asmName = String.takeUntil ',' includestr
+        let project = state.Project
+        let r = project.References |> ResizeArray.tryFind (fun refr ->
+            (refr.Name.IsSome && refr.Name.Value = asmName) ||
+            (String.takeUntil ','  refr.Include = asmName )
+        )
+        let projectName = defaultArg project.Settings.Name.Data "fsproject"
+        match r with 
+        | Some _ -> 
+            traceWarning ^ sprintf "'%s' already has a Reference for '%s'" projectName asmName
+            state
+        | None ->
+            let reference = {
+                Include         = includestr
+                Condition       = condition
+                HintPath        = hintPath
+                Name            = name
+                SpecificVersion = specificVersion
+                CopyLocal       = copy
+            }
+            FsProject.addReference  reference project |> ignore
+            let state = updateProj (FsProject.addReference reference) state 
+            saveState state
+            state
 
 
-    static member removeReference (refr:Reference) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.removeReference refr)  state
-        saveState state
-        state
+    static member removeReference (refname:string) (state: ActiveState)  =
+        let project = state.Project
+        let r = project.References |> ResizeArray.tryFind (fun refr ->
+            (refr.Name.IsSome && refr.Name.Value = refname) ||
+            (String.takeUntil ','  refr.Include = refname )
+        )
+        let projectName = defaultArg project.Settings.Name.Data "fsproject"
+        match r with 
+        | None -> 
+            traceWarning ^ sprintf "'%s' does not contain a Reference for '%s'" projectName refname
+            state
+        | Some reference ->
+            FsProject.removeReference reference project |> ignore
+            let state = updateProj (FsProject.removeReference reference) state 
+            saveState state
+            state
 
 
     static member moveUp (target: string) (state: ActiveState) =

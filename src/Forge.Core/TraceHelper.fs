@@ -46,6 +46,9 @@ let traceImportant text = postMessage ^ ImportantMessage text
 /// Writes a trace to the command line (in yellow)
 let traceFAKE fmt = Printf.ksprintf (fun text -> postMessage ^ ImportantMessage text) fmt
 
+/// Writes a trace to the command line  (in dark cyan)  
+let traceWarning text = postMessage ^ WarningMessage (text, true)
+
 /// Traces an error (in red)
 let traceError error = postMessage ^ ErrorMessage error
 

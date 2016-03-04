@@ -3,6 +3,9 @@
 open System
 open System.Text
 open Argu
+open Forge
+open Forge.ProjectSystem
+open Forge.ProjectManager
 
 /// Custom Command Line Argument
 type CLIArg = CustomCommandLineAttribute
@@ -10,7 +13,7 @@ type CLIArg = CustomCommandLineAttribute
 type CLIAlt = AltCommandLineAttribute
 
 type Result =
-| Continue
+| Continue //of ActiveState
 | Help
 | Exit
 
@@ -366,9 +369,9 @@ let removeFile (results : ParseResults<_>) =
 let removeReference (results : ParseResults<_>) =
     let name = results.TryGetResult <@ AddReferenceArgs.Name @>
     let project = results.TryGetResult <@ AddReferenceArgs.Project @> //TODO
-    match name with
-    | Some n -> References.Remove n
-    | None -> ()
+    match name, project with
+    | Some n , Some p -> ()
+    | _, _ -> ()
     Continue
 
 let processRemove args =
@@ -463,30 +466,29 @@ let processUpdate args =
 //-----------------------------------------------------------------
 
 let processMain args =
-    let res =
-        processCommand<Command> args |> Option.bind (fun res ->
+    let result = processCommand<Command> args 
 
-            match res.GetAllResults() with
-            | [cmd] ->
+    let check (res:ParseResults<_>) =
+        match res.GetAllResults() with
+        | [cmd] ->
+            try
+            let args' = args.[1 ..]
+            args' |> 
+            match cmd with
+            | Command.New -> processNew
+            | Add -> processAdd
+            | Remove -> processRemove
+            | Command.Rename -> processRename
+            | List -> processList
+            | Update -> processUpdate
+            | Command.Fake -> fun a -> Fake.Run a; Some Continue
+            | Command.Paket -> fun a -> Paket.Run a; Some Continue
+            | Refresh -> fun _ -> Templates.Refresh (); Some Continue
+            | Exit -> fun _ -> Some Result.Exit
+            with
+            | _ ->
+                printfn "Unrecognized command or missing required parameter"
+                Some Help
+        | _ -> Some Continue
 
-                try
-                    let args' = args.[1 ..]
-                    args'
-                    |>  match cmd with
-                        | Command.New -> processNew
-                        | Add -> processAdd
-                        | Remove -> processRemove
-                        | Command.Rename -> processRename
-                        | List -> processList
-                        | Update -> processUpdate
-                        | Command.Fake -> fun a -> Fake.Run a; Some Continue
-                        | Command.Paket -> fun a -> Paket.Run a; Some Continue
-                        | Refresh -> fun _ -> Templates.Refresh (); Some Continue
-                        | Exit -> fun _ -> Some Result.Exit
-                with
-                | _ ->
-                    printfn "Unrecognized command or missing required parameter"
-                    Some Help
-            | _ -> Some Continue
-        )
-    defaultArg res Result.Exit
+    defaultArg (Option.bind check result) Result.Exit
