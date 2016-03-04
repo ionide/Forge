@@ -536,7 +536,7 @@ type SourceTree (files:SourceFile list) =
     member __.AddSourceFile (dir:string) (srcFile:SourceFile) =
         let dir = fixDir dir
         let fileName = removeParentDir srcFile.Include
-        let keyPath  = dir + fileName
+        let keyPath  = normalizeFileName (dir + fileName)
         let srcFile = { srcFile with Include = keyPath }
         if  tree.ContainsKey dir
          && not ^ data.ContainsKey keyPath then
@@ -648,11 +648,14 @@ type SourceTree (files:SourceFile list) =
         let rec loop dir (arr:ResizeArray<string>) =
             seq { for x in arr do
                     if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
-                    else yield data.[dir+x].Include
+                    elif data.ContainsKey (dir+x) then
+                        yield data.[dir+x].Include               
             }
         if not ^ tree.ContainsKey dir then Seq.empty else
         let arr = tree.[dir]
-        loop dir arr
+        loop "" arr
+
+    member self.AllFiles() = self.DirContents "/"
 
 
     member __.Data with get() = data
@@ -1196,5 +1199,7 @@ type ProjectFile (projectFileName:string, documentContent:string) =
 
 #if INTERACTIVE
 ;;
-let doc = FsProject.parse ^ __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+let projfile = __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
+//let doc  = FsProject.parse projfile
+let proj = FsProject.load projfile
 #endif
