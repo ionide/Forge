@@ -4,8 +4,10 @@
 #load "TraceListener.fs"
 #load "TraceHelper.fs"
 #load "FileHelper.fs"
+#load "TraceHelper.fs"
 open Forge.Prelude
 open Forge.FileHelper
+open Forge.TraceHelper
 #else
 module Forge.GacSearch
 #endif
@@ -42,7 +44,9 @@ let private tryGetAssemblyName (info : FileInfo) =
     try
         Some ^ System.Reflection.AssemblyName.GetAssemblyName info.FullName
     with
-    | _ -> None //TODO: Add logging
+    | _ as ex ->
+        log ex.Message
+        None
 
 /// Looks for assemblies in GAC
 /// Returns AssemblyName instances for all found assemblies except resource and policy assemblies
