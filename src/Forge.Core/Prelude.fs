@@ -109,45 +109,51 @@ let environVars target =
 
 // String Helpers
 //=====================================================
+[<RequireQualifiedAccess>]
+module String =
+    /// Converts a sequence of strings to a string with delimiters
+    let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
 
-/// Converts a sequence of strings to a string with delimiters
-let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
+    /// Returns if the string is null or empty
+    let inline isNullOrEmpty value = String.IsNullOrEmpty value
 
-/// Returns if the string is null or empty
-let inline isNullOrEmpty value = String.IsNullOrEmpty value
+    /// Returns if the string is not null or empty
+    let inline isNotNullOrEmpty value = not ^ String.IsNullOrEmpty value
 
-/// Returns if the string is not null or empty
-let inline isNotNullOrEmpty value = not ^ String.IsNullOrEmpty value
+    /// Returns if the string is null or empty or completely whitespace
+    let inline isNullOrWhiteSpace value = isNullOrEmpty value || value |> Seq.forall Char.IsWhiteSpace
 
-/// Returns if the string is null or empty or completely whitespace
-let inline isNullOrWhiteSpace value = isNullOrEmpty value || value |> Seq.forall Char.IsWhiteSpace
+    /// Converts a sequence of strings into a string separated with line ends
+    let inline toLines text = separated Environment.NewLine text
 
-/// Converts a sequence of strings into a string separated with line ends
-let inline toLines text = separated Environment.NewLine text
+    /// Checks whether the given text starts with the given prefix
+    let startsWith prefix (text : string) = text.StartsWith prefix
 
-/// Checks whether the given text starts with the given prefix
-let startsWith prefix (text : string) = text.StartsWith prefix
+    /// Checks whether the given text ends with the given suffix
+    let endsWith suffix (text : string) = text.EndsWith suffix
 
-/// Checks whether the given text ends with the given suffix
-let endsWith suffix (text : string) = text.EndsWith suffix
+    /// Determines whether the last character of the given <see cref="string" />
+    /// matches Path.DirectorySeparatorChar.
+    let endsWithSlash = endsWith (Path.DirectorySeparatorChar.ToString())
+    /// Reads a file as one text
+    let inline readFileAsString file = File.ReadAllText file
 
-/// Determines whether the last character of the given <see cref="string" />
-/// matches Path.DirectorySeparatorChar.
-let endsWithSlash = endsWith (Path.DirectorySeparatorChar.ToString())
-/// Reads a file as one text
-let inline readFileAsString file = File.ReadAllText file
+    /// Replaces the given pattern in the given text with the replacement
+    let inline replace (pattern : string) replacement (text : string) = text.Replace(pattern, replacement)
 
-/// Replaces the given pattern in the given text with the replacement
-let inline replace (pattern : string) replacement (text : string) = text.Replace(pattern, replacement)
+    /// Replaces the first occurrence of the pattern with the given replacement.
+    let replaceFirst (pattern : string) replacement (text : string) =
+        let pos = text.IndexOf pattern
+        if pos < 0 then text
+        else text.Remove(pos, pattern.Length).Insert(pos, replacement)
 
-/// Replaces the first occurrence of the pattern with the given replacement.
-let replaceFirst (pattern : string) replacement (text : string) =
-    let pos = text.IndexOf pattern
-    if pos < 0 then text
-    else text.Remove(pos, pattern.Length).Insert(pos, replacement)
+    /// Trims the given string with the DirectorySeparatorChar
+    let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
 
-/// Trims the given string with the DirectorySeparatorChar
-let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
+    let takeUntil (c:char) (str:string) =
+        match str.IndexOf c with
+        | -1    -> str
+        | num   -> str.Substring(0,num)
 
 
 // Process Helpers
@@ -168,7 +174,7 @@ let promptSelect text list =
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text =
-    if isNullOrEmpty text then null else
+    if String.isNullOrEmpty text then null else
     let xmlDocument = XmlDocument ()
     xmlDocument.LoadXml text
     xmlDocument

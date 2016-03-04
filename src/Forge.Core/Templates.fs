@@ -21,7 +21,7 @@ type ProjectComparison =
 /// Compares the given project files againts the template project and returns which files are missing.
 /// For F# projects it is also reporting unordered files.
 let findMissingFiles templateProject projects =
-    let isFSharpProject file = file |> endsWith ".fsproj"
+    let isFSharpProject file = file |> String.endsWith ".fsproj"
 
     let templateFiles = (ProjectFile.FromFile templateProject).Files
     let templateFilesSet = Set.ofSeq templateFiles
@@ -85,15 +85,15 @@ let CompareProjectsTo templateProject projects =
         |> Seq.map (fun pc ->
                 seq {
                     if Seq.isEmpty pc.MissingFiles |> not then
-                        yield sprintf "Missing files in %s:\r\n%s" pc.ProjectFileName (toLines pc.MissingFiles)
+                        yield sprintf "Missing files in %s:\r\n%s" pc.ProjectFileName (String.toLines pc.MissingFiles)
                     if Seq.isEmpty pc.UnorderedFiles |> not then
-                        yield sprintf "Unordered files in %s:\r\n%s" pc.ProjectFileName (toLines pc.UnorderedFiles)
+                        yield sprintf "Unordered files in %s:\r\n%s" pc.ProjectFileName (String.toLines pc.UnorderedFiles)
                     if Seq.isEmpty pc.DuplicateFiles |> not then
-                        yield sprintf "Duplicate files in %s:\r\n%s" pc.ProjectFileName (toLines pc.DuplicateFiles)}
-                    |> toLines)
-        |> toLines
+                        yield sprintf "Duplicate files in %s:\r\n%s" pc.ProjectFileName (String.toLines pc.DuplicateFiles)}
+                    |> String.toLines)
+        |> String.toLines
 
-    if isNotNullOrEmpty errors then failwith errors
+    if String.isNotNullOrEmpty errors then failwith errors
 
 
 let Refresh () =

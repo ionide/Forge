@@ -49,7 +49,7 @@ let renameDir target dirName = (DirectoryInfo dirName).MoveTo target
 let pathDirectories =
     splitEnvironVar "PATH"
     |> Seq.map (fun value -> value.Trim())
-    |> Seq.filter isNotNullOrEmpty 
+    |> Seq.filter String.isNotNullOrEmpty 
     |> Seq.filter isValidPath
 
 
@@ -61,9 +61,9 @@ let tryFindFile dirs file =
         |> Seq.map (fun (path : string) -> 
             let dir = 
                 path
-                |> replace "[ProgramFiles]" ProgramFiles
-                |> replace "[ProgramFilesX86]" ProgramFilesX86
-                |> replace "[SystemRoot]" SystemRoot
+                |> String.replace "[ProgramFiles]" ProgramFiles
+                |> String.replace "[ProgramFilesX86]" ProgramFilesX86
+                |> String.replace "[SystemRoot]" SystemRoot
                 |> DirectoryInfo
             if not dir.Exists then "" else 
             let fi = dir.FullName @@ file |> FileInfo
@@ -99,7 +99,7 @@ let appSettings (key : string) (fallbackValue : string) =
             try 
                 System.Configuration.ConfigurationManager.AppSettings.[key]
             with exn -> ""
-        if not ^ isNullOrWhiteSpace setting then setting
+        if not ^ String.isNullOrWhiteSpace setting then setting
         else fallbackValue
     value.Split ([| ';' |], StringSplitOptions.RemoveEmptyEntries)
 
@@ -285,7 +285,7 @@ let copyDir target source filterFile =
     Directory.GetFiles(source, "*.*", SearchOption.AllDirectories)
     |> Seq.filter filterFile
     |> Seq.iter (fun file -> 
-        let fi = file |> replaceFirst source "" |> trimSeparator
+        let fi = file |> String.replaceFirst source "" |> String.trimSeparator
         let newFile = target @@ fi
         printfn "%s => %s" file newFile
         directoryName newFile |> ensureDirectory

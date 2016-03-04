@@ -11,7 +11,7 @@ let private GitPath = @"[ProgramFiles]\Git\cmd\;[ProgramFilesX86]\Git\cmd\;[Prog
 let gitPath = 
     if isUnix then "git" else
     let ev = environVar "GIT"
-    if not ^ isNullOrEmpty ev then ev else 
+    if not ^ String.isNullOrEmpty ev then ev else 
     findPath "GitPath" GitPath "git.exe"   
 
 /// Runs git.exe with the given command in the given repository directory.
@@ -22,7 +22,7 @@ let runGitCommand repositoryDir command =
             info.WorkingDirectory <- repositoryDir
             info.Arguments <- command) gitTimeOut
 
-    processResult.OK, processResult.Messages, toLines processResult.Errors
+    processResult.OK, processResult.Messages, String.toLines processResult.Errors
 
 /// [omit]
 let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
@@ -31,7 +31,7 @@ let runGitCommandf fmt = Printf.ksprintf runGitCommand fmt
 let runSimpleGitCommand repositoryDir command =
     try
         let _, msg, errors = runGitCommand repositoryDir command
-        let errorText = toLines msg + Environment.NewLine + errors
+        let errorText = String.toLines msg + Environment.NewLine + errors
         if errorText.Contains "fatal: " then  failwith errorText
         if msg.Count = 0 then "" else
         msg |> Seq.iter (logfn "%s")

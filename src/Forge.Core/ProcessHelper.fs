@@ -64,7 +64,7 @@ let ExecProcessWithLambdas configProcessStartInfoF (timeOut : TimeSpan) silent e
     proc.StartInfo.UseShellExecute <- false
     configProcessStartInfoF proc.StartInfo
     platformInfoAction proc.StartInfo
-    if not ^ isNullOrEmpty proc.StartInfo.WorkingDirectory then 
+    if not ^ String.isNullOrEmpty proc.StartInfo.WorkingDirectory then 
         if not ^ Directory.Exists proc.StartInfo.WorkingDirectory then 
             failwithf "Start of process %s failed. WorkingDir %s does not exist." proc.StartInfo.FileName 
                 proc.StartInfo.WorkingDirectory
@@ -159,7 +159,7 @@ let ExecProcessElevated cmd args timeOut =
 let pathDirectories =
     splitEnvironVar "PATH"
     |> Seq.map (fun value -> value.Trim())
-    |> Seq.filter (fun value -> isNotNullOrEmpty value)
+    |> Seq.filter (fun value -> String.isNotNullOrEmpty value)
     |> Seq.filter isValidPath
 
 /// Sets the environment Settings for the given startInfo.
@@ -207,7 +207,7 @@ let StartProcess configProcessStartInfoF =
 let run cmd args dir =
     if execProcess( fun info ->
         info.FileName <- cmd
-        if not ^ isNullOrWhiteSpace dir then
+        if not ^ String.isNullOrWhiteSpace dir then
             info.WorkingDirectory <- dir
         info.Arguments <- args
     ) System.TimeSpan.MaxValue = false then

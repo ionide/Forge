@@ -9,10 +9,11 @@
 open Forge.Prelude
 open Forge.XLinq
 open Forge
+open Forge.TraceListener
+open Forge.TraceHelper
 #else
 module Forge.ProjectSystem
 #endif
-
 open System
 open System.Text
 open System.IO
@@ -476,6 +477,11 @@ module internal PathHelpers =
         loop "" [rootOrder] paths
         |> List.rev
 
+    let checkFile (path:string) (warning:string) =
+        if isValidPath path then true else
+        traceWarning ^ sprintf "'%s' %s" path warning //contains invalid path character
+        false
+
 
 type SourceTree (files:SourceFile list) =
     // for looking up order of directory when given a path
@@ -490,10 +496,22 @@ type SourceTree (files:SourceFile list) =
             path)
         |> treeOrder
         |> List.iter (fun (dir,files) ->
-            tree.Add(dir,ResizeArray files)
+            tree.Add (dir,ResizeArray files)
         )
 
+    /// Check if the target exists in the project file tree
+    let hasTarget (target:string) =
+        let target = normalizeFileName target 
+        if isDirectory target then
+            if tree.ContainsKey target then true else
+            traceWarning ^ sprintf "target directory '%s' is not found in the project tree" target
+            false
+        elif data.ContainsKey target then true else
+        traceWarning ^ sprintf "target file '%s' is doest not exist in the project" target
+        false
+
     let moveFile shift target =
+        if not ^ hasTarget target then () else
         let path = normalizeFileName target
         let parent = getParentDir path
 
@@ -509,6 +527,7 @@ type SourceTree (files:SourceFile list) =
     member __.MoveDown (target:string) = moveFile 1 target
 
     member self.AddAbove (target:string) (srcFile:SourceFile) =
+        if not ^ hasTarget target then () else
         let parent = getParentDir target
         let fileName = removeParentDir srcFile.Include
         let srcFile = {srcFile with Include = parent + fileName}
@@ -520,6 +539,7 @@ type SourceTree (files:SourceFile list) =
 
 
     member self.AddBelow (target:string) (srcFile:SourceFile) =
+        if not ^ hasTarget target then () else
         let parent = getParentDir target
         let fileName = removeParentDir srcFile.Include
         let srcFile = {srcFile with Include = parent + fileName}
@@ -535,6 +555,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.AddSourceFile (dir:string) (srcFile:SourceFile) =
         let dir = fixDir dir
+        if not ^ hasTarget dir then () else
         let fileName = removeParentDir srcFile.Include
         let keyPath  = normalizeFileName (dir + fileName)
         let srcFile = { srcFile with Include = keyPath }
@@ -547,7 +568,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.RemoveSourceFile (filePath:string) =
         let path = normalizeFileName filePath
-        if not ^ data.ContainsKey path then () else
+        if not ^ hasTarget path then () else
         data.Remove path |> ignore
         let parent = getParentDir path
         let arr = tree.[parent]
@@ -556,6 +577,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.RemoveDirectory (path:string) =
         let dir = fixDir path
+        if not ^ hasTarget dir then () else
         let parent = getParentDir dir
 
         let rec updateLoop root (keys:ResizeArray<string>) =
@@ -587,6 +609,8 @@ type SourceTree (files:SourceFile list) =
     member __.RenameFile (path:string) (newName:string) =
         // TODO - check path & name for validity
         // TODO - if there's a .fs & .fsi pair rename both files
+        if   not ^ hasTarget path then () 
+        elif not ^ checkFile newName "is not a valid file name" then () else
         let path = normalizeFileName path
         let dir  = getDirectory path
         let file = Path.GetFileName path
@@ -608,6 +632,8 @@ type SourceTree (files:SourceFile list) =
 
     member __.RenameDir (dir:string) (newName:string) =
         let dir,newName = fixDir dir, fixDir newName
+        if   not ^ hasTarget dir then () 
+        elif not ^ checkFile newName "is not a valid file name" then () else
         let parent = getParentDir dir
 
         let rec updateLoop oldDir newDir (keys:ResizeArray<string>) =
@@ -645,6 +671,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.DirContents (dir:string) =
         let dir = fixDir dir
+        if  not ^ hasTarget dir then Seq.empty else
         let rec loop dir (arr:ResizeArray<string>) =
             seq { for x in arr do
                     if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
@@ -1131,7 +1158,7 @@ type ProjectFile (projectFileName:string, documentContent:string) =
         | _ -> new ProjectFile(projectFileName,document.OuterXml)
 
     /// Read a Project from a FileName
-    static member FromFile(projectFileName) = new ProjectFile(projectFileName,readFileAsString projectFileName)
+    static member FromFile(projectFileName) = new ProjectFile(projectFileName,String.readFileAsString projectFileName)
 
     /// Saves the project file
     member x.Save(?fileName) =
@@ -1200,6 +1227,8 @@ type ProjectFile (projectFileName:string, documentContent:string) =
 #if INTERACTIVE
 ;;
 let projfile = __SOURCE_DIRECTORY__ + "/../Forge/Forge.fsproj"
-//let doc  = FsProject.parse projfile
+let projText = File.ReadAllText projfile
+
+let doc  = FsProject.parse projText
 let proj = FsProject.load projfile
 #endif
