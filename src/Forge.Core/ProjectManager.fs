@@ -69,14 +69,14 @@ let readFsProject path =
 // The furnace is the internal workhorse that handles the orchestration of manipulating 
 // the project and solution files, making changes to the file system, finding the source of
 // errors and surfacing them up to the user
-type Furnace =
+[<RequireQualifiedAccess>]
+module Furnace =
 
-    static member init (projectPath:string) =
+    let init (projectPath: string) =
         readFsProject projectPath
 
 
-    static member addReference 
-        (state: ActiveState, includestr:string,?condition:string,?hintPath:string,?name:string,?specificVersion:bool,?copy:bool) =
+    let addReference (includestr: string, condition: string option, hintPath: string option, name: string option, specificVersion: bool option, copy: bool option) (state: ActiveState) =
         let asmName = String.takeUntil ',' includestr
         let project = state.ProjectData
         let r = project.References |> ResizeArray.tryFind (fun refr ->
@@ -101,7 +101,7 @@ type Furnace =
             updateProj (FsProject.addReference reference) state 
             
 
-    static member removeReference (refname:string) (state: ActiveState)  =
+    let removeReference (refname:string) (state: ActiveState)  =
         let project = state.ProjectData
         let r = project.References |> ResizeArray.tryFind (fun refr ->
             (refr.Name.IsSome && refr.Name.Value = refname) ||
@@ -118,18 +118,16 @@ type Furnace =
 
 
 
-    static member moveUp (target: string) (state: ActiveState) =
+    let moveUp (target: string) (state: ActiveState) =
         updateProj (FsProject.moveUp target)  state
 
 
 
-    static member moveDown (target:string) (state: ActiveState) =
+    let moveDown (target:string) (state: ActiveState) =
         updateProj (FsProject.moveDown target)  state
 
 
-    static member addAbove
-       ( state: ActiveState, target: string, file: string,
-            ?onBuild: BuildAction, ?link: string, ?copy: CopyToOutputDirectory, ?condition: string) =
+    let addAbove (target: string, file: string, onBuild: BuildAction option, link: string option, copy: CopyToOutputDirectory option, condition: string option) (state: ActiveState) =
         let dir = getParentDir target
         let onBuild = defaultArg onBuild BuildAction.Compile
         let srcFile =
@@ -142,9 +140,7 @@ type Furnace =
         updateProj (FsProject.addAbove target srcFile)  state
 
 
-    static member addBelow
-       ( state: ActiveState, target: string, file: string,
-            ?onBuild: BuildAction, ?link: string, ?copy: CopyToOutputDirectory, ?condition: string) =
+    let addBelow (target: string, file: string, onBuild: BuildAction option, link: string option, copy: CopyToOutputDirectory option, condition: string option) (state: ActiveState) =
         let dir = getParentDir target
         let onBuild = defaultArg onBuild BuildAction.Compile
         let srcFile =
@@ -157,9 +153,7 @@ type Furnace =
         updateProj (FsProject.addBelow target srcFile)  state
 
 
-    static member addSourceFile
-       ( state: ActiveState, file: string, ?dir:string,
-            ?onBuild: BuildAction, ?linkPath: string, ?copy: CopyToOutputDirectory, ?condition: string) =
+    let addSourceFile (file: string, dir :string option, onBuild: BuildAction option, linkPath: string option, copy: CopyToOutputDirectory option, condition: string option) (state: ActiveState)=
         let dir = defaultArg dir ""
         let onBuild = defaultArg onBuild BuildAction.Compile
         let srcFile =
@@ -173,35 +167,33 @@ type Furnace =
 
 
 
-    static member removeSourceFile  (path:string) (state: ActiveState) =
+    let removeSourceFile  (path:string) (state: ActiveState) =
         updateProj (FsProject.removeSourceFile path)  state
 
 
 
-    static member deleteSourceFile (path:string) (state: ActiveState) =
+    let deleteSourceFile (path:string) (state: ActiveState) =
         if not ^ File.Exists path then
             traceError ^ sprintf "Cannot Delete File - '%s' does not exist" path
             state
         else
             deleteFile path
-            Furnace.removeSourceFile path state
+            removeSourceFile path state
         
 
-    static member removeDirectory (path:string) (state: ActiveState) =
+    let removeDirectory (path:string) (state: ActiveState) =
         updateProj (FsProject.removeDirectory path)  state
 
-
-
-    static member deleteDirectory (path:string) (state: ActiveState) =
+    let deleteDirectory (path:string) (state: ActiveState) =
         if not ^ directoryExists path then
             traceError ^ sprintf "Cannot Delete Directory - '%s' does not exist" path
             state
         else
             deleteDir path
-            Furnace.removeDirectory path  state
+            removeDirectory path  state
 
 
-    static member renameDirectory (path:string)  (newName:string) (state: ActiveState) =
+    let renameDirectory (path:string, newName:string) (state: ActiveState) =
         if not ^ directoryExists path then
             traceError ^ sprintf "Cannot Rename Directory - '%s' does not exist" path
             state
@@ -210,7 +202,7 @@ type Furnace =
             updateProj (FsProject.renameDir path newName)  state
             
 
-    static member renameSourceFile (path:string) (newName:string) (state: ActiveState) =
+    let renameSourceFile (path:string, newName:string) (state: ActiveState) =
         if not ^ File.Exists path then
             traceError ^ sprintf "Cannot Rename File - '%s' does not exist" path
             state

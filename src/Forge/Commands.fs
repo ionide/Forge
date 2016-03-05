@@ -237,6 +237,18 @@ type RenameFileArgs =
             | Name _-> "File name"
             | Rename _ -> "New file name"
             | Project _ -> "Project Containing File"
+            
+type RenameFolderArgs =
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIAlt "-r">] Rename of string
+    | [<CLIAlt "-p">] Project of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "Folder name"
+            | Rename _ -> "New name"
+            | Project _ -> "Project containg folder"
 
 
 type RenameProjectArgs =
@@ -328,7 +340,7 @@ let parseCommand<'T when 'T :> IArgParserTemplate> args =
     else
         Some results
 
-let execCommand fn args = args |> parseCommand |> Option.map fn 
+let execCommand fn args = args |> parseCommand |> Option.bind fn 
 
 let subCommandArgs args =
     args |> parseCommand<_>
@@ -353,12 +365,12 @@ let newProject (results : ParseResults<_>) =
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
     Project.New projectName projectDir templateName paket fake
-    Continue
+    Some Continue
 
 
 let newFile (results : ParseResults<_>) =
     printfn "Not implemented yet"
-    Continue
+    Some Continue
 
 
 let processNew args =
@@ -375,39 +387,37 @@ let processNew args =
 //-----------------------------------------------------------------
 
 let addFile (results : ParseResults<AddFileArgs>) =
-    maybe{
+    maybe {
         let! name = results.TryGetResult <@ AddFileArgs.Name @>
         let! project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
         let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
-        let build = defaultResult AddFileArgs.BuildAction "" results //TODO
-        let link = results.TryGetResult <@ AddFileArgs.Link @> //TODO
+        let build = defaultResult AddFileArgs.BuildAction "" results |> BuildAction.TryParse
+        let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
         let activeState = Furnace.init project
-        Furnace.addSourceFile(
-            activeState,
-            activeState.ProjectPath,
-            name
-        ) |> ignore
-    } |> ignore
-    Continue
+        activeState 
+        |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None) 
+        |> ignore
+        return Continue
+    }
 
 
 let addReference (results : ParseResults<AddReferenceArgs>) =
-    maybe{
+    maybe {
         let! name = results.TryGetResult <@ AddReferenceArgs.Name @>
-        let! project = results.TryGetResult <@ AddReferenceArgs.Project @> //TODO
-        let activeState = Furnace.init project
-        Furnace.addReference (activeState, name)
+        let! project = results.TryGetResult <@ AddReferenceArgs.Project @>
+        Furnace.init project
+        |> Furnace.addReference (name, None, None, None, None, None)
         |> ignore
-    } |> ignore
-    Continue
+        return Continue
+    }
 
 
 let processAdd args =
     match subCommandArgs args  with
     | Some (cmd, subArgs ) ->
         match cmd with
-        | AddCommands.Reference -> subArgs |> parseCommand |> Option.map addReference
-        | AddCommands.File -> subArgs |> parseCommand |> Option.map addFile
+        | AddCommands.Reference -> execCommand addReference subArgs
+        | AddCommands.File -> execCommand addFile subArgs
     | _ -> Some Help
 
 
@@ -422,33 +432,22 @@ let removeFile (results : ParseResults<RemoveFileArgs>) =
         Furnace.init project
         |> Furnace.removeSourceFile name
         |> ignore
-    } |> ignore
-    Continue
-
-
-let removeSolutionFile (results : ParseResults<_>) =
-//    maybe {
-//        let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
-//        let! solution = results.TryGetResult <@ RemoveFileArgs.Solution @> //TODO
-//
-//        Furnace.init project
-//        |> Furnace.removeSourceFile name
-//        |> ignore
-//    } |> ignore
-    traceWarning "function not implemented yet"
-    Continue
-
+        return Continue
+    }
 
 let removeReference (results : ParseResults<RemoveReferenceArgs>) =
     maybe{
         let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> //TODO
-
         Furnace.init project
         |> Furnace.removeReference name 
         |> ignore
-    } |> ignore
-    Continue
+        return Continue
+    }     
+    
+let removeFolder (results: ParseResults<RemoveFolderArgs>) = 
+    traceWarning "function not implemented yet"
+    Some Continue
 
 
 let processRemove args =
@@ -457,6 +456,7 @@ let processRemove args =
         match cmd with
         | RemoveCommands.Reference -> execCommand removeReference subArgs
         | RemoveCommands.File -> execCommand removeFile subArgs // TODO - change to reflect mutual exclusion of removing solution files and project files
+        | RemoveCommands.Folder -> execCommand removeFolder subArgs
     | _ -> Some Help
 
 
@@ -465,23 +465,25 @@ let processRemove args =
 //-----------------------------------------------------------------
 
 let renameFile (results : ParseResults<RenameFileArgs>) =
-    maybe{
+    maybe {
         let! name = results.TryGetResult <@ RenameFileArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
         let! project = results.TryGetResult <@ RenameFileArgs.Project @> //TODO
 
         Furnace.init project
-        |> Furnace.renameSourceFile name newName
+        |> Furnace.renameSourceFile (name, newName)
         |> ignore
-    } |> ignore
-
-    traceWarning "not implemented yet"
-    Continue
+        return Continue
+    }
 
 
 let renameProject (results : ParseResults<_>) =
     traceWarning "not implemented yet"
-    Continue
+    Some Continue
+    
+let renameFolder (results : ParseResults<RenameFolderArgs>) = 
+    traceWarning "not implemented yet"
+    Some Continue
 
 
 let processRename args =
@@ -490,6 +492,7 @@ let processRename args =
         match cmd with
         | RenameCommands.Project -> execCommand renameProject subArgs
         | RenameCommands.File    -> execCommand renameFile subArgs
+        | RenameCommands.Folder  -> execCommand renameFolder subArgs
     | _ -> Some Help
 
 //-----------------------------------------------------------------
@@ -498,17 +501,17 @@ let processRename args =
 
 let listFile (results : ParseResults<_>) =
     printfn "not implemented yet"
-    Continue
+    Some Continue
 
 
 let listReference (results : ParseResults<_>) =
     printfn "not implemented yet"
-    Continue
+    Some Continue
 
 
 let listProject (results : ParseResults<_>) =
     printfn "not implemented yet"
-    Continue
+    Some Continue
 
 
 let processList args =
@@ -530,7 +533,7 @@ let processUpdate args =
     args |> execCommand (fun results ->
         if results.Contains <@ UpdateArgs.Paket @> then Paket.Update()
         if results.Contains <@ UpdateArgs.Fake @>  then Fake.Update ()
-        Continue
+        Some Continue
     )
 
 

@@ -80,8 +80,6 @@
     <Compile Include="ProjectManager.fs" />
     <Compile Include="Templates.fs" />
     <Compile Include="Project.fs" />
-    <Compile Include="Files.fs" />
-    <Compile Include="References.fs" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Commontypes.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Core.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.xsd" />
