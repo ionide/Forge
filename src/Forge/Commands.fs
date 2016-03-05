@@ -436,7 +436,7 @@ let removeFile (results : ParseResults<RemoveFileArgs>) =
     }
 
 let removeReference (results : ParseResults<RemoveReferenceArgs>) =
-    maybe{
+    maybe {
         let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> 
         Furnace.init project
@@ -446,9 +446,15 @@ let removeReference (results : ParseResults<RemoveReferenceArgs>) =
     }     
     
 let removeFolder (results: ParseResults<RemoveFolderArgs>) = 
-    traceWarning "function not implemented yet"
-    Some Continue
-
+    maybe {
+        let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
+        let! project = results.TryGetResult <@ RemoveFolderArgs.Project @> 
+        Furnace.init project
+        |> Furnace.removeDirectory name 
+        |> ignore       
+        
+        return Continue
+    }
 
 let processRemove args =
     match subCommandArgs args with
@@ -508,19 +514,32 @@ let processRename args =
 // List Command Handlers
 //-----------------------------------------------------------------
 
-let listFile (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Some Continue
+let listFile (results : ParseResults<ListFileArgs>) =
+    maybe {
+        let! proj = results.TryGetResult <@ ListFileArgs.Project @>
+        let activeState = Furnace.init proj
+        activeState.ProjectData.SourceFiles.AllFiles()
+        |> Seq.iter (printfn "%s")
+        return Continue
+    }
 
 
 let listReference (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Some Continue
+    maybe {
+        let! proj = results.TryGetResult <@ ListReferenceArgs.Project @>
+        let activeState = Furnace.init proj
+        activeState.ProjectData.References
+        |> Seq.iter (fun n -> printfn "%s" n.Include)
+        return Continue
+    }
 
 
 let listProject (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Some Continue
+    maybe {
+        let! solution = results.TryGetResult <@ ListProjectArgs.Solution @>
+        traceWarning "not implemented yet"
+        return Continue
+    }
 
 
 let processList args =
