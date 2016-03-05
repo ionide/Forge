@@ -1,4 +1,5 @@
 [<NUnit.Framework.TestFixture>]
+[<NUnit.Framework.Category "ProjectSystem">]
 module Forge.Tests.ProjectSystem
 open System.Diagnostics
 open Forge

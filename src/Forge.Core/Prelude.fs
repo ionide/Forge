@@ -16,6 +16,9 @@ let (^) = (<|)
 let inline (|?|) (pred1:'a->bool) (pred2:'a->bool)  =
     fun a -> pred1 a || pred2 a
 
+let inline (|&|) (pred1:'a->bool) (pred2:'a->bool)  =
+    fun a -> pred1 a && pred2 a
+
 /// Combines two path strings using Path.Combine
 let inline combinePaths path1 (path2 : string) = Path.Combine (path1, path2.TrimStart [| '\\'; '/' |])
 let inline combinePathsNoTrim path1 path2 = Path.Combine (path1, path2)

@@ -14,8 +14,9 @@ open Forge.ProjectSystem.PathHelpers
 
 type ActiveState =
     {   StoredXml       : XElement seq
-        Project         : FsProject
+        ProjectData     : FsProject
         ProjectPath     : string
+        ProjectFileName : string
         ActiveConfig    : ConfigSettings
     }
 
@@ -23,47 +24,61 @@ type ActiveState =
 
 
 let saveState (state:ActiveState) =
-    File.WriteAllText(state.ProjectPath, state.Project.ToXmlString state.StoredXml)
+    File.WriteAllText(
+        state.ProjectPath </> state.ProjectFileName, 
+        state.ProjectData.ToXmlString state.StoredXml
+    )
 
 
 let updateProj projfn (state:ActiveState) =
-    { state with Project = projfn state.Project  }
+    let state = { state with ProjectData = projfn state.ProjectData  }
+    saveState state
+    state
 
 
 let readFsProject path =
     use reader = XmlReader.Create (path:string)
     let xdoc   = reader |> XDocument.Load
+    // hold onto the xml content we're not using so it doesn't get lost
     let detritus =
         xdoc.Root |> XElem.elements
         |> Seq.filter (fun (xelem:XElement) ->
             xelem
-            |>( XElem.isNamed Constants.Project
-            |?| XElem.isNamed Constants.PropertyGroup
-            |?| XElem.isNamed Constants.ItemGroup
-            |?| XElem.isNamed Constants.ProjectReference
+            |>( XElem.notNamed Constants.Project
+            |&| XElem.notNamed Constants.PropertyGroup
+            |&| XElem.notNamed Constants.ItemGroup
+            |&| XElem.notNamed Constants.ProjectReference
             )
         )
     let proj = FsProject.fromXDoc xdoc
     
+    let projectPath = 
+        match Path.GetDirectoryName path with
+        | "" -> Environment.CurrentDirectory
+        | p  -> Environment.CurrentDirectory </> p
     // TODO - This is a bad way to deal with loading the configuration settings
 
     let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
-    {   StoredXml       = detritus
-        Project         = proj
-        ProjectPath     = path
+    {   StoredXml       = List.ofSeq detritus
+        ProjectData     = proj
+        ProjectPath     = projectPath
+        ProjectFileName = Path.GetFileName path
         ActiveConfig    = config
     }
 
-
+// The furnace is the internal workhorse that handles the orchestration of manipulating 
+// the project and solution files, making changes to the file system, finding the source of
+// errors and surfacing them up to the user
 type Furnace =
 
     static member init (projectPath:string) =
         readFsProject projectPath
 
+
     static member addReference 
         (state: ActiveState, includestr:string,?condition:string,?hintPath:string,?name:string,?specificVersion:bool,?copy:bool) =
         let asmName = String.takeUntil ',' includestr
-        let project = state.Project
+        let project = state.ProjectData
         let r = project.References |> ResizeArray.tryFind (fun refr ->
             (refr.Name.IsSome && refr.Name.Value = asmName) ||
             (String.takeUntil ','  refr.Include = asmName )
@@ -83,13 +98,11 @@ type Furnace =
                 CopyLocal       = copy
             }
             FsProject.addReference  reference project |> ignore
-            let state = updateProj (FsProject.addReference reference) state 
-            saveState state
-            state
-
+            updateProj (FsProject.addReference reference) state 
+            
 
     static member removeReference (refname:string) (state: ActiveState)  =
-        let project = state.Project
+        let project = state.ProjectData
         let r = project.References |> ResizeArray.tryFind (fun refr ->
             (refr.Name.IsSome && refr.Name.Value = refname) ||
             (String.takeUntil ','  refr.Include = refname )
@@ -101,23 +114,17 @@ type Furnace =
             state
         | Some reference ->
             FsProject.removeReference reference project |> ignore
-            let state = updateProj (FsProject.removeReference reference) state 
-            saveState state
-            state
+            updateProj (FsProject.removeReference reference) state 
+
 
 
     static member moveUp (target: string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.moveUp target)  state
-        saveState state
-        state
+        updateProj (FsProject.moveUp target)  state
+
 
 
     static member moveDown (target:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.moveDown target)  state
-        saveState state
-        state
+        updateProj (FsProject.moveDown target)  state
 
 
     static member addAbove
@@ -132,11 +139,7 @@ type Furnace =
                 Link        = link
                 Copy        = copy
             }
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        createFile (dir </> file)
-        let state = updateProj (FsProject.addAbove target srcFile)  state
-        saveState state
-        state
+        updateProj (FsProject.addAbove target srcFile)  state
 
 
     static member addBelow
@@ -151,74 +154,68 @@ type Furnace =
                 Link        = link
                 Copy        = copy
             }
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        createFile (dir </> file)
-        let state = updateProj (FsProject.addBelow target srcFile)  state
-        saveState state
-        state
+        updateProj (FsProject.addBelow target srcFile)  state
 
 
     static member addSourceFile
-       ( state: ActiveState, dir: string, file: string,
-            ?onBuild: BuildAction, ?link: string, ?copy: CopyToOutputDirectory, ?condition: string) =
-
+       ( state: ActiveState, file: string, ?dir:string,
+            ?onBuild: BuildAction, ?linkPath: string, ?copy: CopyToOutputDirectory, ?condition: string) =
+        let dir = defaultArg dir ""
         let onBuild = defaultArg onBuild BuildAction.Compile
         let srcFile =
             {   Include     = dir </> file
                 Condition   = condition
                 OnBuild     = onBuild
-                Link        = link
+                Link        = linkPath
                 Copy        = copy
             }
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        createFile (dir </> file)
-        let state = updateProj (FsProject.addSourceFile dir srcFile)  state
-        saveState state
-        state
+        updateProj (FsProject.addSourceFile dir srcFile)  state
+
 
 
     static member removeSourceFile  (path:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.removeSourceFile path)  state
-        saveState state
-        state
+        updateProj (FsProject.removeSourceFile path)  state
+
 
 
     static member deleteSourceFile (path:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        deleteFile path
-        let state = updateProj (FsProject.removeSourceFile path)  state
-        saveState state
-        state
-
+        if not ^ File.Exists path then
+            traceError ^ sprintf "Cannot Delete File - '%s' does not exist" path
+            state
+        else
+            deleteFile path
+            Furnace.removeSourceFile path state
+        
 
     static member removeDirectory (path:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        let state = updateProj (FsProject.removeDirectory path)  state
-        saveState state
-        state
+        updateProj (FsProject.removeDirectory path)  state
+
 
 
     static member deleteDirectory (path:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        deleteDir path
-        let state = updateProj (FsProject.removeDirectory path)  state
-        saveState state
-        state
+        if not ^ directoryExists path then
+            traceError ^ sprintf "Cannot Delete Directory - '%s' does not exist" path
+            state
+        else
+            deleteDir path
+            Furnace.removeDirectory path  state
 
 
-    static member renameDirectory (target:string)  (newName:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        renameDir target newName
-        let state = updateProj (FsProject.renameDir target newName)  state
-        saveState state
-        state
+    static member renameDirectory (path:string)  (newName:string) (state: ActiveState) =
+        if not ^ directoryExists path then
+            traceError ^ sprintf "Cannot Rename Directory - '%s' does not exist" path
+            state
+        else
+            renameDir path newName
+            updateProj (FsProject.renameDir path newName)  state
+            
 
+    static member renameSourceFile (path:string) (newName:string) (state: ActiveState) =
+        if not ^ File.Exists path then
+            traceError ^ sprintf "Cannot Rename File - '%s' does not exist" path
+            state
+        else
+            renameFile path newName
+            updateProj (FsProject.renameFile path newName)  state
 
-    static member renameSourceFile (target:string) (newName:string) (state: ActiveState) =
-        Environment.CurrentDirectory <- Path.GetDirectoryName state.ProjectPath
-        renameFile target newName
-        let state = updateProj (FsProject.renameFile target newName)  state
-        saveState state
-        state
 

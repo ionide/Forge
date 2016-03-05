@@ -61,7 +61,7 @@ open System.Xml.Linq
 
 let (|InvariantEqual|_|) (str:string) arg =
   if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
-    then Some() else None
+  then Some () else None
 
 /// Sets the platform for a Build Configuration
 ///     x86,  x64, or AnyCPU.
@@ -950,7 +950,7 @@ type FsProject =
 
     member self.ToXmlString (extraElems:XElement seq) =
         let doc = self.ToXDoc()
-        doc.LastNode.AddAfterSelf extraElems
+        doc.Root.LastNode.AddAfterSelf extraElems
         String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
 
 
@@ -1016,7 +1016,9 @@ module FsProject =
 
 
     let addReference (refr:Reference) (proj:FsProject) =
-        if proj.References |> ResizeArray.contains refr then proj
+        if proj.References |> ResizeArray.contains refr then 
+            traceWarning "already contrains this reference"
+            proj
         else
         { proj with References = ResizeArray.add refr proj.References }
 
@@ -1081,6 +1083,14 @@ module FsProject =
         use reader = XmlReader.Create(path:string)
         (reader |> XDocument.Load)
         |> FsProject.fromXDoc
+
+    let save path (proj:FsProject) =
+        try
+        File.WriteAllText(path,proj.ToXmlString())
+        with
+        | ex -> traceException ex
+        
+
 
 
 // A small abstraction over MSBuild project files.

@@ -82,8 +82,6 @@
     <Compile Include="Project.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="References.fs" />
-    <None Include="Scratch\xlinq.fsx" />
-    <None Include="Scratch\sourcetree.fsx" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Commontypes.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Core.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.xsd" />
@@ -92,9 +90,6 @@
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Build" />
-    <Reference Include="Microsoft.Build.Engine" />
-    <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
