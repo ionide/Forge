@@ -123,13 +123,14 @@ with
             | File -> "Adds file to project or solution"
             | Reference -> "Adds reference to project"
 
-// TODO add above, add below
 type AddFileArgs =
     | [<First>][<CLIAlt "-p">] Project of string
     | [<First>][<CLIAlt "-s">] Solution of string
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "dir">] Folder of string
-    | [<CLIArg "--build-action">] [<CLIAlt "-b">] BuildAction of string // TODO - use actual build acton type
+    | [<CLIArg "--build-action">] [<CLIAlt "-ba">] BuildAction of string
+    | [<CLIArg "--above">] [<CLIAlt "-a">] Above of string
+    | [<CLIArg "--below">] [<CLIAlt "-b">] Below of string
     | Link
 
     interface IArgParserTemplate with
@@ -141,7 +142,8 @@ type AddFileArgs =
             | Folder _   -> "Add the file to this folder"
             | BuildAction _ -> "File build action"
             | Link -> "Adds as link"
-
+            | Above _ -> "Adds above given file"
+            | Below _ -> "Adds below given file"
 
 type AddReferenceArgs =
     | [<CLIAlt "-n">] Name of string
@@ -393,10 +395,24 @@ let addFile (results : ParseResults<AddFileArgs>) =
         let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
         let build = defaultResult AddFileArgs.BuildAction "" results |> BuildAction.TryParse
         let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
+        let below = results.TryGetResult <@ AddFileArgs.Below @>
+        let above = results.TryGetResult <@ AddFileArgs.Above @>
         let activeState = Furnace.init project
-        activeState 
-        |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None) 
-        |> ignore
+        
+        match below, above with 
+        | Some b, _ -> 
+            activeState 
+            |> Furnace.addBelow (b, name, build, link, None, None) 
+            |> ignore
+        | None, Some a ->
+            activeState 
+            |> Furnace.addAbove (a, name, build, link, None, None) 
+            |> ignore
+        | None, None ->
+            activeState 
+            |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None) 
+            |> ignore
+            
         return Continue
     }
 
