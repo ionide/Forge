@@ -428,7 +428,7 @@ let processAdd args =
 let removeFile (results : ParseResults<RemoveFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveFileArgs.Project @> //TODO
+        let! project = results.TryGetResult <@ RemoveFileArgs.Project @>
         Furnace.init project
         |> Furnace.removeSourceFile name
         |> ignore
@@ -438,7 +438,7 @@ let removeFile (results : ParseResults<RemoveFileArgs>) =
 let removeReference (results : ParseResults<RemoveReferenceArgs>) =
     maybe{
         let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> //TODO
+        let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> 
         Furnace.init project
         |> Furnace.removeReference name 
         |> ignore
@@ -468,7 +468,7 @@ let renameFile (results : ParseResults<RenameFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFileArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
-        let! project = results.TryGetResult <@ RenameFileArgs.Project @> //TODO
+        let! project = results.TryGetResult <@ RenameFileArgs.Project @>
 
         Furnace.init project
         |> Furnace.renameSourceFile (name, newName)
@@ -482,8 +482,17 @@ let renameProject (results : ParseResults<_>) =
     Some Continue
     
 let renameFolder (results : ParseResults<RenameFolderArgs>) = 
-    traceWarning "not implemented yet"
-    Some Continue
+    maybe {
+        let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
+        let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
+        let! project = results.TryGetResult <@ RenameFolderArgs.Project @>
+        
+        Furnace.init project
+        |> Furnace.renameDirectory (name, newName)
+        |> ignore
+        
+        return Continue
+    }
 
 
 let processRename args =
