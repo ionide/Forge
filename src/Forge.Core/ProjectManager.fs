@@ -44,6 +44,9 @@ let readFsProject path =
             )
         )
     let proj = FsProject.fromXDoc xdoc
+    
+    // TODO - This is a bad way to deal with loading the configuration settings
+
     let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
     {   StoredXml       = detritus
         Project         = proj
@@ -53,6 +56,9 @@ let readFsProject path =
 
 
 type Furnace =
+
+    static member init (projectPath:string) =
+        readFsProject projectPath
 
     static member addReference 
         (state: ActiveState, includestr:string,?condition:string,?hintPath:string,?name:string,?specificVersion:bool,?copy:bool) =

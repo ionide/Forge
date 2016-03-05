@@ -239,3 +239,54 @@ module Dict =
         let dict = Dictionary()
         for k, v in xs do dict.[k] <- v
         dict
+
+
+type MaybeBuilder () =
+    [<DebuggerStepThrough>]
+    member inline __.Return value: 'T option = Some value
+
+    [<DebuggerStepThrough>]
+    member inline __.ReturnFrom value: 'T option = value
+
+    [<DebuggerStepThrough>]
+    member inline __.Zero (): unit option = Some()   
+
+    [<DebuggerStepThrough>]
+    member __.Delay (f: unit -> 'T option): 'T option = f ()
+
+    [<DebuggerStepThrough>]
+    member inline __.Combine (r1, r2: 'T option): 'T option =
+        match r1 with
+        | None -> None
+        | Some () -> r2
+
+    [<DebuggerStepThrough>]
+    member inline __.Bind (value, f: 'T -> 'U option): 'U option = Option.bind f value
+
+    [<DebuggerStepThrough>]
+    member __.Using (resource: ('T :> System.IDisposable), body: _ -> _ option): _ option =
+        try body resource
+        finally
+            if not <| obj.ReferenceEquals (null, box resource) then
+                resource.Dispose ()
+
+    [<DebuggerStepThrough>]
+    member x.While (guard, body: _ option): _ option =
+        if not ^ guard () then None else
+            // OPTIMIZE: This could be simplified so we don't need to make calls to Bind and While.
+            x.Bind (body, (fun () -> x.While (guard, body)))
+
+    [<DebuggerStepThrough>]
+    member x.For (sequence: seq<_>, body: 'T -> unit option): _ option =
+        // OPTIMIZE: This could be simplified so we don't need to make calls to Using, While, Delay.
+        x.Using (sequence.GetEnumerator (), fun enum ->
+            x.While (
+                enum.MoveNext,
+                x.Delay (fun () ->
+                    body enum.Current)))
+
+
+let maybe = MaybeBuilder()
+
+
+
