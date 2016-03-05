@@ -46,7 +46,7 @@ type Command =
             | New -> "<project|file> Create new file or project"
             | Add -> "<file|reference> Adds file or reference"
             | Move -> "<file|folder> Move the file or folder within the project hierarchy"
-            | Remove -> "<file|reference> Removes file or refrence" // TODO add dirs too
+            | Remove -> "<file|reference> Removes file or refrence"
             | Rename -> "<project|file> Renames file or project"
             | List -> "<project|file|reference> List files or refrences"
             | Update -> "<paket|fake> Updates Paket or FAKE"
@@ -305,6 +305,33 @@ type ListProjectArgs =
         member this.Usage =
             match this with
             | Solution _ -> "List the files in this solution"
+            
+
+//-----------------------------------------------------------------
+// Move commands
+//-----------------------------------------------------------------
+
+type MoveCommands =
+    | [<First>][<CLIArg "file">] File
+with
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | File -> "Move file in project"
+
+type MoveFileArgs =
+    | [<First>][<CLIAlt "-p">] Project of string
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIArg "--up">] [<CLIAlt "-u">] Up
+    | [<CLIArg "--down">] [<CLIAlt "-d">] Down
+    
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "File name"
+            | Project _ -> "Project name"
+            | Up -> "Moves file up"
+            | Down -> "Moves file down"
 
 //-----------------------------------------------------------------
 // Update commands
@@ -553,7 +580,7 @@ let listReference (results : ParseResults<_>) =
 let listProject (results : ParseResults<_>) =
     maybe {
         let! solution = results.TryGetResult <@ ListProjectArgs.Solution @>
-        traceWarning "not implemented yet"
+        traceWarning "not implemented yet" //TODO
         return Continue
     }
 
@@ -567,6 +594,37 @@ let processList args =
         | ListCommands.Reference -> execCommand listReference subArgs
     | _ -> Some Help
     
+//-----------------------------------------------------------------
+// Move Command Handlers
+//-----------------------------------------------------------------
+
+let moveFile (results : ParseResults<_>) =
+    maybe {
+        let! proj = results.TryGetResult <@ MoveFileArgs.Project @>
+        let! name = results.TryGetResult <@ MoveFileArgs.Name @>
+        let up = results.TryGetResult <@ MoveFileArgs.Up @>
+        let down = results.TryGetResult <@ MoveFileArgs.Down @>
+        let activeState = Furnace.init proj
+        
+        match up, down with
+        | Some u, _ -> 
+            activeState |> Furnace.moveUp name |> ignore
+        | None, Some d ->
+            activeState |> Furnace.moveDown name |> ignore
+        | None, None ->
+            traceWarning "Up or Down must be specified"
+        
+        return Continue
+    }
+
+let processMove args =
+    match subCommandArgs args  with
+    | Some (cmd, subArgs ) ->
+        match cmd with
+        | MoveCommands.File -> execCommand moveFile subArgs
+    | _ -> Some Help
+
+
 
 
 //-----------------------------------------------------------------
@@ -600,6 +658,7 @@ let processMain args =
             | Remove -> processRemove
             | Command.Rename -> processRename
             | List -> processList
+            | Move -> processMove
             | Update -> processUpdate
             | Command.Fake -> fun a -> Fake.Run a; Some Continue
             | Command.Paket -> fun a -> Paket.Run a; Some Continue
