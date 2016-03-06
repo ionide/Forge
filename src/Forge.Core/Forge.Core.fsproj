@@ -76,6 +76,7 @@
     <Compile Include="GacSearch.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="ProjectValidation.fs" />
+    <Compile Include="SolutionFile.fs" />
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="ProjectManager.fs" />
     <Compile Include="Templates.fs" />
@@ -83,7 +84,6 @@
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Commontypes.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.Core.xsd" />
     <EmbeddedResource Include="XmlSchemas\Microsoft.Build.xsd" />
-    <Compile Include="SolutionFile.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

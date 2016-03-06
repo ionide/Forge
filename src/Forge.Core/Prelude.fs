@@ -244,6 +244,9 @@ module Dict =
         dict
 
 
+// COMPUTATION EXPRESSIONS
+//=====================================
+
 type MaybeBuilder () =
     [<DebuggerStepThrough>]
     member inline __.Return value: 'T option = Some value
@@ -292,4 +295,10 @@ type MaybeBuilder () =
 let maybe = MaybeBuilder()
 
 
+// ACTIVE PATTERNS
+//=====================================
+
+let (|InvariantEqual|_|) (str:string) arg =
+  if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
+  then Some () else None
 
