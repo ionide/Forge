@@ -97,6 +97,7 @@ let CompareProjectsTo templateProject projects =
 
 
 let Refresh () =
+let refresh () =
     printfn "Getting templates..."
     cleanDir templatesLocation
     cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
