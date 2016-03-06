@@ -8,10 +8,12 @@ open Forge.ProjectSystem
 open NUnit.Framework
 open FsUnit
 
+
 [<Test>]
 let ``ProjectSystem parse - AST gets all project files`` () =
     let projectFile = FsProject.parse astInput
     projectFile.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
+
 
 [<Test>]
 let ``ProjectSystem parse - AST gets all references`` () =
@@ -31,6 +33,7 @@ let ``ProjectSystem parse - AST gets correct settings`` () =
     s.TargetFrameworkVersion.Data |> should be (equal ^ Some "v4.5")
     s.AssemblyName.Data |> should be (equal ^ Some "Test")
 
+
 [<Test>]
 let ``ProjectSystem - add new file``() =
     let pf = FsProject.parse astInput
@@ -39,6 +42,7 @@ let ``ProjectSystem - add new file``() =
     let files = pf'.SourceFiles.AllFiles()
     TestContext.WriteLine  (sprintf "%A" files)
     pf'.SourceFiles.AllFiles() |> Seq.length |> should be (equal 4)
+
 
 [<Test>]
 let ``ProjectSystem - add duplicate file``() =
@@ -49,6 +53,7 @@ let ``ProjectSystem - add duplicate file``() =
     TestContext.WriteLine (sprintf "%A" files)
     pf'.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
 
+
 [<Test>]
 let ``ProjectSystem - remove file``() =
     let pf = FsProject.parse astInput
@@ -56,12 +61,14 @@ let ``ProjectSystem - remove file``() =
     let pf' = FsProject.removeSourceFile f pf
     pf'.SourceFiles.AllFiles() |> Seq.length |> should be (equal 2)
 
+
 [<Test>]
 let ``ProjectSystem - remove not existing file``() =
     let pf = FsProject.parse astInput
     let f = "FixProject2.fs"
     let pf' = FsProject.removeSourceFile f pf
     pf'.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
+
 
 [<Test>]
 let ``ProjectSystem - order file``() =
@@ -71,30 +78,34 @@ let ``ProjectSystem - order file``() =
     files |> Seq.head |> should be (equal "a_file.fs")
     files |> Seq.length |> should be (equal 3)
 
+
 [<Test>]
 let ``ProjectSystem - add reference``() =
     let pf = FsProject.parse astInput
-    let r = {Reference.Include = "System.Xml"; Name = None; Condition = None; HintPath = None; SpecificVersion = None; CopyLocal = None}
+    let r = {Reference.Empty with Include = "System.Xml"}
     let pf' = FsProject.addReference r pf
     pf'.References |> Seq.length |> should be (equal 6)
+
 
 [<Test>]
 let ``ProjectSystem - add existing reference``() =
     let pf = FsProject.parse astInput
-    let r = {Reference.Include = "System"; Name = None; Condition = None; HintPath = None; SpecificVersion = None; CopyLocal = None}
+    let r = {Reference.Empty with Include = "System"}
     let pf' = FsProject.addReference r pf
     pf'.References |> Seq.length |> should be (equal 5)
+
 
 [<Test>]
 let ``ProjectSystem - remove reference``() =
     let pf = FsProject.parse astInput
-    let r = {Reference.Include = "System"; Name = None; Condition = None; HintPath = None; SpecificVersion = None; CopyLocal = None}
+    let r = {Reference.Empty with Include = "System"}
     let pf' = FsProject.removeReference r pf
     pf'.References |> Seq.length |> should be (equal 4)
+
 
 [<Test>]
 let ``ProjectSystem - remove not existing reference``() =
     let pf = FsProject.parse astInput
-    let r = {Reference.Include = "System.Xml"; Name = None; Condition = None; HintPath = None; SpecificVersion = None; CopyLocal = None}
+    let r = {Reference.Empty with Include = "System.Xml"}
     let pf' = FsProject.removeReference r pf
     pf'.References |> Seq.length |> should be (equal 5)

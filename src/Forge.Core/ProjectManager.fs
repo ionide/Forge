@@ -36,44 +36,41 @@ let updateProj projfn (state:ActiveState) =
     state
 
 
-let readFsProject path =
-    use reader = XmlReader.Create (path:string)
-    let xdoc   = reader |> XDocument.Load
-    // hold onto the xml content we're not using so it doesn't get lost
-    let detritus =
-        xdoc.Root |> XElem.elements
-        |> Seq.filter (fun (xelem:XElement) ->
-            xelem
-            |>( XElem.notNamed Constants.Project
-            |&| XElem.notNamed Constants.PropertyGroup
-            |&| XElem.notNamed Constants.ItemGroup
-            |&| XElem.notNamed Constants.ProjectReference
-            )
-        )
-    let proj = FsProject.fromXDoc xdoc
-    
-    let projectPath = 
-        match Path.GetDirectoryName path with
-        | "" -> Environment.CurrentDirectory
-        | p  -> Environment.CurrentDirectory </> p
-    // TODO - This is a bad way to deal with loading the configuration settings
-
-    let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
-    {   StoredXml       = List.ofSeq detritus
-        ProjectData     = proj
-        ProjectPath     = projectPath
-        ProjectFileName = Path.GetFileName path
-        ActiveConfig    = config
-    }
-
-// The furnace is the internal workhorse that handles the orchestration of manipulating 
+    // The furnace is the internal workhorse that handles the orchestration of manipulating 
 // the project and solution files, making changes to the file system, finding the source of
 // errors and surfacing them up to the user
 [<RequireQualifiedAccess>]
 module Furnace =
 
-    let init (projectPath: string) =
-        readFsProject projectPath
+    let loadFsProject (projectPath: string) =
+        use reader = XmlReader.Create projectPath
+        let xdoc   = reader |> XDocument.Load
+        // hold onto the xml content we're not using so it doesn't get lost
+        let detritus =
+            xdoc.Root |> XElem.elements
+            |> Seq.filter (fun (xelem:XElement) ->
+                xelem
+                |>( XElem.notNamed Constants.Project
+                |&| XElem.notNamed Constants.PropertyGroup
+                |&| XElem.notNamed Constants.ItemGroup
+                |&| XElem.notNamed Constants.ProjectReference
+                )
+            )
+        let proj = FsProject.fromXDoc xdoc
+    
+        let projectPath = 
+            match Path.GetDirectoryName projectPath with
+            | "" -> Environment.CurrentDirectory
+            | p  -> Environment.CurrentDirectory </> p
+        // TODO - This is a bad way to deal with loading the configuration settings
+
+        let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
+        {   StoredXml       = List.ofSeq detritus
+            ProjectData     = proj
+            ProjectPath     = projectPath
+            ProjectFileName = Path.GetFileName projectPath
+            ActiveConfig    = config
+        }
 
 
     let addReference (includestr: string, condition: string option, hintPath: string option, name: string option, specificVersion: bool option, copy: bool option) (state: ActiveState) =
@@ -116,13 +113,11 @@ module Furnace =
             FsProject.removeReference reference project |> ignore
             updateProj (FsProject.removeReference reference) state 
 
-
-
+            
     let moveUp (target: string) (state: ActiveState) =
         updateProj (FsProject.moveUp target)  state
 
-
-
+        
     let moveDown (target:string) (state: ActiveState) =
         updateProj (FsProject.moveDown target)  state
 
@@ -164,13 +159,11 @@ module Furnace =
                 Copy        = copy
             }
         updateProj (FsProject.addSourceFile dir srcFile)  state
-
-
+        
 
     let removeSourceFile  (path:string) (state: ActiveState) =
         updateProj (FsProject.removeSourceFile path)  state
-
-
+        
 
     let deleteSourceFile (path:string) (state: ActiveState) =
         if not ^ File.Exists path then
@@ -183,6 +176,7 @@ module Furnace =
 
     let removeDirectory (path:string) (state: ActiveState) =
         updateProj (FsProject.removeDirectory path)  state
+
 
     let deleteDirectory (path:string) (state: ActiveState) =
         if not ^ directoryExists path then
@@ -209,5 +203,17 @@ module Furnace =
         else
             renameFile path newName
             updateProj (FsProject.renameFile path newName)  state
+
+
+    let listSourceFiles (state: ActiveState) =
+        FsProject.listSourceFiles state.ProjectData
+        |> List.iter trace
+        state
+
+
+    let listReferences (state: ActiveState) =
+        FsProject.listReferences state.ProjectData
+        |> List.iter trace
+        state
 
 

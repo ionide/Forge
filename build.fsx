@@ -29,7 +29,7 @@ let summary = "Forge is a build tool that provides tasks for creating, compiling
 let description = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
 // List of author names (for NuGet package)
-let authors = [ "Reid Evans"; "Krzysztof Cieslak" ]
+let authors = [ "Reid Evans"; "Krzysztof Cieslak"; "Jared Hester" ]
 
 // Tags for your project (for NuGet package)
 let tags = ""
@@ -213,6 +213,7 @@ Target "GenerateDocs" DoNothing
   ==> "ReleaseDocs"
 
 "Default"
+
   ==> "ZipRelease"
   ==> "ReleaseDocs"
   ==> "Release"

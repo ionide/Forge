@@ -235,6 +235,14 @@ type Reference =
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
     }
+    static member Empty =
+        {   Include         = ""
+            Condition       = None
+            HintPath        = None
+            Name            = None
+            SpecificVersion = None
+            CopyLocal       = None
+        }
 
     static member fromXElem (xelem:XElement) =
         let name =  xelem.Name.LocalName
@@ -835,6 +843,7 @@ type ConfigSettings =
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
     }
+
     static member Debug =
         {   Condition            = " '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "
             DebugSymbols         = property Constants.DebugSymbols true
@@ -890,6 +899,7 @@ type ConfigSettings =
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
         }
+
 
     member self.ToXElem () =
         XElem.create Constants.PropertyGroup []
@@ -1072,6 +1082,15 @@ module FsProject =
     let renameDir target newName (proj:FsProject) =
         proj.SourceFiles.RenameDir target newName
         proj
+
+
+    let listReferences (proj:FsProject) =
+        proj.References |> ResizeArray.map (fun x -> x.Include)
+        |> ResizeArray.toList
+
+
+    let listSourceFiles (proj:FsProject) =
+        proj.SourceFiles.AllFiles() |> List.ofSeq
 
 
     let parse (text:string) =

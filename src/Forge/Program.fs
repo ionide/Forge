@@ -12,6 +12,7 @@ let parser = ArgumentParser.Create<Command>()
 
 
 let rec consoleLoop () =
+    trace Environment.CurrentDirectory
     Console.Write "λ "
     let input = Console.ReadLine()
     let result = match input with
@@ -26,13 +27,12 @@ let rec consoleLoop () =
 
 [<EntryPoint>]
 let main argv =
-    if argv |> Array.isEmpty
-    then
+    match argv with
+    | [||] ->
         parser.Usage "Available commands:" |> System.Console.WriteLine
         consoleLoop ()
-    else
-        let result = processMain argv
-        match result with
+    | _ ->        
+        match processMain argv with
         | Continue -> consoleLoop ()
         | Help ->
             parser.Usage "Available commands:" |> printfn "%s"
