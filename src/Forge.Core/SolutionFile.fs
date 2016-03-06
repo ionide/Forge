@@ -3,6 +3,7 @@ module Forge.SolutionFile
 open System
 open System.IO
 open FParsec
+open Forge.ProjectSystem
 
 
 type UserState = unit
@@ -33,7 +34,7 @@ type BuildConfiguration =
 
 type SolutionConfigurationPlatform =
     { Configuration: BuildConfiguration;
-      Platform: string }
+      Platform: PlatformType }
 type SolutionConfigurationPlatformsGlobalSection = 
     { PreOrPost: PreOrPostSolution 
       ConfigurationPlatforms: SolutionConfigurationPlatform list }
@@ -43,7 +44,7 @@ type ProjectConfigurationPlatform =
     { ProjectGuid: Guid
       BuildConfiguration: BuildConfiguration;
       ProjectConfiguration: string
-      Platform: string }
+      Platform: PlatformType }
 type ProjectConfigurationPlatformsGlobalSection =
     { PreOrPost: PreOrPostSolution 
       ConfigurationPlatforms: ProjectConfigurationPlatform list }
@@ -148,7 +149,7 @@ type SolutionFile =
             let pSolutionConfigurationPlatform: Parser<SolutionConfigurationPlatform> = 
                 let pJunkInTheMiddle: Parser<string> = (pchar '|' >>. manyCharsTill anyChar (pchar '|'))
                 spaces >>. pBuildConfiguration .>>. (pJunkInTheMiddle >>. restOfLine true)
-                |>> (fun (config, platform) -> {Configuration = config; Platform = platform})
+                |>> (fun (config, platform) -> {Configuration = config; Platform = (PlatformType.Parse platform)})
 
             pHeader .>>. many (notFollowedBy pEndGlobalSection >>. pSolutionConfigurationPlatform) .>> pEndGlobalSection 
             |>> (fun (preOrPost, configPlatforms) -> {PreOrPost = preOrPost; ConfigurationPlatforms = configPlatforms})
@@ -160,7 +161,7 @@ type SolutionFile =
                       pBuildConfiguration
                       (pchar '|' >>. manyCharsTill anyChar (pchar '|')) 
                       (manyCharsTill anyChar newline)
-                      (fun projectGuid buildConfig projectConfig platform -> {ProjectGuid = projectGuid; BuildConfiguration = buildConfig; ProjectConfiguration = projectConfig; Platform = platform})
+                      (fun projectGuid buildConfig projectConfig platform -> {ProjectGuid = projectGuid; BuildConfiguration = buildConfig; ProjectConfiguration = projectConfig; Platform = (PlatformType.Parse platform)})
 
             pHeader .>>. many (notFollowedBy pEndGlobalSection >>. pProjectConfigurationPlatform) .>> pEndGlobalSection 
             |>> (fun (preOrPost, configPlatforms) -> {PreOrPost = preOrPost; ConfigurationPlatforms = configPlatforms})
