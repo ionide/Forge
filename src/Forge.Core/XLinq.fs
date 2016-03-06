@@ -136,6 +136,9 @@ module XElem =
     let inline isNamed name (xelem:#XElement) = 
         matchName name xelem
 
+    let inline notNamed name (xelem:#XElement) = 
+        not ^ matchName name xelem
+
     let create (name:string) (content:seq<'a>) = 
         XElement (XName.Get name, Seq.toArray content)
 

@@ -3,10 +3,9 @@ NUGET
   remote: https://www.nuget.org/api/v2
   specs:
     Argu (2.1)
-    FAKE (4.21.0)
+    FAKE (4.21.4)
     FSharp.Compiler.Service (2.0.0.6)
     FParsec (1.0.2)
->>>>>>> 7d0fbd8... Initial add of SolutionFile parsing (ported from fork of old Forge)
     FSharp.Core (4.0.0.1)
     FSharp.Data (2.2.5)
     FSharp.Formatting (2.14.0)
@@ -34,5 +33,10 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
+<<<<<<< HEAD
     modules/Octokit/Octokit.fsx (695680cee21ed8dbd7d0e4e5b158a98b2e949304)
       Octokit
+=======
+    modules/Octokit/Octokit.fsx (e71048b08b7aefebb3adeaa4518915510d55785c)
+      Octokit
+>>>>>>> upstream/commands

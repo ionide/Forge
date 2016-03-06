@@ -4,15 +4,19 @@ open System
 open Argu
 open Forge.Commands
 
+// Console Configuration
+Console.Title <- "FORGE"
+Console.OutputEncoding <- System.Text.Encoding.UTF8
+
 let parser = ArgumentParser.Create<Command>()
 
 
 let rec consoleLoop () =
-    Console.Write("> ")
+    Console.Write "λ "
     let input = Console.ReadLine()
     let result = match input with
                  | null -> Result.Exit
-                 | _ -> input.Split(' ')  |> processMain
+                 | _ -> input.Split ' '  |> processMain
     match result with
     | Continue -> consoleLoop ()
     | Help ->

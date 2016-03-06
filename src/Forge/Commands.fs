@@ -3,6 +3,9 @@
 open System
 open System.Text
 open Argu
+open Forge
+open Forge.ProjectSystem
+open Forge.ProjectManager
 
 /// Custom Command Line Argument
 type CLIArg = CustomCommandLineAttribute
@@ -10,17 +13,24 @@ type CLIArg = CustomCommandLineAttribute
 type CLIAlt = AltCommandLineAttribute
 
 type Result =
-| Continue
+| Continue //of ActiveState
 | Help
 | Exit
+
 
 //-----------------------------------------------------------------
 // Main commands
 //-----------------------------------------------------------------
 
+(*  TODO Add commands
+    - delete file|dir    
+
+*)
+
 type Command =
     | [<First>][<CLIArg "new">] New
     | [<First>][<CLIArg "add">] Add
+    | [<First>][<CLIArg "move">] Move
     | [<First>][<CLIArg "remove">] Remove
     | [<First>][<CLIArg "rename">] Rename
     | [<First>][<CLIArg "list">] List
@@ -29,12 +39,13 @@ type Command =
     | [<First>][<CLIArg "fake">] Fake
     | [<First>][<CLIArg "refresh">] Refresh
     | [<First>][<CLIArg "exit">][<CLIAlt("quit","-q")>] Exit
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | New -> "<project|file> Create new file or project"
             | Add -> "<file|reference> Adds file or reference"
+            | Move -> "<file|folder> Move the file or folder within the project hierarchy"
             | Remove -> "<file|reference> Removes file or refrence"
             | Rename -> "<project|file> Renames file or project"
             | List -> "<project|file|reference> List files or refrences"
@@ -63,9 +74,10 @@ with
             | Project -> "Creates new project"
             | File -> "Creates new file"
 
+
 type NewProjectArgs =
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "-d">] Dir of string
+    | [<CLIAlt "dir">] Folder of string
     | [<CLIAlt "-t">] Template of string
     | No_Paket
     | No_Fake
@@ -74,10 +86,11 @@ with
         member this.Usage =
             match this with
             | Name _ -> "Project name"
-            | Dir _ -> "Project directory, relative to Forge working directory"
+            | Folder _ -> "Project folder, relative to Forge working folder"
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"
+
 
 type NewFileArgs =
     | [<CLIAlt "-n">] Name of string
@@ -85,7 +98,7 @@ type NewFileArgs =
     | [<CLIAlt "-p">] Project of string
     | [<CLIAlt "-s">] Solution of string
     | [<CLIArg "--build-action">] [<CLIAlt "-b">] BuildAction of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -94,6 +107,7 @@ with
             | Project _ -> "Project to which file will be added"
             | Solution _ -> "Solution to which file will be added"
             | BuildAction _ -> "File build action"
+
 
 //-----------------------------------------------------------------
 // Add commands
@@ -110,30 +124,37 @@ with
             | Reference -> "Adds reference to project"
 
 type AddFileArgs =
+    | [<First>][<CLIAlt "-p">] Project of string
+    | [<First>][<CLIAlt "-s">] Solution of string
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "-p">] Project of string
-    | [<CLIAlt "-s">] Solution of string
-    | [<CLIArg "--build-action">] [<CLIAlt "-b">] BuildAction of string
+    | [<CLIAlt "dir">] Folder of string
+    | [<CLIArg "--build-action">] [<CLIAlt "-ba">] BuildAction of string
+    | [<CLIArg "--above">] [<CLIAlt "-a">] Above of string
+    | [<CLIArg "--below">] [<CLIAlt "-b">] Below of string
     | Link
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "File name"
-            | Project _ -> "Project to which file will be added"
-            | Solution _ -> "Solution to which file will be added"
+            | Project _ -> "Add the file to this project"
+            | Solution _ -> "Add the file to this solution"
+            | Folder _   -> "Add the file to this folder"
             | BuildAction _ -> "File build action"
             | Link -> "Adds as link"
+            | Above _ -> "Adds above given file"
+            | Below _ -> "Adds below given file"
 
 type AddReferenceArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "-p">] Project of string
-with
+    
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "Reference name"
             | Project _ -> "Project to which reference will be added"
+
 
 //-----------------------------------------------------------------
 // Remove commands
@@ -142,34 +163,53 @@ with
 type RemoveCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "reference">] Reference
-with
+    | [<First>][<CLIArg "folder">][<CLIAlt "dir">] Folder
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | File -> "Removes file from project or solution"
             | Reference -> "Removes reference from project"
+            | Folder -> "Removes the folder from the project or solution"
+
 
 type RemoveFileArgs =
+    | [<First>][<CLIAlt "-p">] Project of string
+    | [<First>][<CLIAlt "-s">] Solution of string
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "-p">] Project of string
-    | [<CLIAlt "-s">] Solution of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Name _-> "File name"
+            | Name _    -> "File name"
             | Project _ -> "Project from which file will be removed"
             | Solution _ -> "Solution from which file will be removed"
+
 
 type RemoveReferenceArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "-p">] Project of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "Reference name"
             | Project _ -> "Project from which reference will be removed"
+
+
+type RemoveFolderArgs =
+    | [<First>][<CLIAlt "-p">] Project of string
+    | [<First>][<CLIAlt "-s">] Solution of string
+    | [<CLIAlt "-n">] Name of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _    -> "Name of the folder"
+            | Project _ -> "Remove folder from this project"
+            | Solution  _ -> "Remove folder from this solution"
+
+
 
 //-----------------------------------------------------------------
 // Rename
@@ -178,27 +218,45 @@ with
 type RenameCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "project">] Project
+    | [<First>][<CLIArg "folder">][<CLIAlt "dir">] Folder
 with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | File -> "Reneames file"
             | Project -> "Renames project"
+            | Folder -> "Renames folder"
+
 
 type RenameFileArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "-r">] Rename of string
-with
+    | [<CLIAlt "-p">] Project of string
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Name _-> "File name"
             | Rename _ -> "New file name"
+            | Project _ -> "Project Containing File"
+            
+type RenameFolderArgs =
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIAlt "-r">] Rename of string
+    | [<CLIAlt "-p">] Project of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "Folder name"
+            | Rename _ -> "New name"
+            | Project _ -> "Project containg folder"
+
 
 type RenameProjectArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "-r">] Rename of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -213,7 +271,7 @@ type ListCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "reference">] Reference
     | [<First>][<CLIArg "project">] Project
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -221,30 +279,59 @@ with
             | Reference -> "List reference from project"
             | Project -> "List projects in solution"
 
+
 type ListFileArgs =
     | [<CLIAlt "-p">] Project of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Project _ -> "Project from which file will be listed"
+            | Project _ -> "List the files in this project"
 
 
 type ListReferenceArgs =
     | [<CLIAlt "-p">] Project of string
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Project _ -> "Project from which reference will be listed"
+            | Project _ -> "List the refrences in this project"
+
 
 type ListProjectArgs =
     | [<CLIAlt "-s">] Solution of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Solution _ -> "List the files in this solution"
+            
+
+//-----------------------------------------------------------------
+// Move commands
+//-----------------------------------------------------------------
+
+type MoveCommands =
+    | [<First>][<CLIArg "file">] File
 with
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Solution _ -> "Solution from which projects will be listed"
+            | File -> "Move file in project"
+
+type MoveFileArgs =
+    | [<First>][<CLIAlt "-p">] Project of string
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIArg "--up">] [<CLIAlt "-u">] Up
+    | [<CLIArg "--down">] [<CLIAlt "-d">] Down
+    
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "File name"
+            | Project _ -> "Project name"
+            | Up -> "Moves file up"
+            | Down -> "Moves file down"
 
 //-----------------------------------------------------------------
 // Update commands
@@ -254,19 +341,20 @@ with
 type UpdateArgs =
     |[<CLIArg "paket">] Paket
     |[<CLIArg "fake">] Fake
-with
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Paket -> "Updates Paket to latest version"
             | Fake _ -> "Updates FAKE to latest version"
 
+
 //-----------------------------------------------------------------
 // Command Handlers
 //-----------------------------------------------------------------
 
 
-let processCommand<'T when 'T :> IArgParserTemplate> args =
+let parseCommand<'T when 'T :> IArgParserTemplate> args =
     let parser = ArgumentParser.Create<'T>()
     let results =
         parser.Parse
@@ -276,10 +364,23 @@ let processCommand<'T when 'T :> IArgParserTemplate> args =
              ignoreMissing = true,
              errorHandler = ProcessExiter())
     if results.IsUsageRequested then
-        parser.Usage("Available parameters:") |> System.Console.WriteLine
+        parser.Usage "Available parameters:" |> System.Console.WriteLine
         None
     else
         Some results
+
+let execCommand fn args = args |> parseCommand |> Option.bind fn 
+
+let subCommandArgs args =
+    args |> parseCommand<_>
+    |> Option.map (fun res ->
+        res.GetAllResults().Head, args.[1..]
+    )
+
+
+let inline defaultResult (cmdarg:'field->#IArgParserTemplate) value (results : ParseResults<_>) =    
+    defaultArg (results.TryGetResult <@cmdarg@>) value
+
 
 //-----------------------------------------------------------------
 // New Command Handlers
@@ -287,157 +388,243 @@ let processCommand<'T when 'T :> IArgParserTemplate> args =
 
 
 let newProject (results : ParseResults<_>) =
-    let projectName = defaultArg (results.TryGetResult <@ NewProjectArgs.Name @>) ""
-    let projectDir = defaultArg (results.TryGetResult <@ NewProjectArgs.Dir @>) ""
-    let templateName = defaultArg (results.TryGetResult <@ NewProjectArgs.Template @>) ""
+    let projectName = defaultResult NewProjectArgs.Name "" results
+    let projectDir  = defaultResult NewProjectArgs.Folder  "" results
+    let templateName = defaultResult NewProjectArgs.Template "" results
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
     Project.New projectName projectDir templateName paket fake
-    Continue
+    Some Continue
+
 
 let newFile (results : ParseResults<_>) =
     printfn "Not implemented yet"
-    Continue
+    Some Continue
+
 
 let processNew args =
-    args
-    |> processCommand<NewCommand>
-    |> Option.bind (fun res ->
-        let args' = args.[1 ..]
-        match res.GetAllResults () with
-        | [cmd] ->
-            match cmd with
-            | NewCommand.Project -> args' |> processCommand |> Option.map newProject
-            | NewCommand.File -> args' |> processCommand |> Option.map newFile
-        | _ -> Some Help
-    )
+    match subCommandArgs args with
+    | Some (cmd, subArgs) ->
+        match cmd with
+        | NewCommand.Project -> execCommand newProject subArgs
+        | NewCommand.File    -> execCommand newFile subArgs
+    | _ -> Some Help
+
 
 //-----------------------------------------------------------------
 // Add Command Handlers
 //-----------------------------------------------------------------
 
-let addFile (results : ParseResults<_>) =
-    let name = results.TryGetResult <@ AddFileArgs.Name @>
-    let project = results.TryGetResult <@ AddFileArgs.Project @> //TODO
-    let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
-    let build = results.TryGetResult <@ AddFileArgs.BuildAction @> //TODO
-    let link = results.TryGetResult <@ AddFileArgs.Link @> //TODO
+let addFile (results : ParseResults<AddFileArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ AddFileArgs.Name @>
+        let! project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
+        let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
+        let build = defaultResult AddFileArgs.BuildAction "" results |> BuildAction.TryParse
+        let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
+        let below = results.TryGetResult <@ AddFileArgs.Below @>
+        let above = results.TryGetResult <@ AddFileArgs.Above @>
+        let activeState = Furnace.init project
+        
+        match below, above with 
+        | Some b, _ -> 
+            activeState 
+            |> Furnace.addBelow (b, name, build, link, None, None) 
+            |> ignore
+        | None, Some a ->
+            activeState 
+            |> Furnace.addAbove (a, name, build, link, None, None) 
+            |> ignore
+        | None, None ->
+            activeState 
+            |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None) 
+            |> ignore
+            
+        return Continue
+    }
 
-    match name with
-    | Some n -> Files.Add n
-    | None -> ()
-    Continue
 
-let addReference (results : ParseResults<_>) =
-    let name = results.TryGetResult <@ AddReferenceArgs.Name @>
-    let project = results.TryGetResult <@ AddReferenceArgs.Project @> //TODO
-    match name with
-    | Some n -> References.Add n
-    | None -> ()
-    Continue
+let addReference (results : ParseResults<AddReferenceArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ AddReferenceArgs.Name @>
+        let! project = results.TryGetResult <@ AddReferenceArgs.Project @>
+        Furnace.init project
+        |> Furnace.addReference (name, None, None, None, None, None)
+        |> ignore
+        return Continue
+    }
+
 
 let processAdd args =
-    args
-    |> processCommand<AddCommands>
-    |> Option.bind (fun res ->
-        let args' = args.[1 ..]
-        match res.GetAllResults () with
-        | [cmd] ->
-            match cmd with
-            | AddCommands.Reference -> args' |> processCommand |> Option.map addReference
-            | AddCommands.File -> args' |> processCommand |> Option.map addFile
-        | _ -> Some Help
-    )
+    match subCommandArgs args  with
+    | Some (cmd, subArgs ) ->
+        match cmd with
+        | AddCommands.Reference -> execCommand addReference subArgs
+        | AddCommands.File -> execCommand addFile subArgs
+    | _ -> Some Help
+
 
 //-----------------------------------------------------------------
 // Remove Command Handlers
 //-----------------------------------------------------------------
 
-let removeFile (results : ParseResults<_>) =
-    let name = results.TryGetResult <@ RemoveFileArgs.Name @>
-    let project = results.TryGetResult <@ RemoveFileArgs.Project @> //TODO
-    let solution = results.TryGetResult <@ RemoveFileArgs.Solution @> //TODO
+let removeFile (results : ParseResults<RemoveFileArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
+        let! project = results.TryGetResult <@ RemoveFileArgs.Project @>
+        Furnace.init project
+        |> Furnace.removeSourceFile name
+        |> ignore
+        return Continue
+    }
 
-    match name with
-    | Some n -> Files.Remove n
-    | None -> ()
-    Continue
-
-let removeReference (results : ParseResults<_>) =
-    let name = results.TryGetResult <@ AddReferenceArgs.Name @>
-    let project = results.TryGetResult <@ AddReferenceArgs.Project @> //TODO
-    match name with
-    | Some n -> References.Remove n
-    | None -> ()
-    Continue
+let removeReference (results : ParseResults<RemoveReferenceArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
+        let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> 
+        Furnace.init project
+        |> Furnace.removeReference name 
+        |> ignore
+        return Continue
+    }     
+    
+let removeFolder (results: ParseResults<RemoveFolderArgs>) = 
+    maybe {
+        let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
+        let! project = results.TryGetResult <@ RemoveFolderArgs.Project @> 
+        Furnace.init project
+        |> Furnace.removeDirectory name 
+        |> ignore       
+        
+        return Continue
+    }
 
 let processRemove args =
-    args
-    |> processCommand<RemoveCommands>
-    |> Option.bind (fun res ->
-        let args' = args.[1 ..]
-        match res.GetAllResults () with
-        | [cmd] ->
-            match cmd with
-            | RemoveCommands.Reference -> args' |> processCommand |> Option.map removeReference
-            | RemoveCommands.File -> args' |> processCommand |> Option.map removeFile
-        | _ -> Some Help
-    )
+    match subCommandArgs args with
+    | Some (cmd, subArgs) ->
+        match cmd with
+        | RemoveCommands.Reference -> execCommand removeReference subArgs
+        | RemoveCommands.File -> execCommand removeFile subArgs // TODO - change to reflect mutual exclusion of removing solution files and project files
+        | RemoveCommands.Folder -> execCommand removeFolder subArgs
+    | _ -> Some Help
+
 
 //-----------------------------------------------------------------
 // Rename Command Handlers
 //-----------------------------------------------------------------
 
-let renameFile (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Continue
+let renameFile (results : ParseResults<RenameFileArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ RenameFileArgs.Name @>
+        let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
+        let! project = results.TryGetResult <@ RenameFileArgs.Project @>
+
+        Furnace.init project
+        |> Furnace.renameSourceFile (name, newName)
+        |> ignore
+        return Continue
+    }
+
 
 let renameProject (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Continue
+    traceWarning "not implemented yet"
+    Some Continue
+    
+let renameFolder (results : ParseResults<RenameFolderArgs>) = 
+    maybe {
+        let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
+        let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
+        let! project = results.TryGetResult <@ RenameFolderArgs.Project @>
+        
+        Furnace.init project
+        |> Furnace.renameDirectory (name, newName)
+        |> ignore
+        
+        return Continue
+    }
+
 
 let processRename args =
-    args
-    |> processCommand<RenameCommands>
-    |> Option.bind (fun res ->
-        let args' = args.[1 ..]
-        match res.GetAllResults () with
-        | [cmd] ->
-            match cmd with
-            | RenameCommands.Project -> args' |> processCommand |> Option.map renameProject
-            | RenameCommands.File -> args' |> processCommand |> Option.map renameFile
-        | _ -> Some Help
-    )
+    match subCommandArgs args with
+    | Some (cmd, subArgs) ->
+        match cmd with
+        | RenameCommands.Project -> execCommand renameProject subArgs
+        | RenameCommands.File    -> execCommand renameFile subArgs
+        | RenameCommands.Folder  -> execCommand renameFolder subArgs
+    | _ -> Some Help
 
 //-----------------------------------------------------------------
 // List Command Handlers
 //-----------------------------------------------------------------
 
-let listFile (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Continue
+let listFile (results : ParseResults<ListFileArgs>) =
+    maybe {
+        let! proj = results.TryGetResult <@ ListFileArgs.Project @>
+        let activeState = Furnace.init proj
+        activeState.ProjectData.SourceFiles.AllFiles()
+        |> Seq.iter (printfn "%s")
+        return Continue
+    }
+
 
 let listReference (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Continue
+    maybe {
+        let! proj = results.TryGetResult <@ ListReferenceArgs.Project @>
+        let activeState = Furnace.init proj
+        activeState.ProjectData.References
+        |> Seq.iter (fun n -> printfn "%s" n.Include)
+        return Continue
+    }
+
 
 let listProject (results : ParseResults<_>) =
-    printfn "not implemented yet"
-    Continue
+    maybe {
+        let! solution = results.TryGetResult <@ ListProjectArgs.Solution @>
+        traceWarning "not implemented yet" //TODO
+        return Continue
+    }
+
 
 let processList args =
-    args
-    |> processCommand<ListCommands>
-    |> Option.bind (fun res ->
-        let args' = args.[1 ..]
-        match res.GetAllResults () with
-        | [cmd] ->
-            match cmd with
-            | ListCommands.Project -> args' |> processCommand |> Option.map listProject
-            | ListCommands.File -> args' |> processCommand |> Option.map listFile
-            | ListCommands.Reference -> args' |> processCommand |> Option.map listReference
-        | _ -> Some Help
-    )
+    match subCommandArgs args with
+    | Some (cmd, subArgs) ->
+        match cmd with
+        | ListCommands.Project   -> execCommand listProject subArgs
+        | ListCommands.File      -> execCommand listFile subArgs
+        | ListCommands.Reference -> execCommand listReference subArgs
+    | _ -> Some Help
+    
+//-----------------------------------------------------------------
+// Move Command Handlers
+//-----------------------------------------------------------------
+
+let moveFile (results : ParseResults<_>) =
+    maybe {
+        let! proj = results.TryGetResult <@ MoveFileArgs.Project @>
+        let! name = results.TryGetResult <@ MoveFileArgs.Name @>
+        let up = results.TryGetResult <@ MoveFileArgs.Up @>
+        let down = results.TryGetResult <@ MoveFileArgs.Down @>
+        let activeState = Furnace.init proj
+        
+        match up, down with
+        | Some u, _ -> 
+            activeState |> Furnace.moveUp name |> ignore
+        | None, Some d ->
+            activeState |> Furnace.moveDown name |> ignore
+        | None, None ->
+            traceWarning "Up or Down must be specified"
+        
+        return Continue
+    }
+
+let processMove args =
+    match subCommandArgs args  with
+    | Some (cmd, subArgs ) ->
+        match cmd with
+        | MoveCommands.File -> execCommand moveFile subArgs
+    | _ -> Some Help
+
+
 
 
 //-----------------------------------------------------------------
@@ -445,16 +632,10 @@ let processList args =
 //-----------------------------------------------------------------
 
 let processUpdate args =
-    args
-    |> processCommand<UpdateArgs>
-    |> Option.map (fun results ->
-        let paket = results.Contains <@ UpdateArgs.Paket @>
-        let fake = results.Contains <@ UpdateArgs.Fake @>
-        match paket,fake with
-        | true, _ -> Paket.Update ()
-        | _, true -> Fake.Update ()
-        | false, false -> ()
-        Continue
+    args |> execCommand (fun results ->
+        if results.Contains <@ UpdateArgs.Paket @> then Paket.Update()
+        if results.Contains <@ UpdateArgs.Fake @>  then Fake.Update ()
+        Some Continue
     )
 
 
@@ -463,30 +644,31 @@ let processUpdate args =
 //-----------------------------------------------------------------
 
 let processMain args =
-    let res =
-        processCommand<Command> args |> Option.bind (fun res ->
+    let result = parseCommand<Command> args
 
-            match res.GetAllResults() with
-            | [cmd] ->
+    let check (res:ParseResults<_>) =
+        match res.GetAllResults() with
+        | [cmd] ->
+            try
+            let args' = args.[1 ..]
+            args' |>
+            match cmd with
+            | Command.New -> processNew
+            | Add -> processAdd
+            | Remove -> processRemove
+            | Command.Rename -> processRename
+            | List -> processList
+            | Move -> processMove
+            | Update -> processUpdate
+            | Command.Fake -> fun a -> Fake.Run a; Some Continue
+            | Command.Paket -> fun a -> Paket.Run a; Some Continue
+            | Refresh -> fun _ -> Templates.Refresh (); Some Continue
+            | Exit -> fun _ -> Some Result.Exit
+            with
+            | _ ->
+                printfn "Unrecognized command or missing required parameter"
+                Some Help
+        | _ -> Some Continue
 
-                try
-                    let args' = args.[1 ..]
-                    args'
-                    |>  match cmd with
-                        | Command.New -> processNew
-                        | Add -> processAdd
-                        | Remove -> processRemove
-                        | Command.Rename -> processRename
-                        | List -> processList
-                        | Update -> processUpdate
-                        | Command.Fake -> fun a -> Fake.Run a; Some Continue
-                        | Command.Paket -> fun a -> Paket.Run a; Some Continue
-                        | Refresh -> fun _ -> Templates.Refresh (); Some Continue
-                        | Exit -> fun _ -> Some Result.Exit
-                with
-                | _ ->
-                    printfn "Unrecognized command or missing required parameter"
-                    Some Help
-            | _ -> Some Continue
-        )
-    defaultArg res Result.Exit
+//    defaultArg (Option.bind check result) Result.Exit
+    defaultArg (Option.bind check result) Result.Continue

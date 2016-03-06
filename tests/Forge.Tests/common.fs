@@ -6,13 +6,9 @@ open NUnit.Framework
 
 
 let cleanup (text : string) =
-    let hasCrLf = text.Contains("\r\n")
-
-    match hasCrLf with
-    | true ->
-        text
-    | false ->
-        text.Replace("\n", "\r\n")
+    match text.Contains "\r\n" with
+    | true  -> text
+    | false -> text.Replace("\n", "\r\n")
 
 let shouldbetext expected actual =
     let cleanupExpected = cleanup expected

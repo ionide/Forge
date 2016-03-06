@@ -16,6 +16,9 @@ let (^) = (<|)
 let inline (|?|) (pred1:'a->bool) (pred2:'a->bool)  =
     fun a -> pred1 a || pred2 a
 
+let inline (|&|) (pred1:'a->bool) (pred2:'a->bool)  =
+    fun a -> pred1 a && pred2 a
+
 /// Combines two path strings using Path.Combine
 let inline combinePaths path1 (path2 : string) = Path.Combine (path1, path2.TrimStart [| '\\'; '/' |])
 let inline combinePathsNoTrim path1 path2 = Path.Combine (path1, path2)
@@ -109,45 +112,51 @@ let environVars target =
 
 // String Helpers
 //=====================================================
+[<RequireQualifiedAccess>]
+module String =
+    /// Converts a sequence of strings to a string with delimiters
+    let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
 
-/// Converts a sequence of strings to a string with delimiters
-let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
+    /// Returns if the string is null or empty
+    let inline isNullOrEmpty value = String.IsNullOrEmpty value
 
-/// Returns if the string is null or empty
-let inline isNullOrEmpty value = String.IsNullOrEmpty value
+    /// Returns if the string is not null or empty
+    let inline isNotNullOrEmpty value = not ^ String.IsNullOrEmpty value
 
-/// Returns if the string is not null or empty
-let inline isNotNullOrEmpty value = not ^ String.IsNullOrEmpty value
+    /// Returns if the string is null or empty or completely whitespace
+    let inline isNullOrWhiteSpace value = isNullOrEmpty value || value |> Seq.forall Char.IsWhiteSpace
 
-/// Returns if the string is null or empty or completely whitespace
-let inline isNullOrWhiteSpace value = isNullOrEmpty value || value |> Seq.forall Char.IsWhiteSpace
+    /// Converts a sequence of strings into a string separated with line ends
+    let inline toLines text = separated Environment.NewLine text
 
-/// Converts a sequence of strings into a string separated with line ends
-let inline toLines text = separated Environment.NewLine text
+    /// Checks whether the given text starts with the given prefix
+    let startsWith prefix (text : string) = text.StartsWith prefix
 
-/// Checks whether the given text starts with the given prefix
-let startsWith prefix (text : string) = text.StartsWith prefix
+    /// Checks whether the given text ends with the given suffix
+    let endsWith suffix (text : string) = text.EndsWith suffix
 
-/// Checks whether the given text ends with the given suffix
-let endsWith suffix (text : string) = text.EndsWith suffix
+    /// Determines whether the last character of the given <see cref="string" />
+    /// matches Path.DirectorySeparatorChar.
+    let endsWithSlash = endsWith (Path.DirectorySeparatorChar.ToString())
+    /// Reads a file as one text
+    let inline readFileAsString file = File.ReadAllText file
 
-/// Determines whether the last character of the given <see cref="string" />
-/// matches Path.DirectorySeparatorChar.
-let endsWithSlash = endsWith (Path.DirectorySeparatorChar.ToString())
-/// Reads a file as one text
-let inline readFileAsString file = File.ReadAllText file
+    /// Replaces the given pattern in the given text with the replacement
+    let inline replace (pattern : string) replacement (text : string) = text.Replace(pattern, replacement)
 
-/// Replaces the given pattern in the given text with the replacement
-let inline replace (pattern : string) replacement (text : string) = text.Replace(pattern, replacement)
+    /// Replaces the first occurrence of the pattern with the given replacement.
+    let replaceFirst (pattern : string) replacement (text : string) =
+        let pos = text.IndexOf pattern
+        if pos < 0 then text
+        else text.Remove(pos, pattern.Length).Insert(pos, replacement)
 
-/// Replaces the first occurrence of the pattern with the given replacement.
-let replaceFirst (pattern : string) replacement (text : string) =
-    let pos = text.IndexOf pattern
-    if pos < 0 then text
-    else text.Remove(pos, pattern.Length).Insert(pos, replacement)
+    /// Trims the given string with the DirectorySeparatorChar
+    let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
 
-/// Trims the given string with the DirectorySeparatorChar
-let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
+    let takeUntil (c:char) (str:string) =
+        match str.IndexOf c with
+        | -1    -> str
+        | num   -> str.Substring(0,num)
 
 
 // Process Helpers
@@ -168,7 +177,7 @@ let promptSelect text list =
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text =
-    if isNullOrEmpty text then null else
+    if String.isNullOrEmpty text then null else
     let xmlDocument = XmlDocument ()
     xmlDocument.LoadXml text
     xmlDocument
@@ -233,3 +242,54 @@ module Dict =
         let dict = Dictionary()
         for k, v in xs do dict.[k] <- v
         dict
+
+
+type MaybeBuilder () =
+    [<DebuggerStepThrough>]
+    member inline __.Return value: 'T option = Some value
+
+    [<DebuggerStepThrough>]
+    member inline __.ReturnFrom value: 'T option = value
+
+    [<DebuggerStepThrough>]
+    member inline __.Zero (): unit option = Some()   
+
+    [<DebuggerStepThrough>]
+    member __.Delay (f: unit -> 'T option): 'T option = f ()
+
+    [<DebuggerStepThrough>]
+    member inline __.Combine (r1, r2: 'T option): 'T option =
+        match r1 with
+        | None -> None
+        | Some () -> r2
+
+    [<DebuggerStepThrough>]
+    member inline __.Bind (value, f: 'T -> 'U option): 'U option = Option.bind f value
+
+    [<DebuggerStepThrough>]
+    member __.Using (resource: ('T :> System.IDisposable), body: _ -> _ option): _ option =
+        try body resource
+        finally
+            if not <| obj.ReferenceEquals (null, box resource) then
+                resource.Dispose ()
+
+    [<DebuggerStepThrough>]
+    member x.While (guard, body: _ option): _ option =
+        if not ^ guard () then None else
+            // OPTIMIZE: This could be simplified so we don't need to make calls to Bind and While.
+            x.Bind (body, (fun () -> x.While (guard, body)))
+
+    [<DebuggerStepThrough>]
+    member x.For (sequence: seq<_>, body: 'T -> unit option): _ option =
+        // OPTIMIZE: This could be simplified so we don't need to make calls to Using, While, Delay.
+        x.Using (sequence.GetEnumerator (), fun enum ->
+            x.While (
+                enum.MoveNext,
+                x.Delay (fun () ->
+                    body enum.Current)))
+
+
+let maybe = MaybeBuilder()
+
+
+
