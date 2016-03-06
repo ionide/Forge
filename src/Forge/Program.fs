@@ -8,33 +8,69 @@ open Forge.Commands
 Console.Title <- "FORGE"
 Console.OutputEncoding <- System.Text.Encoding.UTF8
 
+let defaultForeground = Console.ForegroundColor
+let defaultBackground = Console.BackgroundColor
+
+let red         = ConsoleColor.Red
+let darkRed     = ConsoleColor.DarkRed
+let blue        = ConsoleColor.Blue
+let darkBlue    = ConsoleColor.DarkBlue
+let darkCyan    = ConsoleColor.DarkCyan
+let cyan        = ConsoleColor.Cyan
+let grey        = ConsoleColor.Gray
+let darkGrey    = ConsoleColor.DarkGray
+let darkGreen   = ConsoleColor.DarkGreen
+let darkMagenta = ConsoleColor.DarkMagenta
+let green       = ConsoleColor.Green
+
 let parser = ArgumentParser.Create<Command>()
 
+let write color (msg:string) =  
+    Console.ForegroundColor <- color
+    Console.Write msg
+    Console.ForegroundColor <- defaultForeground
+
+let writeln color (msg:string) =  
+    Console.ForegroundColor <- color
+    Console.WriteLine msg
+    Console.ForegroundColor <- defaultForeground
+
+
+
+let highlight fcol bcol (msg:string) =
+    Console.ForegroundColor <- fcol
+    Console.BackgroundColor <- bcol
+    Console.Write msg
+    Console.ForegroundColor <- defaultForeground
+    Console.BackgroundColor <- defaultBackground
+
+let highlightln fcol bcol (msg:string) =    
+    Console.ForegroundColor <- fcol
+    Console.BackgroundColor <- bcol
+    Console.WriteLine msg
+    Console.ForegroundColor <- defaultForeground
+    Console.BackgroundColor <- defaultBackground
+    
 
 let rec consoleLoop () =
-    trace Environment.CurrentDirectory
+    write   green Environment.CurrentDirectory
+    writeln darkRed " [FORGE] "
     Console.Write "λ "
-    let input = Console.ReadLine()
-    let result = match input with
-                 | null -> Result.Exit
-                 | _ -> input.Split ' '  |> processMain
-    match result with
-    | Continue -> consoleLoop ()
-    | Help ->
-        parser.Usage "Available commands:" |> printfn "%s"
-        consoleLoop()
-    | _ -> 1
+
+    match Console.ReadLine() with
+    | null  -> Result.Exit
+    | input -> input.Split ' '  |> interactive
+    |> function
+    | Continue    -> consoleLoop ()
+    | Result.Exit -> 1
 
 [<EntryPoint>]
 let main argv =
     match argv with
     | [||] ->
-        parser.Usage "Available commands:" |> System.Console.WriteLine
+        writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
         consoleLoop ()
     | _ ->        
-        match processMain argv with
+        match singlePass argv with
         | Continue -> consoleLoop ()
-        | Help ->
-            parser.Usage "Available commands:" |> printfn "%s"
-            consoleLoop()
-        | _ -> 1
+        | Result.Exit -> 1
