@@ -5,6 +5,7 @@ NUGET
     Argu (2.1)
     FAKE (4.21.4)
     FSharp.Compiler.Service (2.0.0.6)
+    FParsec (1.0.2)
     FSharp.Core (4.0.0.1)
     FSharp.Data (2.2.5)
     FSharp.Formatting (2.14.0)
