@@ -301,4 +301,21 @@ let maybe = MaybeBuilder()
 let (|InvariantEqual|_|) (str:string) arg =
   if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
   then Some () else None
+  
+  
+ // Seq extension
+ //====================================
 
+module Seq = 
+    let duplicates xs =
+        (Map.empty, xs)
+        ||> Seq.scan (fun xs x ->
+            match Map.tryFind x xs with
+            | None -> Map.add x false xs
+            | Some false -> Map.add x true xs
+            | Some true -> xs)
+        |> Seq.zip xs
+        |> Seq.choose (fun (x, xs) ->
+            match Map.tryFind x xs with
+            | Some false -> Some x
+            | None | Some true -> None)
