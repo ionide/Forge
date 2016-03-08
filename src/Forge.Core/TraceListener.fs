@@ -83,6 +83,7 @@ type ConsoleTraceListener(importantMessagesToStdErr, colorMap) =
             | CloseTag _ -> ()
             | ImportantMessage text             
             | ErrorMessage text ->
+                //writeText false color true text
                 writeText importantMessagesToStdErr color true text
             | WarningMessage (text, newLine)
             | LogMessage (text, newLine) 
@@ -96,7 +97,7 @@ type ConsoleTraceListener(importantMessagesToStdErr, colorMap) =
 /// The default TraceListener for Console.
 let defaultConsoleTraceListener =
  // ConsoleTraceListener(importantMessagesToStdErr, colorMap)
-  ConsoleTraceListener(true, colorMap)
+  ConsoleTraceListener(false, colorMap)
 
 
 /// A List with all registered listeners

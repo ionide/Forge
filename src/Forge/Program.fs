@@ -54,7 +54,7 @@ let highlightln fcol bcol (msg:string) =
 
 let rec consoleLoop () =
     write   green Environment.CurrentDirectory
-    writeln darkRed " [FORGE] "
+    writeln darkRed " [-FORGE-] "
     Console.Write "λ "
 
     match Console.ReadLine() with

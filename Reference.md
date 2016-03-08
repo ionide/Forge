@@ -1,3 +1,6 @@
+## Solution File Reference
+
+[The differences between Solution build configurations and Project build configurations](http://jimmyscorner.com/archives/51/the-differences-between-solution-build-configurations-and-project-build-configurations)
 
 
 ## Visual Studio ProjectType GUIDs

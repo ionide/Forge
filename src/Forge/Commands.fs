@@ -714,7 +714,7 @@ let strikeForge args (cont:Result) =
             | Update -> processUpdate cont
             | Command.Fake -> fun a -> Fake.Run a; Some cont
             | Command.Paket -> fun a -> Paket.Run a; Some cont
-            | Refresh -> fun _ -> Templates.refresh (); Some cont
+            | Refresh -> fun _ -> Templates.refresh(); Some cont
             | Exit -> fun _ -> Some Result.Exit
             with
             | _ ->
