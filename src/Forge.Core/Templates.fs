@@ -23,18 +23,21 @@ type ProjectComparison =
 let findMissingFiles templateProject projects =
     let isFSharpProject file = file |> String.endsWith ".fsproj"
 
-    let templateFiles = (ProjectFile.FromFile templateProject).Files
+    let templateFiles = (FsProject.load templateProject).SourceFiles.Files
     let templateFilesSet = Set.ofSeq templateFiles
 
     projects
-    |> Seq.map (fun fileName -> ProjectFile.FromFile fileName)
-    |> Seq.map (fun ps ->
-            let missingFiles = Set.difference templateFilesSet (Set.ofSeq ps.Files)
+    |> Seq.map (fun fileName -> FsProject.load fileName, fileName)
+    |> Seq.map (fun (ps,fn) ->
+            let missingFiles = Set.difference templateFilesSet (Set.ofSeq ps.SourceFiles.Files)
+
+            let duplicateFiles =                 
+                Seq.duplicates ps.SourceFiles.Files
 
             let unorderedFiles =
                 if not <| isFSharpProject templateProject then [] else
                 if not <| Seq.isEmpty missingFiles then [] else
-                let remainingFiles = ps.Files |> List.filter (fun file -> Set.contains file templateFilesSet)
+                let remainingFiles = ps.SourceFiles.Files |> List.filter (fun file -> Set.contains file templateFilesSet)
                 if remainingFiles.Length <> templateFiles.Length then [] else
 
                 templateFiles
@@ -43,33 +46,39 @@ let findMissingFiles templateProject projects =
                 |> List.map fst
 
             { TemplateProjectFileName = templateProject
-              ProjectFileName = ps.ProjectFileName
+              ProjectFileName = fn
               MissingFiles = missingFiles
-              DuplicateFiles = ps.FindDuplicateFiles()
+              DuplicateFiles = duplicateFiles
               UnorderedFiles = unorderedFiles })
     |> Seq.filter (fun pc -> pc.HasErrors)
 
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
 let FixMissingFiles templateProject projects =
-    let addMissing (project:ProjectFile) missingFile =
-        printfn "Adding %s to %s" missingFile project.ProjectFileName
-        project.AddFile missingFile "Compile"
+    
 
     findMissingFiles templateProject projects
     |> Seq.iter (fun pc ->
-            let project = ProjectFile.FromFile pc.ProjectFileName
-            if not (Seq.isEmpty pc.MissingFiles) then
-                let newProject = Seq.fold addMissing project pc.MissingFiles
-                newProject.Save())
+            let addMissing project missingFile =
+                printfn "Adding %s to %s" missingFile pc.ProjectFileName
+                project |> FsProject.addSourceFile  "" {SourceFile.Include = missingFile; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+    
+    
+            let project = FsProject.load pc.ProjectFileName
+            if not ^ Seq.isEmpty pc.MissingFiles then
+                pc.MissingFiles 
+                |> Seq.fold addMissing project 
+                |> FsProject.save pc.ProjectFileName )
 
 /// It removes duplicate files from the project files.
 let RemoveDuplicateFiles projects =
     projects
     |> Seq.iter (fun fileName ->
-            let project = ProjectFile.FromFile fileName
-            if not (project.FindDuplicateFiles().IsEmpty) then
-                let newProject = project.RemoveDuplicates()
-                newProject.Save())
+            let project = FsProject.load fileName
+            let duplicates = 
+                Seq.duplicates project.SourceFiles.Files
+            if not ^ Seq.isEmpty duplicates then
+                let newProject = project //TODO: .RemoveDuplicates() 
+                newProject |> FsProject.save fileName)
 
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
 /// It also removes duplicate files from the project files.
@@ -97,7 +106,6 @@ let CompareProjectsTo templateProject projects =
 
 
 let Refresh () =
-let refresh () =
     printfn "Getting templates..."
     cleanDir templatesLocation
     cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"

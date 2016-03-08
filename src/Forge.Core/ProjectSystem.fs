@@ -487,7 +487,7 @@ type SourceTree (files:SourceFile list) =
 
     /// Check if the target exists in the project file tree
     let hasTarget (target:string) =
-        let target = normalizeFileName target 
+        let target = normalizeFileName target
         if isDirectory target then
             if tree.ContainsKey target then true else
             traceWarning ^ sprintf "target directory '%s' is not found in the project tree" target
@@ -595,7 +595,7 @@ type SourceTree (files:SourceFile list) =
     member __.RenameFile (path:string) (newName:string) =
         // TODO - check path & name for validity
         // TODO - if there's a .fs & .fsi pair rename both files
-        if   not ^ hasTarget path then () 
+        if   not ^ hasTarget path then ()
         elif not ^ checkFile newName "is not a valid file name" then () else
         let path = normalizeFileName path
         let dir  = getDirectory path
@@ -618,7 +618,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.RenameDir (dir:string) (newName:string) =
         let dir,newName = fixDir dir, fixDir newName
-        if   not ^ hasTarget dir then () 
+        if   not ^ hasTarget dir then ()
         elif not ^ checkFile newName "is not a valid file name" then () else
         let parent = getParentDir dir
 
@@ -662,7 +662,7 @@ type SourceTree (files:SourceFile list) =
             seq { for x in arr do
                     if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
                     elif data.ContainsKey (dir+x) then
-                        yield data.[dir+x].Include               
+                        yield data.[dir+x].Include
             }
         if not ^ tree.ContainsKey dir then Seq.empty else
         let arr = tree.[dir]
@@ -673,6 +673,7 @@ type SourceTree (files:SourceFile list) =
 
     member __.Data with get() = data
     member __.Tree with get() = tree
+    member __.Files with get() = data.Keys |> Seq.toList
 
 
     override self.ToString() =
@@ -1004,7 +1005,7 @@ module FsProject =
 
 
     let addReference (refr:Reference) (proj:FsProject) =
-        if proj.References |> ResizeArray.contains refr then 
+        if proj.References |> ResizeArray.contains refr then
             traceWarning "already contrains this reference"
             proj
         else
@@ -1086,7 +1087,6 @@ module FsProject =
         File.WriteAllText(path,proj.ToXmlString())
         with
         | ex -> traceException ex
-        
 
 #if INTERACTIVE
 ;;

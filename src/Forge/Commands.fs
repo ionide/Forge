@@ -13,7 +13,7 @@ type CLIArg = CustomCommandLineAttribute
 type CLIAlt = AltCommandLineAttribute
 
 type Result =
-| Continue 
+| Continue
 | Exit
 
 
@@ -22,7 +22,7 @@ type Result =
 //-----------------------------------------------------------------
 
 (*  TODO Add commands
-    - delete file|dir    
+    - delete file|dir
 
 *)
 
@@ -32,7 +32,7 @@ let internal getCaseName (item:'T) =
     | [||] -> uci.Name
     | arr -> (arr.[0] :?> CustomCommandLineAttribute).Name
 
-let getUsage (x:#IArgParserTemplate) = sprintf "  %s : %s" (getCaseName x) x.Usage  
+let getUsage (x:#IArgParserTemplate) = sprintf "  %s : %s" (getCaseName x) x.Usage
 
 
 type Command =
@@ -62,7 +62,7 @@ type Command =
             | Fake -> "Runs FAKE"
             | Refresh -> "Refreshes the template cache"
             | Exit -> "Exits interactive mode"
-    
+
 
 
 //-----------------------------------------------------------------
@@ -78,7 +78,7 @@ type NewCommand =
             match this with
             | Project -> "Creates new project"
             | File -> "Creates new file"
-    
+
 
 
 
@@ -97,7 +97,7 @@ type NewProjectArgs =
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"
-    
+
 
 
 type NewFileArgs =
@@ -162,7 +162,7 @@ type AddFileArgs =
 type AddReferenceArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "-p">] Project of string
-    
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -310,7 +310,7 @@ type ListFilters =
         member this.Usage =
             match this with
             | Filter _ -> "Filter list via fuzzy search for this string"
-            | Count _ -> "Return the x best search results"    
+            | Count _ -> "Return the x best search results"
 
 
 type ListFilesArgs =
@@ -341,7 +341,7 @@ type ListProjectsArgs =
             match this with
             | Solution _ -> "List the projects in this solution"
             | Folder _ -> "List the projects in this directory"
-            
+
 
 //-----------------------------------------------------------------
 // Move commands
@@ -361,7 +361,7 @@ type MoveFileArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIArg "--up">] [<CLIAlt "-u">] Up
     | [<CLIArg "--down">] [<CLIAlt "-d">] Down
-    
+
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -402,22 +402,22 @@ let parseCommand<'T when 'T :> IArgParserTemplate> args =
              ignoreMissing = true,
              errorHandler = ProcessExiter())
     if results.IsUsageRequested then
-        match results.GetAllResults() with 
-        | [] -> 
+        match results.GetAllResults() with
+        | [] ->
             parser.Usage "   Available parameters:" |> System.Console.WriteLine
             None
-        | [hd] -> 
+        | [hd] ->
             (getUsage>>traceWarning) hd
-            Some results            
-        | ls -> 
+            Some results
+        | ls ->
             ls  |> List.iter (getUsage>>traceWarning)
             Some results
     else
     Some results
 
 
-let execCommand fn args = 
-    args |> parseCommand |> Option.bind fn 
+let execCommand fn args =
+    args |> parseCommand |> Option.bind fn
 
 
 let subCommandArgs args =
@@ -427,7 +427,7 @@ let subCommandArgs args =
     )
 
 
-let inline defaultResult (cmdarg:'field->#IArgParserTemplate) value (results : ParseResults<_>) =    
+let inline defaultResult (cmdarg:'field->#IArgParserTemplate) value (results : ParseResults<_>) =
     defaultArg (results.TryGetResult <@cmdarg@>) value
 
 
@@ -444,7 +444,7 @@ let newProject cont (results : ParseResults<_>) =
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
     //Project.New projectName projectDir templateName paket fake
     Some cont
-    
+
 
 let newFile cont (results : ParseResults<_>) =
     printfn "Not implemented yet"
@@ -474,21 +474,21 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
         let below = results.TryGetResult <@ AddFileArgs.Below @>
         let above = results.TryGetResult <@ AddFileArgs.Above @>
         let activeState = Furnace.loadFsProject project
-        
-        match below, above with 
-        | Some b, _ -> 
-            activeState 
-            |> Furnace.addBelow (b, name, build, link, None, None) 
+
+        match below, above with
+        | Some b, _ ->
+            activeState
+            |> Furnace.addBelow (b, name, build, link, None, None)
             |> ignore
         | None, Some a ->
-            activeState 
-            |> Furnace.addAbove (a, name, build, link, None, None) 
+            activeState
+            |> Furnace.addAbove (a, name, build, link, None, None)
             |> ignore
         | None, None ->
-            activeState 
-            |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None) 
+            activeState
+            |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None)
             |> ignore
-            
+
         return cont
     }
 
@@ -531,20 +531,20 @@ let removeFile cont (results : ParseResults<RemoveFileArgs>) =
 let removeReference cont (results : ParseResults<RemoveReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @> 
+        let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @>
         Furnace.loadFsProject project
-        |> Furnace.removeReference name 
+        |> Furnace.removeReference name
         |> ignore
         return cont
-    }     
-    
-let removeFolder cont (results: ParseResults<RemoveFolderArgs>) = 
+    }
+
+let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveFolderArgs.Project @> 
+        let! project = results.TryGetResult <@ RemoveFolderArgs.Project @>
         Furnace.loadFsProject project
-        |> Furnace.removeDirectory name 
-        |> ignore       
+        |> Furnace.removeDirectory name
+        |> ignore
         return cont
     }
 
@@ -580,17 +580,17 @@ let renameProject cont (results : ParseResults<_>) =
     traceWarning "not implemented yet"
     Some cont
 
-    
-let renameFolder cont (results : ParseResults<RenameFolderArgs>) = 
+
+let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
         let! project = results.TryGetResult <@ RenameFolderArgs.Project @>
-        
+
         Furnace.loadFsProject project
         |> Furnace.renameDirectory (name, newName)
         |> ignore
-        
+
         return cont
     }
 
@@ -646,7 +646,7 @@ let processList cont args =
         | ListCommands.GAC       -> traceWarning "not implemented yet"; Some cont
         | ListCommands.Templates -> traceWarning "not implemented yet"; Some cont
     | _ -> Some cont
-    
+
 //-----------------------------------------------------------------
 // Move Command Handlers
 //-----------------------------------------------------------------
@@ -658,15 +658,15 @@ let moveFile cont (results : ParseResults<_>) =
         let up = results.TryGetResult <@ MoveFileArgs.Up @>
         let down = results.TryGetResult <@ MoveFileArgs.Down @>
         let activeState = Furnace.loadFsProject proj
-        
+
         match up, down with
-        | Some u, _ -> 
+        | Some u, _ ->
             activeState |> Furnace.moveUp name |> ignore
         | None, Some d ->
             activeState |> Furnace.moveDown name |> ignore
         | None, None ->
             traceWarning "Up or Down must be specified"
-        
+
         return cont
     }
 
@@ -714,7 +714,7 @@ let strikeForge args (cont:Result) =
             | Update -> processUpdate cont
             | Command.Fake -> fun a -> Fake.Run a; Some cont
             | Command.Paket -> fun a -> Paket.Run a; Some cont
-            | Refresh -> fun _ -> Templates.refresh(); Some cont
+            | Refresh -> fun _ -> Templates.Refresh (); Some cont
             | Exit -> fun _ -> Some Result.Exit
             with
             | _ ->
