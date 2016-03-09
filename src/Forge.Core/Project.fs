@@ -34,9 +34,9 @@ let New projectName projectDir templateName paket fake =
 
     let templates = Templates.GetList()
 
-    let projectName' = if String.IsNullOrWhiteSpace projectName then prompt "Enter project name:" else projectName
-    let projectDir' = if String.IsNullOrWhiteSpace projectDir then prompt "Enter project directory (relative to working directory):" else projectDir
-    let templateName' = if String.IsNullOrWhiteSpace templateName then templates |> promptSelect "Choose a template:" else templateName
+    let projectName' = defaultArg projectName ^ prompt "Enter project name:"
+    let projectDir' = defaultArg projectDir ^ prompt "Enter project directory (relative to working directory):" 
+    let templateName' = defaultArg templateName (templates |> promptSelect "Choose a template:")
     let projectFolder = directory </> projectDir' </> projectName'
     let templateDir = templatesLocation </> templateName'
 

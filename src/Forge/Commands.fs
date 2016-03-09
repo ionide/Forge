@@ -2,9 +2,9 @@
 
 open System
 open System.Text
-open Argu
+open Argu 
 open Forge
-open Forge.ProjectSystem
+open Forge.ProjectSystem 
 open Forge.ProjectManager
 
 /// Custom Command Line Argument
@@ -13,7 +13,7 @@ type CLIArg = CustomCommandLineAttribute
 type CLIAlt = AltCommandLineAttribute
 
 type Result =
-| Continue
+| Continue 
 | Exit
 
 
@@ -427,22 +427,18 @@ let subCommandArgs args =
     )
 
 
-let inline defaultResult (cmdarg:'field->#IArgParserTemplate) value (results : ParseResults<_>) =
-    defaultArg (results.TryGetResult <@cmdarg@>) value
-
-
 //-----------------------------------------------------------------
 // New Command Handlers
 //-----------------------------------------------------------------
 
 
 let newProject cont (results : ParseResults<_>) =
-    let projectName = defaultResult NewProjectArgs.Name "" results
-    let projectDir  = defaultResult NewProjectArgs.Folder  "" results
-    let templateName = defaultResult NewProjectArgs.Template "" results
+    let projectName = results.TryGetResult <@ NewProjectArgs.Name @>
+    let projectDir  = results.TryGetResult <@ NewProjectArgs.Folder @>
+    let templateName = results.TryGetResult <@ NewProjectArgs.Template @>
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
-    //Project.New projectName projectDir templateName paket fake
+    Project.New projectName projectDir templateName paket fake
     Some cont
 
 
@@ -469,7 +465,7 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
         let! name = results.TryGetResult <@ AddFileArgs.Name @>
         let! project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
         let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
-        let build = defaultResult AddFileArgs.BuildAction "" results |> BuildAction.TryParse
+        let build = results.TryGetResult <@ AddFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
         let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
         let below = results.TryGetResult <@ AddFileArgs.Below @>
         let above = results.TryGetResult <@ AddFileArgs.Above @>

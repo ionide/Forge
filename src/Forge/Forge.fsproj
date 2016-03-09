@@ -60,7 +60,7 @@
     <ProjectReference Include="..\Forge.Core\Forge.Core.fsproj">
       <Name>Forge.Core</Name>
       <Project>{d28ce980-2040-4b62-aca6-f07eb6b31920}</Project>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
