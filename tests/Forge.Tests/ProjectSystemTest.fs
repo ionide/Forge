@@ -12,6 +12,7 @@ open FsUnit
 [<Test>]
 let ``ProjectSystem parse - AST gets all project files`` () =
     let projectFile = FsProject.parse astInput
+    System.Diagnostics.Debug.WriteLine projectFile
     projectFile.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
 
 

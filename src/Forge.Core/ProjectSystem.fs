@@ -383,7 +383,9 @@ type SourceElement =
 module internal PathHelpers =
 
     let normalizeFileName (fileName : string) =
-        let file = fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()
+        let file = if (fileName = (Path.DirectorySeparatorChar |> string)) 
+                   then fileName
+                   else fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()
         match file with
         | "/" -> "/"
         | f -> f.TrimStart '/'
