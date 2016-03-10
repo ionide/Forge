@@ -115,7 +115,7 @@ let GetList () =
     |> Seq.map Path.GetFileName
     |> Seq.filter (fun x -> not ^ x.StartsWith ".")
     
-module Template = 
+module Project = 
     open System
     open System.IO
     open Forge.ProjectSystem
@@ -176,4 +176,5 @@ module Template =
             printfn "Done!"
         else
             printfn "Wrong template name"
+            
     

@@ -438,8 +438,8 @@ let newProject cont (results : ParseResults<_>) =
     let templateName = results.TryGetResult <@ NewProjectArgs.Template @>
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
-    Project.New projectName projectDir templateName paket fake
-    Some cont
+    Templates.Project.New projectName projectDir templateName paket fake
+    Some cont 
 
 
 let newFile cont (results : ParseResults<_>) =
