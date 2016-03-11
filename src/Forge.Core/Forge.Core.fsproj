@@ -63,6 +63,7 @@
     <None Include="paket.template" />
     <Compile Include="Prelude.fs" />
     <Compile Include="XLinq.fs" />
+    <Compile Include="JsonValue.fs" />
     <Compile Include="ResizeArray.fs" />
     <Compile Include="TraceListener.fs" />
     <Compile Include="TraceHelper.fs" />

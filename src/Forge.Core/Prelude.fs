@@ -162,7 +162,6 @@ module String =
 // Process Helpers
 //=====================================================
 
-
 let prompt text =
     printfn text
     Console.Write "> "
@@ -174,6 +173,13 @@ let promptSelect text list =
     printfn ""
     Console.Write "> "
     Console.ReadLine ()
+
+let promptSelect2 text list =
+     printfn text
+     list |> Array.iter (fun (n, v) -> printfn " - %s (%s)" n v)
+     printfn ""
+     Console.Write("> ")
+     Console.ReadLine()
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text =
@@ -194,6 +200,10 @@ let packagesDirectory = directory </> "packages"
 let paketLocation     = exeLocation </> "Tools" </> "Paket"
 let fakeLocation      = exeLocation </> "Tools" </> "FAKE"
 let fakeToolLocation  = fakeLocation </> "tools"
+
+let filesLocation = templatesLocation </> ".files"
+let templateFile = templatesLocation </> "templates.json"
+
 
 
 let inline mapOpt (opt:'a option) mapfn (x:'b) =
@@ -303,8 +313,8 @@ let (|InvariantEqual|_|) (str:string) arg =
   then Some () else None
   
   
- // Seq extension
- //====================================
+// Seq extension
+//====================================
 
 module Seq = 
     let duplicates xs =
@@ -319,3 +329,4 @@ module Seq =
             match Map.tryFind x xs with
             | Some false -> Some x
             | None | Some true -> None)
+            

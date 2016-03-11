@@ -3,7 +3,6 @@ source https://nuget.org/api/v2
 
 nuget Argu
 nuget FSharp.Core
-nuget FSharp.Data
 nuget FSharp.Formatting
 nuget FsUnit
 nuget NUnit

@@ -25,7 +25,7 @@ type ActiveState =
 
 let saveState (state:ActiveState) =
     File.WriteAllText(
-        state.ProjectPath </> state.ProjectFileName, 
+        state.ProjectPath </> state.ProjectFileName + ".fsproj", 
         state.ProjectData.ToXmlString state.StoredXml
     )
 
@@ -215,5 +215,14 @@ module Furnace =
         FsProject.listReferences state.ProjectData
         |> List.iter trace
         state
+        
+    let rec tryFindProject dir = 
+        let dir' = System.IO.Path.GetDirectoryName dir 
+        match Globbing.search dir' "*.fsproj" |> List.tryHead with
+        | Some f -> Some f
+        | None -> 
+            if dir' = directory then None 
+            else dir' |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
+
 
 

@@ -3,7 +3,8 @@
 open Forge.Git
 open Forge.ProjectSystem
 open System.IO
-
+open System
+open FSharp.Data
 
 /// Result type for project comparisons.
 type ProjectComparison =
@@ -114,7 +115,18 @@ let GetList () =
     Directory.GetDirectories templatesLocation
     |> Seq.map Path.GetFileName
     |> Seq.filter (fun x -> not ^ x.StartsWith ".")
+
+let relative (path1 : string) (path2 : string) =
+    let p1, p2 = Uri path1, Uri path2
+    Uri.UnescapeDataString(
+        p2.MakeRelativeUri(p1)
+            .ToString()
+            .Replace('/', Path.DirectorySeparatorChar)
+    )  
     
+//type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">  
+    
+ 
 module Project = 
     open System
     open System.IO
@@ -131,15 +143,7 @@ module Project =
         |> Seq.iter (fun x ->
                         let r = replace x
                         let contents = File.ReadAllText(x).Replace(find, r)
-                        File.WriteAllText(x, contents))
-
-    let relative (path1 : string) (path2 : string) =
-        let p1, p2 = Uri path1, Uri path2
-        Uri.UnescapeDataString(
-            p2.MakeRelativeUri(p1)
-                .ToString()
-                .Replace('/', Path.DirectorySeparatorChar)
-        )
+                        File.WriteAllText(x, contents))    
 
     let getProjects() =
         DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
@@ -177,4 +181,57 @@ module Project =
         else
             printfn "Wrong template name"
             
+module File = 
+    open System
+    open System.IO
+    open Forge.ProjectSystem
+    open Forge.Json
+    open Json.JsonExtensions
     
+    let getTemplates () =
+        let value = System.IO.File.ReadAllText(templateFile) |> JsonValue.Parse
+        value?Files |> JsonValue.AsArray |> Array.map (fun n -> 
+            n?name.ToString().Replace("\"","" ), 
+            n?value.ToString().Replace("\"","" ), 
+            n?extension.ToString().Replace("\"","" ) )
+    
+    let sed (find:string) replace file =
+        let r = replace file
+        let contents = File.ReadAllText(file).Replace(find, r)
+        File.WriteAllText(file, contents)
+
+
+    let New fileName template project buildAction =
+        if not ^ Directory.Exists templatesLocation then Refresh ()
+        
+        let templates = getTemplates ()
+        let template' = 
+            match template with
+            | Some t -> t
+            | None -> (templates |> Array.map( fun (n,v,_) -> n,v) |> promptSelect2 "Choose a template:")
+        let (_, value, ext) = templates |> Seq.find (fun (_,v,_) -> v = template')
+        let oldFile = value + "." + ext
+        let newFile = fileName + "." + ext
+        let newFile' =  (directory </> newFile)
+        let project' = 
+            match project with
+            | Some p -> Some p
+            | None -> ProjectManager.Furnace.tryFindProject newFile'
+
+        System.IO.File.Copy(filesLocation </> oldFile, newFile')
+        match project' with
+        | Some f ->
+            ProjectManager.Furnace.loadFsProject f 
+            |> ProjectManager.Furnace.addSourceFile (newFile, None, buildAction, None, None, None)
+            |> ignore
+        | None ->
+            traceWarning "Project file not found, use `add file --project<string>` to add file to project"
+
+        sed "<%= namespace %>" (fun _ -> fileName) newFile'
+        sed "<%= guid %>" (fun _ -> System.Guid.NewGuid().ToString()) newFile'
+        sed "<%= paketPath %>" (relative directory) newFile'
+        sed "<%= packagesPath %>" (relative packagesDirectory) newFile'
+
+        
+                
+        

@@ -443,7 +443,12 @@ let newProject cont (results : ParseResults<_>) =
 
 
 let newFile cont (results : ParseResults<_>) =
-    printfn "Not implemented yet"
+    let fn = results.GetResult <@ NewFileArgs.Name @>
+    let template = results.TryGetResult <@ NewFileArgs.Template @>
+    let ba = results.TryGetResult <@ NewFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
+    let project = results.TryGetResult <@ NewFileArgs.Project @>
+    Templates.File.New fn template project ba
+    
     Some cont
 
 
