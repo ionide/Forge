@@ -64,7 +64,7 @@ type SolutionFolder =
         |> string
 
 
-type Project =
+type SolutionProject =
     {   ProjectTypeGuid     : Guid
         Name                : string
         Path                : string
@@ -98,7 +98,7 @@ type Project =
         |> string
 
 
-type SolutionConfiguration = 
+type SolutionConfig = 
     { Name:string; Platform:PlatformType }
 
     member self.ToSln() =
@@ -120,7 +120,7 @@ type BuildProperty =
         | Build0    -> "Build.0"
 
 
-type ProjectConfiguration =
+type SolutionProjectConfig =
     {   ProjectGuid   : Guid
         ConfigName    : string
         BuildProperty : BuildProperty
@@ -154,9 +154,9 @@ type NestedProject =
 type Solution = 
     {   Header : string
         Folders : SolutionFolder list
-        Projects : Project List
-        [<PreSolution>]  SolutionConfigurationPlatforms : SolutionConfiguration list
-        [<PostSolution>] ProjectConfigurationPlatforms : ProjectConfiguration list
+        Projects : SolutionProject List
+        [<PreSolution>]  SolutionConfigurationPlatforms : SolutionConfig list
+        [<PostSolution>] ProjectConfigurationPlatforms : SolutionProjectConfig list
         [<PreSolution>]  SolutionProperties : SolutionProperty list
         [<PreSolution>]  NestedProjects : NestedProject list
     }
@@ -168,6 +168,26 @@ type Solution =
             SolutionConfigurationPlatforms = []
             ProjectConfigurationPlatforms = []
             SolutionProperties = []
+            NestedProjects = []
+        }
+
+    static member Default = 
+        {   Header  = 
+               "Microsoft Visual Studio Solution File, Format Version 12.00\n\
+                # Visual Studio 14\n\
+                VisualStudioVersion = 14.0.24720.0\n\
+                MinimumVisualStudioVersion = 10.0.40219.1"
+        
+            Folders = []
+            Projects = []
+            SolutionConfigurationPlatforms = [
+                { Name = "Debug"; Platform = AnyCPU }
+                { Name = "Release"; Platform = AnyCPU }
+            ]
+            ProjectConfigurationPlatforms = []
+            SolutionProperties = [
+                { Name = "HideSolutionNode"; Value = "FALSE" }
+            ]
             NestedProjects = []
         }
 
@@ -252,15 +272,71 @@ module SolutionFolder =
                 (fun si -> String.equalsIgnoreCase si.Name name) 
         { folder with SolutionItems = items }
 
+    // TODO - rename item
 
 
+
+
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Solution =
+    
+    let toSlnString (sln:Solution) = sln.ToSln()
+
+    /// Adds a new folder to the solution
+    let addFolder (name:string) (sln:Solution) =
+        if  sln.Folders |> List.exists
+            (fun fl -> String.equalsIgnoreCase fl.Name name)
+         || sln.Projects |> List.exists
+            (fun pj -> String.equalsIgnoreCase pj.Name name) then
+            failwithf "The Solution  already contains a folder or project named '%s'" name
+        else
+        let folder = SolutionFolder.create name
+        { sln with Folders = folder::sln.Folders }
+        
+  
+    let removeFolder (target:string) (sln:Solution) =
+        if not (sln.Folders |> List.exists (fun fl -> 
+            String.equalsIgnoreCase fl.Name target)) then 
+            failwithf "Can't remove - The Solution doesn't contain a folder named '%s'" target
+        else 
+        let folder = 
+            sln.Folders |> List.find (fun fl -> 
+                String.equalsIgnoreCase fl.Name target)
+        let nestedProjects =
+            sln.NestedProjects |> List.filter (fun np ->
+                np.Parent <> folder.Guid && np.Project <> folder.Guid)
+        let slnFolders = 
+            sln.Folders |> List.filter (fun sf -> sf.Name <> folder.Name) 
+        { sln with
+            Folders = slnFolders
+            NestedProjects = nestedProjects    
+        }
+
+
+    let addProject (path:string) (project:FsProject) (sln:Solution) =
+        let slnProj = 
+            {   
+                // TODO - this will need to make use of the projectTypes listed in the reference file to add 
+                // the correct project-type if none is listed
+                ProjectTypeGuid = project.Settings.ProjectType.Data.Value |> List.head
+                // TODO - this should create a new guid if one is not found
+                Guid = project.Settings.ProjectGuid.Data.Value
+                // TODO - use the assembly name if name isn't found
+                Name = project.Settings.Name.Data.Value
+                Path = path
+                // TODO - should we use project references to check against solution projects
+                // to add existing projects to this list?
+                Dependecies = []
+            }
+        { sln with Projects=slnProj::sln.Projects }
 
 
 
 [<AutoOpen>]
-module internal Parsers =
+module Parsers =
     
-
     type UserState = unit
     type Parser<'t> = Parser<'t, UserState>
 
@@ -293,31 +369,26 @@ module internal Parsers =
 
     /// Parsers a Guid inside of { }
     let pGuid: Parser<Guid> = 
-        let psr = between ``{`` ``}`` ^ manySatisfy isGuid
-        fun stream  ->
-            let reply: _ Reply = psr stream
-            if  reply.Status <> Ok then Reply (Error,reply.Error) else
-            try Guid.Parse reply.Result |> Reply 
-            with ex -> Reply (Error, expected ex.Message)
+        between ``{`` ``}`` ^ manySatisfy isGuid >>= fun x ->
+            try preturn ^ Guid.Parse x with ex -> fail "expected valid Guid"
 
 
     let pSolutionConfigLine =
         spaces >>. manyCharsTill anyChar ``|`` .>>. (manyCharsTill anyChar  pEq)  .>> skipRestOfLine true
         |>> fun (name, plat) -> 
-        {   SolutionConfiguration.Name = name
+        {   SolutionConfig.Name = name
             Platform = plat.Trim() |> PlatformType.Parse }
 
 
     let pProjectConfigLine =
-        (spaces >>. pGuid .>> ``.``)
-        .>>. (many1CharsTill anyChar ``|``)
-        .>>. (many1CharsTill anyChar ``.``)
-        .>>. (many1CharsTill anyChar ^ (spaces .>> pEq)) .>> skipRestOfLine true
-        |>> fun (((guid,name),plat),prop) ->
-            {   ProjectGuid = guid
-                ConfigName = name
-                BuildProperty = BuildProperty.Parse ^ prop.Trim()
-                Platform = PlatformType.Parse  ^ plat.Trim()  }
+        spaces >>. pGuid .>> ``.`` >>= fun guid ->
+        many1CharsTill anyChar ``|`` >>= fun name ->
+        many1CharsTill anyChar ``.`` >>= fun plat ->
+        many1CharsTill anyChar ^ (spaces .>> pEq) .>> skipRestOfLine true |>> fun prop ->
+        {   ProjectGuid = guid
+            ConfigName = name
+            BuildProperty = BuildProperty.Parse ^ prop.Trim()
+            Platform = PlatformType.Parse  ^ plat.Trim()  }
 
 
     let pNestedProjectLine : Parser<_> =
@@ -342,79 +413,48 @@ module internal Parsers =
     let npEntries =  manyTill (spaces >>. pNestedProjectLine  .>> spaces) ^ lookAhead pEndGlobalSection
 
 
-    /// Higher order function that takes a parser an insert/update function and an accumulator
-    /// The insert function takes the Reply of the parser and the accumulator as its arguments 
-    /// to produce a new accumulator which will be wrapped in a reply
-    /// This is used to insert a parser into a large scale folding parser
-    let inline insertBuilder psr (insertfn:'a->Reply<_>-> _) (acc:'a) : Parser<_> =
-        fun stream -> 
-            let reply: _ Reply = psr stream
-            if reply.Status <> Ok  then Reply (Error, reply.Error) else
-            insertfn acc reply |> Reply   
-
-
     let insertProperties (sln:Solution) : Parser<_> =
-        sln |> insertBuilder spEntries (fun sol reply ->
-            let props = List.append sol.SolutionProperties reply.Result
-            { sol with SolutionProperties = props })
+        spEntries |>> fun props ->
+            let props = List.append sln.SolutionProperties props
+            { sln with SolutionProperties = props }
 
 
     let insertNestedProjects (sln:Solution) : Parser<_> =
-        sln |> insertBuilder npEntries (fun sol reply ->
-            let projects = List.append sol.NestedProjects reply.Result
-            { sol with NestedProjects = projects })
+        npEntries |>> fun projects ->
+            let projects = List.append sln.NestedProjects projects
+            { sln with NestedProjects = projects }
 
 
     let insertProjectConfigs (sln:Solution) : Parser<_> =
-        sln |> insertBuilder pcEntries (fun sol reply ->
-            let configs =  List.append sol.ProjectConfigurationPlatforms reply.Result
-            { sol with ProjectConfigurationPlatforms =  configs })
+        pcEntries |>> fun configs ->
+            let configs =  List.append sln.ProjectConfigurationPlatforms configs
+            { sln with ProjectConfigurationPlatforms =  configs }
 
 
     let insertSolutionConfigs (sln:Solution) : Parser<_> =
-        sln |> insertBuilder scEntries (fun sol reply ->
-            let configs = List.append sol.SolutionConfigurationPlatforms reply.Result
-            { sol with SolutionConfigurationPlatforms = configs })
+        scEntries |>> fun configs ->
+            let configs = List.append sln.SolutionConfigurationPlatforms configs
+            { sln with SolutionConfigurationPlatforms = configs }
 
 
     let sectionSwitch (sln:Solution) =
         let sectionType = between ``(`` ``)`` ^ manyCharsTill anyChar ^ lookAhead ``)``
-        let switch (stream: _ CharStream) =
-            let reply: _ Reply = sectionType stream
-            if reply.Status <> Ok  then Reply (Error, reply.Error) else
-            stream.SkipRestOfLine true // skip the rest of the line to prepare to parse the items inside the section
-            match reply.Result  with
-            | "ProjectConfigurationPlatforms"   -> (insertProjectConfigs  sln) stream
-            | "SolutionConfigurationPlatforms"  -> (insertSolutionConfigs sln) stream
-            | "SolutionProperties"              -> (insertProperties      sln) stream
-            | "NestedProjects"                  -> (insertNestedProjects  sln) stream
-            | s -> Reply (Error, expected <| sprintf 
-                    "Inside Global Property ::\ncould not parse unexpected string -'%s'\n at Ln: %d Col: %d"
-                    s stream.Line stream.Column)
+        let switch  =
+            sectionType >>= fun section -> skipRestOfLine true >>= fun _ ->
+            match section  with
+            | "ProjectConfigurationPlatforms"   -> insertProjectConfigs  sln
+            | "SolutionConfigurationPlatforms"  -> insertSolutionConfigs sln
+            | "SolutionProperties"              -> insertProperties      sln
+            | "NestedProjects"                  -> insertNestedProjects  sln
+            | s -> fail <| sprintf 
+                    "Inside Global Property ::\ncould not parse unexpected string -'%s'" s
         between (spaces >>. pGlobalSection) (spaces >>. pEndGlobalSection) switch
 
 
-    let inline foldParser (foldfn: 'a -> Parser<'a>) (endpsr:Parser<_>) seed =
-        let rec loop acc (stream: _ CharStream) =
-            let state = stream.State
-            let reply: _ Reply = foldfn acc ^ stream
-            if reply.Status = Ok then loop reply.Result stream else
-            stream.BacktrackTo state 
-            let checkEnd: _ Reply = endpsr stream
-            if checkEnd.Status = Ok then 
-                stream.BacktrackTo state; Reply acc
-            else Reply (Error, checkEnd.Error)
-        loop seed
-
-
-    let inline foldParserFull (foldfn: 'a -> Parser<'a>) seed =
-        let rec loop acc (stream: _ CharStream) =
-            let state = stream.State
-            let reply: _ Reply = foldfn acc ^ stream
-            if reply.Status = Ok then loop reply.Result stream 
-            elif stream.IsEndOfStream then Reply acc else
-            stream.BacktrackTo state 
-            Reply (Error, reply.Error)
+    let inline foldParser (foldfn: 'a -> Parser<'a>) (endpsr:Parser<_>) (seed:'a) =
+        let rec loop (acc:'a) =
+            (foldfn acc >>= fun result -> loop result)
+            <|> (endpsr |>> fun _ -> acc)
         loop seed
 
 
@@ -431,75 +471,56 @@ module internal Parsers =
     let pFolderItems =  
         between (pProjectSection .>> skipRestOfLine true) pEndProjectSection ^
             manyTill (spaces >>. pSolutionItem  .>> spaces) ^ lookAhead pEndProjectSection
-
+        <|>% []
 
     let pProjectDependencies =
         between (pProjectSection .>> skipRestOfLine true) pEndProjectSection ^
             manyTill (spaces >>. pGuid .>> skipRestOfLine true .>> spaces) ^ lookAhead pEndProjectSection
+        <|>% []
 
     let quoteGuid = ``"`` >>. pGuid .>> ``"``
 
     let quoted: Parser<_> = between ``"`` ``"`` ^ manyCharsTill anyChar ^ lookAhead ``"``
 
     let projectHeading =  
-        (``(`` >>. quoteGuid .>> ``)``) 
-        .>>. (skipEqs >>. (quoted .>> skipCom))
-        .>>. ((quoted .>> skipCom) .>>. quoteGuid .>> spaces)
+        ``(`` >>. quoteGuid .>> ``)`` >>= fun typeGuid -> 
+        skipEqs >>. (quoted .>> skipCom) >>= fun name ->
+        quoted .>> skipCom >>= fun path ->
+        quoteGuid .>> spaces |>> fun idGuid ->
+        typeGuid, name, path, idGuid
 
 
     let parseProject (sln:Solution) =
-        let switch (stream: _ CharStream) =
-            let reply = projectHeading stream
-            if reply.Status <> Ok then Reply (Error, reply.Error) else
-            let (typeGuid,name),(path,idGuid) = reply.Result
-            let state = stream.State
+        let switch =
+            projectHeading >>= fun heading ->
+            let typeGuid, name, path, idGuid = heading
             if typeGuid = FolderGuid then
-                let solutionFolder =
-                    {   ProjectTypeGuid = typeGuid                    
-                        Name = name
-                        Path = path
-                        Guid = idGuid
-                        SolutionItems = []
-                    }
-                let reply = pFolderItems stream
-                if reply.Status <> Ok then 
-                    stream.BacktrackTo state
-                    { sln with Folders = solutionFolder::sln.Folders } |> Reply
-                else
-                    let subFolders = reply.Result
-                    let solutionFolder = {solutionFolder with SolutionItems = subFolders }
-                    { sln with Folders = solutionFolder::sln.Folders } |> Reply
+                pFolderItems |>> fun items ->
+                    let solutionFolder =
+                        {   ProjectTypeGuid = typeGuid                    
+                            Name = name
+                            Path = path
+                            Guid = idGuid
+                            SolutionItems = items
+                        }
+                    { sln with Folders = solutionFolder::sln.Folders }
             else
-                let project =
-                    {   ProjectTypeGuid = typeGuid
-                        Name = name
-                        Path = path
-                        Guid = idGuid
-                        Dependecies = []
-                    }
-                let reply = pProjectDependencies stream
-                // if we don't find any dependencies for the project we backtrack
-                if reply.Status <> Ok then 
-                    stream.BacktrackTo state
-                    { sln with Projects = project::sln.Projects} |> Reply
-                else
-                    let dependencyIds = reply.Result
-                    let project = { project with Dependecies = dependencyIds}
-                    { sln with Projects = project::sln.Projects} |> Reply
+                pProjectDependencies |>> fun deps ->
+                    let project =
+                        {   ProjectTypeGuid = typeGuid
+                            Name = name
+                            Path = path
+                            Guid = idGuid
+                            Dependecies = deps
+                        }
+                    { sln with Projects = project::sln.Projects} 
         between (spaces >>. pProject) (spaces >>. pEndProject) switch
-
 
     let pSolutionHeader = manyCharsTill anyChar ^ lookAhead ^ (pProject <|> pGlobal)
        
 
-    let parseSolution (sln:Solution) : Parser<_> =
-        let entry sln = spaces >>. choice [parseGlobal sln; parseProject sln ]
-        let parseEntries = spaces >>. foldParser entry (spaces >>. eof) sln
-        fun stream ->
-            let reply = pSolutionHeader stream
-            if reply.Status <> Ok then Reply (Error, reply.Error) else
-            let header = reply.Result
-            let reply = parseEntries stream
-            if reply.Status <> Ok then Reply (Error, reply.Error) else
-            let parsedSln = reply.Result
-            { parsedSln with Header = header } |> Reply
+let parseSolution (sln:Solution) : Parser<_> =
+    let entry sln = spaces >>. choice [parseGlobal sln; parseProject sln ]
+    let parseEntries = spaces >>. foldParser entry (spaces >>. eof) sln
+    pSolutionHeader >>= fun hdr -> parseEntries |>> fun sln -> 
+        { sln with Header = hdr }
