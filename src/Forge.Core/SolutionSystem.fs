@@ -451,11 +451,30 @@ module Parsers =
         between (spaces >>. pGlobalSection) (spaces >>. pEndGlobalSection) switch
 
 
+    let inline foldParser (foldfn: _ -> Parser<_>) (endpsr:Parser<_>) seed =
+        let rec loop acc (stream: _ CharStream) =
+            let state = stream.State
+            let reply: _ Reply = foldfn acc ^ stream
+            if reply.Status = Ok then loop reply.Result stream else
+            stream.BacktrackTo state 
+            let checkEnd: _ Reply = endpsr stream
+            if checkEnd.Status = Ok then 
+                stream.BacktrackTo state; Reply acc
+            else Reply (Error, checkEnd.Error)
+        loop seed
+
+(*
+    The combinator implementation of `foldParser` would be:
+
     let inline foldParser (foldfn: 'a -> Parser<'a>) (endpsr:Parser<_>) (seed:'a) =
         let rec loop (acc:'a) =
             (attempt ^ foldfn acc >>= fun result -> loop result)
             <|> (lookAhead endpsr |>> fun _ -> acc)
         loop seed
+
+    However this version is not tail recursive and will stackoverflow on large enough
+    files, thus we opt for the stream implementation instead.
+*)
 
 
 
