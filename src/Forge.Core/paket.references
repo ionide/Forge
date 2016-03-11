@@ -1,2 +1,4 @@
 FAKE
 SharpZipLib
+FSharp.Core
+FParsec

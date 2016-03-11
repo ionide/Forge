@@ -7,8 +7,9 @@ open System
 /// Defines Tracing information for TraceListeners
 type TraceData = 
     | StartMessage
-    | ImportantMessage of msg:string
+    | ImportantMessage of msg:string    
     | ErrorMessage of msg:string
+    | WarningMessage of msg:string * newline:bool
     | LogMessage of msg:string * newline:bool
     | TraceMessage of msg:string * newLine:bool
     | FinishedMessage
@@ -17,6 +18,7 @@ type TraceData =
     member x.NewLine =
         match x with
         | ImportantMessage _
+        | WarningMessage _
         | ErrorMessage _ -> Some true
         | LogMessage (_, newLine)
         | TraceMessage (_, newLine) -> Some newLine
@@ -28,6 +30,7 @@ type TraceData =
         match x with
         | ImportantMessage text
         | ErrorMessage text
+        | WarningMessage (text, _)
         | LogMessage (text, _)
         | TraceMessage (text, _) -> Some text
         | StartMessage
@@ -44,6 +47,7 @@ let colorMap traceData =
     match traceData with
     | ImportantMessage _ -> ConsoleColor.Yellow
     | ErrorMessage _ -> ConsoleColor.Red
+    | WarningMessage _ -> ConsoleColor.DarkCyan
     | LogMessage _ -> ConsoleColor.Gray
     | TraceMessage _ -> ConsoleColor.Green
     | FinishedMessage -> ConsoleColor.White
@@ -77,9 +81,11 @@ type ConsoleTraceListener(importantMessagesToStdErr, colorMap) =
             | StartMessage -> ()
             | OpenTag _ -> ()
             | CloseTag _ -> ()
-            | ImportantMessage text 
+            | ImportantMessage text             
             | ErrorMessage text ->
+                //writeText false color true text
                 writeText importantMessagesToStdErr color true text
+            | WarningMessage (text, newLine)
             | LogMessage (text, newLine) 
             | TraceMessage (text, newLine) ->
                 writeText false color newLine text
@@ -91,7 +97,7 @@ type ConsoleTraceListener(importantMessagesToStdErr, colorMap) =
 /// The default TraceListener for Console.
 let defaultConsoleTraceListener =
  // ConsoleTraceListener(importantMessagesToStdErr, colorMap)
-  ConsoleTraceListener(true, colorMap)
+  ConsoleTraceListener(false, colorMap)
 
 
 /// A List with all registered listeners

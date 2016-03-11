@@ -25,6 +25,7 @@ let Update () =
     wc.DownloadFile("https://www.nuget.org/api/v2/package/FAKE", zip )
     Unzip fakeLocation zip
 
+
 let Run args =
     let f = getFAKE ()
     if not ^ File.Exists f then Update ()

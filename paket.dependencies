@@ -2,7 +2,7 @@ framework: net45
 source https://nuget.org/api/v2
 
 nuget Argu
-nuget FSharp.Data
+nuget FSharp.Core
 nuget FSharp.Formatting
 nuget FsUnit
 nuget NUnit
@@ -10,5 +10,6 @@ nuget NUnit.Runners
 nuget FAKE
 nuget SharpZipLib
 nuget SourceLink.Fake
+nuget FParsec
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

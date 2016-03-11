@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{BF60
 		build_docs.fsx = build_docs.fsx
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
+		Reference.md = Reference.md
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
 EndProject

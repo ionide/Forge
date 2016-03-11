@@ -4,55 +4,73 @@ open System
 open Argu
 open Forge.Commands
 
-let rec consoleLoop f =
-    Console.Write("> ")
-    let input = Console.ReadLine()
-    let result = match input with
-                 | null -> 1
-                 | _ -> input.Split(' ')  |> f
-    if result > 0
-    then result
-    else consoleLoop f
+// Console Configuration
+Console.Title <- "FORGE"
+Console.OutputEncoding <- System.Text.Encoding.UTF8
 
-let handleInput (parser : ArgumentParser<_>) args =
+let defaultForeground = Console.ForegroundColor
+let defaultBackground = Console.BackgroundColor
 
-    let result = parser.Parse(inputs = args,
-                    ignoreMissing = true,
-                    ignoreUnrecognized = true,
-                    raiseOnUsage = false)
-    match result.IsUsageRequested, result.GetAllResults () with
-    | true, [] ->
-        parser.Usage("Available commands:") |> System.Console.WriteLine
-        0
-    | _, [command] ->
-        let h =
-            match command with
-            | New -> processCommand project
-            | File -> processCommand file
-            | Reference -> processCommand reference
-            | Update -> processCommand update
-            | Command.Paket -> (fun _ args -> Paket.Run args; 0)
-            | Command.Fake -> (fun _ args -> Fake.Run args; 0)
-            | Refresh -> (fun _ _ -> Templates.Refresh (); 0)
-            | Help -> (fun _ _ -> parser.Usage "Avaliable commands" |> Console.WriteLine; 0)
-            | Exit -> (fun _ _ -> 1)
-        let args = args.[1 ..]
-        h command args
-    | _, [] ->
-        System.Console.WriteLine "Command was:"
-        System.Console.WriteLine ("  " + String.Join(" ", args))
-        parser.Usage "Available commands:" |> System.Console.WriteLine
-        0
-    | _ ->
-        System.Console.WriteLine "Expected only one command"
-        parser.Usage "Available commands:" |> System.Console.WriteLine
-        0
+let red         = ConsoleColor.Red
+let darkRed     = ConsoleColor.DarkRed
+let blue        = ConsoleColor.Blue
+let darkBlue    = ConsoleColor.DarkBlue
+let darkCyan    = ConsoleColor.DarkCyan
+let cyan        = ConsoleColor.Cyan
+let grey        = ConsoleColor.Gray
+let darkGrey    = ConsoleColor.DarkGray
+let darkGreen   = ConsoleColor.DarkGreen
+let darkMagenta = ConsoleColor.DarkMagenta
+let green       = ConsoleColor.Green
+
+let parser = ArgumentParser.Create<Command>()
+
+let write color (msg:string) =  
+    Console.ForegroundColor <- color
+    Console.Write msg
+    Console.ForegroundColor <- defaultForeground
+
+let writeln color (msg:string) =  
+    Console.ForegroundColor <- color
+    Console.WriteLine msg
+    Console.ForegroundColor <- defaultForeground
+
+
+
+let highlight fcol bcol (msg:string) =
+    Console.ForegroundColor <- fcol
+    Console.BackgroundColor <- bcol
+    Console.Write msg
+    Console.ForegroundColor <- defaultForeground
+    Console.BackgroundColor <- defaultBackground
+
+let highlightln fcol bcol (msg:string) =    
+    Console.ForegroundColor <- fcol
+    Console.BackgroundColor <- bcol
+    Console.WriteLine msg
+    Console.ForegroundColor <- defaultForeground
+    Console.BackgroundColor <- defaultBackground
+    
+
+let rec consoleLoop () =
+    write   green Environment.CurrentDirectory
+    writeln darkRed " [-FORGE-] "
+    Console.Write "λ "
+
+    match Console.ReadLine() with
+    | null  -> Result.Exit
+    | input -> input.Split ' '  |> interactive
+    |> function
+    | Continue    -> consoleLoop ()
+    | Result.Exit -> 1
 
 [<EntryPoint>]
 let main argv =
-    let parser = ArgumentParser.Create<Command>()
-    if argv |> Array.isEmpty
-    then
-        parser.Usage "Available commands:" |> System.Console.WriteLine
-        consoleLoop ^ handleInput parser
-    else handleInput parser argv
+    match argv with
+    | [||] ->
+        writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
+        consoleLoop ()
+    | _ ->        
+        match singlePass argv with
+        | Continue -> consoleLoop ()
+        | Result.Exit -> 1
