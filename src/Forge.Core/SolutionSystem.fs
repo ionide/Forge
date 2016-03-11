@@ -453,9 +453,10 @@ module Parsers =
 
     let inline foldParser (foldfn: 'a -> Parser<'a>) (endpsr:Parser<_>) (seed:'a) =
         let rec loop (acc:'a) =
-            (foldfn acc >>= fun result -> loop result)
-            <|> (endpsr |>> fun _ -> acc)
+            (attempt ^ foldfn acc >>= fun result -> loop result)
+            <|> (lookAhead endpsr |>> fun _ -> acc)
         loop seed
+
 
 
     let foldSections sln :Parser<_> = foldParser sectionSwitch (spaces >>. pEndGlobal) sln
