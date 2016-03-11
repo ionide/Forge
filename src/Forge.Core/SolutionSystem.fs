@@ -2,6 +2,9 @@ module Forge.SolutionSystem
 
 open System
 open System.IO
+open System.Text
+open Forge
+open Forge.ProjectSystem
 open FParsec
 
 
@@ -12,28 +15,13 @@ type Parser<'t> = Parser<'t, UserState>
 /// Sets the platform for a Build Configuration
 ///     x86,  x64, or AnyCPU.
 /// The default is AnyCPU.
-type PlatformType =
-    | X86 |  X64 | AnyCPU
 
-    override self.ToString () = self |> function
-        | X86     -> Constants.X86
-        | X64     -> Constants.X64
-        | AnyCPU  -> Constants.AnyCPU
 
-    static member Parse text = text |> function
-        | InvariantEqual Constants.X86     -> X86
-        | InvariantEqual Constants.X64     -> X64
-        | InvariantEqual "Any CPU"
-        | InvariantEqual Constants.AnyCPU  -> AnyCPU
-        | _ ->
-            failwithf "Could not parse '%s' into a `PlatformType`" text
+let [<Literal>] FolderGuidString = "2150E333-8FDC-42A3-9474-1A3956D46DE8"
+let FolderGuid = Guid "2150E333-8FDC-42A3-9474-1A3956D46DE8"
 
-    static member TryParse text = text |> function
-        | InvariantEqual Constants.X86     -> Some X86
-        | InvariantEqual Constants.X64     -> Some X64
-        | InvariantEqual "Any CPU"
-        | InvariantEqual Constants.AnyCPU  -> Some AnyCPU
-        | _ -> None
+let sectionIndent = String.replicate 4 " "
+let itemIndent = String.replicate 8 " "
 
 
 type PreProjectAttribute    () = inherit Attribute() 
@@ -41,7 +29,11 @@ type PostProjectAttribute   () = inherit Attribute()
 type PreSolutionAttribute   () = inherit Attribute() 
 type PostSolutionAttribute  () = inherit Attribute() 
 
-type SolutionItem = { Name:string; Path:string }
+type SolutionItem = 
+    { Name:string; Path:string }
+    member self.ToSln() =
+        sprintf "%s = %s" self.Name self.Path
+
 
 type SolutionFolder = 
     {   ProjectTypeGuid     : Guid  // {2150E333-8FDC-42A3-9474-1A3956D46DE8}
@@ -52,6 +44,26 @@ type SolutionFolder =
         SolutionItems       : SolutionItem list
     }
 
+    member self.ToSln() =
+        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper() 
+        let idGuid = self.Guid.ToString().ToUpper()
+        let header = 
+            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n" 
+                typeGuid self.Name self.Path idGuid
+
+        if self.SolutionItems = [] then header + "EndProject\n" else
+        let sb = StringBuilder()
+
+        self.SolutionItems |> List.iter (fun item -> 
+            itemIndent +  item.ToSln() |> sb.AppendLine |> ignore)
+        let sectionHeader = "ProjectSection(SolutionItems) = preProject\n"
+        sb  .Insert(0,sectionIndent + sectionHeader)
+            .AppendLine(sectionIndent + "EndProjectSection")
+            .Insert(0,header) 
+            .AppendLine("EndProject")
+        |> string
+
+
 type Project =
     {   ProjectTypeGuid     : Guid
         Name                : string
@@ -61,7 +73,40 @@ type Project =
         Dependecies         : Guid list
     }
 
-type SolutionConfiguration = { Name:string; Platform:PlatformType }
+    member self.ToSln() =
+        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper() 
+        let idGuid = self.Guid.ToString().ToUpper()
+
+        let dependencyString (guid:Guid) =
+            let guidstr = guid.ToString().ToUpper()
+            sprintf "{%s} = {%s}\n" guidstr guidstr
+
+        let header = 
+            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n" 
+                typeGuid self.Name self.Path idGuid
+
+        if self.Dependecies = [] then header + "EndProject\n" else
+        let sb = StringBuilder()
+
+        self.Dependecies |> List.iter (fun guid -> 
+            sectionIndent + dependencyString guid |> sb.Append |> ignore)
+        let sectionHeader = "ProjectSection(ProjectDependencies) = postProject\n"
+        sb  .Insert(0,sectionIndent + sectionHeader)
+            .AppendLine(sectionIndent + "EndProjectSection")
+            .Insert(0,header) 
+            .AppendLine("EndProject")
+        |> string
+
+
+type SolutionConfiguration = 
+    { Name:string; Platform:PlatformType }
+
+    member self.ToSln() =
+        let platfomStr = self.Platform |> function
+            | AnyCPU -> "Any CPU"
+            | x      -> string x
+        sprintf "%s|%s = %s|%s\n" self.Name platfomStr self.Name platfomStr
+
 
 type BuildProperty = 
     | ActiveCfg | Build0
@@ -70,6 +115,9 @@ type BuildProperty =
         | InvariantEqual "Build.0" -> Build0
         | _ ->
             failwithf "Could not parse '%s' into a `PlatformType`" text
+    override self.ToString() = self |> function
+        | ActiveCfg -> "ActiveCfg"
+        | Build0    -> "Build.0"
 
 
 type ProjectConfiguration =
@@ -79,9 +127,29 @@ type ProjectConfiguration =
         Platform      : PlatformType
     }
 
-type SolutionProperty = { Name:string; Value:string }
+    member self.ToSln() =
+        let guidStr = self.ProjectGuid.ToString().ToUpper()
+        let buildStr = string self.BuildProperty
+        let platfomStr = self.Platform |> function
+            | AnyCPU -> "Any CPU"
+            | x      -> string x
+        sprintf "{%s}.%s|%s.%s = %s|%s\n"
+            guidStr self.ConfigName platfomStr buildStr self.ConfigName buildStr
 
-type NestedProject = { Project : Guid; Parent : Guid }
+
+type SolutionProperty = 
+    { Name:string; Value:string }
+    member self.ToSln() =
+        sprintf "%s = %s\n" self.Name self.Value
+
+
+type NestedProject = 
+    { Project : Guid; Parent : Guid }
+    member self.ToSln() =
+        let projectGuid = self.Project.ToString().ToUpper()
+        let parentGuid  = self.Parent.ToString().ToUpper()
+        sprintf "{%s} = {%s}\n" projectGuid parentGuid
+
 
 type Solution = 
     {   Header : string
@@ -92,6 +160,7 @@ type Solution =
         [<PreSolution>]  SolutionProperties : SolutionProperty list
         [<PreSolution>]  NestedProjects : NestedProject list
     }
+
     static member Empty = 
         {   Header  = ""
             Folders = []
@@ -102,11 +171,95 @@ type Solution =
             NestedProjects = []
         }
 
+    member self.ToSln() =
+        let sb = StringBuilder()
+        sb.AppendLine self.Header |> ignore
+        self.Projects |> List.iter(fun p -> p.ToSln()|>sb.Append|>ignore)
+        self.Folders  |> List.iter(fun p -> p.ToSln()|>sb.Append|>ignore)
+        sb.AppendLine("Global")
+            .AppendLine(sectionIndent + "GlobalSection(SolutionConfigurationPlatforms) = preSolution")|> ignore
+        self.SolutionConfigurationPlatforms
+            |> List.iter(fun cp -> itemIndent + cp.ToSln() |> sb.Append|>ignore)
+        sb.AppendLine(sectionIndent + "EndGlobalSection")
+            .AppendLine(sectionIndent + "GlobalSection(ProjectConfigurationPlatforms) = postSolution")|> ignore
+        self.ProjectConfigurationPlatforms
+            |> List.iter(fun pp -> itemIndent + pp.ToSln() |> sb.Append|>ignore)
+        sb.AppendLine(sectionIndent + "EndGlobalSection")
+            .AppendLine(sectionIndent + "GlobalSection(SolutionProperties) = preSolution")|> ignore
+        self.SolutionProperties
+            |> List.iter(fun sp -> itemIndent + sp.ToSln() |> sb.Append|>ignore)
+        sb.AppendLine(sectionIndent + "EndGlobalSection")
+            .AppendLine(sectionIndent + "GlobalSection(NestedProjects) = preSolution")|> ignore
+        self.NestedProjects
+            |> List.iter(fun np -> itemIndent + np.ToSln() |> sb.Append|>ignore)
+        sb.AppendLine(sectionIndent + "EndGlobalSection")
+            .AppendLine("EndGlobal")
+        |> string
+
+
+//  Functionality to Add
+//  
+//  - Add new folder
+//  - add item to folder
+//  - add new project
+//  - add project to folder
+//  - add existing project
+//  - move item inside solution
+//  - remove item from solution
+//  - remove project from solution
+//  - remove folder from solution, recursive removal
+//  - show dependency tree / build order
+//  - set project build order
+//  - check for cyclic dependencies 
+//  - add/remove solution build configuration
+//  - unload/reload project
+//  - getinfo on solution item
+//
+
+(*  Notes -
+    - paths in the solution file are all relative to the location of the .sln
+    - folders can't have the same name as project files
+    - projects must have unique names (globally)
+    - files must have unique names project/folder scope
+*)
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module SolutionFolder =
+    
+    let create name =
+        {   ProjectTypeGuid = FolderGuid
+            Name  = name
+            Path  = name
+            Guid  = Guid.NewGuid()
+            SolutionItems = []
+        }
+
+    let rename name (folder:SolutionFolder) =
+        { folder with Name = name; Path = name }
+
+
+    let addItem name (folder:SolutionFolder) =
+        if folder.SolutionItems |> List.exists 
+            (fun si -> String.equalsIgnoreCase si.Name name) then
+            failwithf "The Solution Folder '%s' already contains an item named '%s'" folder.Name name
+        else
+        { folder with
+            SolutionItems = {SolutionItem.Name = name; Path=name}::folder.SolutionItems}
+
+    let removeItem name (folder:SolutionFolder) =
+        let items = 
+            folder.SolutionItems |> List.filter
+                (fun si -> String.equalsIgnoreCase si.Name name) 
+        { folder with SolutionItems = items }
+
+
+
+
+
 
 [<AutoOpen>]
 module internal Parsers =
-    let [<Literal>] FolderGuidString = "2150E333-8FDC-42A3-9474-1A3956D46DE8"
-    let FolderGuid = Guid "2150E333-8FDC-42A3-9474-1A3956D46DE8"
+    
 
     type UserState = unit
     type Parser<'t> = Parser<'t, UserState>

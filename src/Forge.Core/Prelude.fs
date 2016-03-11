@@ -114,6 +114,9 @@ let environVars target =
 //=====================================================
 [<RequireQualifiedAccess>]
 module String =
+
+    let equalsIgnoreCase (str1:string) (str2:string) =
+        String.Compare(str1,str2,StringComparison.OrdinalIgnoreCase) = 0
     /// Converts a sequence of strings to a string with delimiters
     let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
 

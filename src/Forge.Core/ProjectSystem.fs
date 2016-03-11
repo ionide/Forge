@@ -21,7 +21,6 @@ open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
 open Forge
-open Forge.SolutionSystem
 
 (*  Project System AST
     ==================
@@ -60,10 +59,28 @@ open Forge.SolutionSystem
     These will map to XML elements and attributes in the .fsproj file
 *)
 
+type PlatformType =
+    | X86 |  X64 | AnyCPU
 
+    override self.ToString () = self |> function
+        | X86     -> Constants.X86
+        | X64     -> Constants.X64
+        | AnyCPU  -> Constants.AnyCPU
 
+    static member Parse text = text |> function
+        | InvariantEqual Constants.X86     -> X86
+        | InvariantEqual Constants.X64     -> X64
+        | InvariantEqual "Any CPU"
+        | InvariantEqual Constants.AnyCPU  -> AnyCPU
+        | _ ->
+            failwithf "Could not parse '%s' into a `PlatformType`" text
 
-
+    static member TryParse text = text |> function
+        | InvariantEqual Constants.X86     -> Some X86
+        | InvariantEqual Constants.X64     -> Some X64
+        | InvariantEqual "Any CPU"
+        | InvariantEqual Constants.AnyCPU  -> Some AnyCPU
+        | _ -> None
 
 
 [<RequireQualifiedAccess>]
