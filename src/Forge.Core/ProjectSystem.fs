@@ -210,6 +210,9 @@ type WarningLevel (x:int) =
     member __.Value =
         if x < 0 then 0 elif x > 5 then 5 else x
 
+    override self.ToString() = 
+        self.Value.ToString()
+
 
 let inline toXElem x = (^a:(member ToXElem:unit->'b) x)
 
