@@ -515,7 +515,7 @@ type SourceTree (files:SourceFile list) =
             traceWarning ^ sprintf "target directory '%s' is not found in the project tree" target
             false
         elif data.ContainsKey target then true else
-        traceWarning ^ sprintf "target file '%s' is doest not exist in the project" target
+        traceWarning ^ sprintf "target file '%s' does not exist in the project" target
         false
 
     let moveFile shift target =
