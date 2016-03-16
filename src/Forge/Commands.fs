@@ -56,7 +56,7 @@ type Command =
             | Move -> "<file|folder> Move the file or folder within the project hierarchy"
             | Remove -> "<file|reference> Removes file or refrence"
             | Rename -> "<project|file> Renames file or project"
-            | List -> "<project|file|reference|templates|gac> List files or refrences"
+            | List -> "<project|files|reference|templates|gac> List files or refrences"
             | Update -> "<paket|fake> Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
