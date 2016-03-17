@@ -343,7 +343,7 @@ type ListProjectsArgs =
             | Folder _ -> "List the projects in this directory"
 
 type ListGacArgs =
-    | [<CLIAlt "gac">] GAC of string
+    | [<CLIArg "gac">] GAC of string
 
     interface IArgParserTemplate with
         member this.Usage = "List all assemblies in the GAC"
