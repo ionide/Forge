@@ -342,6 +342,9 @@ type ListProjectsArgs =
             | Solution _ -> "List the projects in this solution"
             | Folder _ -> "List the projects in this directory"
 
+type ListGacArgs =
+    interface IArgParserTemplate with
+        member this.Usage = "List all assemblies in the GAC"
 
 //-----------------------------------------------------------------
 // Move commands
@@ -636,6 +639,12 @@ let listProject cont (results : ParseResults<ListProjectsArgs>) =
         return cont
     }
 
+let listGac cont (results : ParseResults<ListGacArgs>) =
+    maybe {
+        GacSearch.searchGac
+        |> ignore
+        return cont
+    }
 
 let processList cont args =
     match subCommandArgs args with
@@ -644,7 +653,7 @@ let processList cont args =
         | ListCommands.Project   -> execCommand (listProject cont) subArgs
         | ListCommands.File      -> execCommand (listFiles cont) subArgs
         | ListCommands.Reference -> execCommand (listReferences cont) subArgs
-        | ListCommands.GAC       -> traceWarning "not implemented yet"; Some cont
+        | ListCommands.GAC       -> execCommand (listGac cont) subArgs
         | ListCommands.Templates -> traceWarning "not implemented yet"; Some cont
     | _ -> Some cont
 
