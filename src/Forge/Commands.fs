@@ -636,6 +636,11 @@ let listProject cont (results : ParseResults<ListProjectsArgs>) =
         return cont
     }
 
+let listTemplates () =
+    Forge.Templates.GetList()
+    |> Seq.iter trace
+
+
 
 let processList cont args =
     match subCommandArgs args with
@@ -645,7 +650,7 @@ let processList cont args =
         | ListCommands.File      -> execCommand (listFiles cont) subArgs
         | ListCommands.Reference -> execCommand (listReferences cont) subArgs
         | ListCommands.GAC       -> traceWarning "not implemented yet"; Some cont
-        | ListCommands.Templates -> traceWarning "not implemented yet"; Some cont
+        | ListCommands.Templates -> listTemplates(); Some cont
     | _ -> Some cont
 
 //-----------------------------------------------------------------
