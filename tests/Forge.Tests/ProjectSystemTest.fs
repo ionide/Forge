@@ -46,30 +46,6 @@ let ``ProjectSystem - add new file``() =
 
 
 [<Test>]
-let ``ProjectSystem - add new file above`` () =
-    let pf = FsProject.parse astInput
-    let f = {SourceFile.Include = "Test.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.addAbove "a_file.fs" f pf
-    let files = pf'.SourceFiles.AllFiles()
-    let theFile = let tf = files |> Seq.toList in tf.[2]
-    TestContext.WriteLine (sprintf "%A" files)
-    files |> Seq.length |> should be (equal 4)
-    theFile |> should be (equal f)
-
-
-[<Test>]
-let ``ProjectSystem - add new file below`` () =
-    let pf = FsProject.parse astInput
-    let f = {SourceFile.Include = "Test.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.addBelow "a_file.fs" f pf
-    let files = pf'.SourceFiles.AllFiles()
-    let theFile = let tf = files |> Seq.toList in tf.[tf.Length - 1]
-    TestContext.WriteLine (sprintf "%A" files)
-    files |> Seq.length |> should be (equal 4)
-    theFile |> should be (equal f)
-
-
-[<Test>]
 let ``ProjectSystem - add duplicate file``() =
     let pf = FsProject.parse astInput
     let f = {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
@@ -77,16 +53,6 @@ let ``ProjectSystem - add duplicate file``() =
     let files = pf'.SourceFiles.AllFiles()
     TestContext.WriteLine (sprintf "%A" files)
     pf'.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
-
-
-[<Test>]
-let ``ProjectSystem - remove directory`` () =
-    let pf = FsProject.parse astInput
-    let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    let pf' = FsProject.addSourceFile "/test" f pf
-    TestContext.WriteLine (sprintf "With Directory: %A" pf')
-    let pf'' = FsProject.removeDirectory "test" pf'
-    pf''.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
 
 
 [<Test>]
@@ -106,22 +72,11 @@ let ``ProjectSystem - remove not existing file``() =
 
 
 [<Test>]
-let ``ProjectSystem - order file (moveUp)``() =
+let ``ProjectSystem - order file``() =
     let pf = FsProject.parse astInput
     let pf' = pf |> FsProject.moveUp "a_file.fs" |> FsProject.moveUp "a_file.fs" 
     let files = pf'.SourceFiles.AllFiles()
     files |> Seq.head |> should be (equal "a_file.fs")
-    files |> Seq.length |> should be (equal 3)
-
-
-[<Test>]
-let ``ProjectSystem - order file (moveDown)`` () =
-    let pf = FsProject.parse astInput
-    let pf' = pf |> FsProject.moveDown "FixProject.fs" |> FsProject.moveDown "FixProject.fs"
-    let files = pf'.SourceFiles.AllFiles()
-    // for case insensitivity
-    let filename = ("FixProject.fs").ToLower()
-    files |> Seq.rev |> Seq.head |> should be (equal filename)
     files |> Seq.length |> should be (equal 3)
 
 
