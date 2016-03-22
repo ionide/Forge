@@ -1028,7 +1028,7 @@ module FsProject =
 
     let addReference (refr:Reference) (proj:FsProject) =
         if proj.References |> ResizeArray.contains refr then
-            traceWarning "already contrains this reference"
+            traceWarning "already contains this reference"
             proj
         else
         { proj with References = ResizeArray.add refr proj.References }
