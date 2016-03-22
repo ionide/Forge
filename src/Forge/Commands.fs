@@ -643,8 +643,10 @@ let listProject cont (results : ParseResults<ListProjectsArgs>) =
 
 let listGac cont (results : ParseResults<ListGacArgs>) =
     maybe {
-        GacSearch.searchGac
+        GacSearch.searchGac ()
+        |> Seq.iter(fun a -> trace a.FullName)
         |> ignore
+
         return cont
     }
 
