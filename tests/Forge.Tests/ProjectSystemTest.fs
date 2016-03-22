@@ -110,3 +110,14 @@ let ``ProjectSystem - remove not existing reference``() =
     let r = {Reference.Empty with Include = "System.Xml"}
     let pf' = FsProject.removeReference r pf
     pf'.References |> Seq.length |> should be (equal 5)
+
+[<Test>]
+let ``ProjectSystem - rename project``() =
+    let pf = FsProject.parse astInput
+    let pf' = FsProject.renameProject "TestRename" pf
+    let s = pf'.Settings
+    let df = pf'.BuildConfigs |> List.pick (fun cfg -> cfg.Documentationfile.Data) |> Some
+    s.AssemblyName.Data |> should be (equal ^ Some "TestRename")
+    s.RootNamespace.Data |> should be (equal ^ Some "TestRename")
+    df |> should be (equal ^ Some "TestRename")
+
