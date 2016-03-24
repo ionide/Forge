@@ -15,7 +15,7 @@
      paket <string>               - Runs Paket with given arguments
      fake <string>                - Runs FAKE with given arguments
      refresh                      - Refreshes the template cache
-     list gac                     - Lists out all assemblies that is in the Global Assembly Cache
+     list gac                     - Lists out all assemblies that are in the Global Assembly Cache
      help                         - Displays this help
      exit                         - Exit interactive mode
 
