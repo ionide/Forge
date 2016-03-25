@@ -405,11 +405,10 @@ module internal PathHelpers =
     let normalizeFileName (fileName : string) =
         let file = if (fileName = (Path.DirectorySeparatorChar |> string)) 
                    then fileName
-                   else fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()
+                   else fileName.Replace(@"\", "/").ToLower()
         match file with
         | "/" -> "/"
         | f -> f.TrimStart '/'
-
 
     let hasRoot (path:string) =
         match Path.GetDirectoryName path with
@@ -499,8 +498,9 @@ type SourceTree (files:SourceFile list) =
 
     do
         files |> List.map (fun x ->
-            let path = normalizeFileName x.Include
-            data.Add (path, {x with Include = path})
+            let path = Option.getOrElse x.Include x.Link |> normalizeFileName
+            let file = {x with Include = normalizeFileName x.Include; Link = Option.map normalizeFileName x.Link}
+            data.Add (path, file)
             path)
         |> treeOrder
         |> List.iter (fun (dir,files) ->
@@ -643,13 +643,18 @@ type SourceTree (files:SourceFile list) =
         if   not ^ hasTarget dir then ()
         elif not ^ checkFile newName "is not a valid file name" then () else
         let parent = getParentDir dir
+        
+        let pointTo newFile sourceFile =
+            match sourceFile.Link with
+            | Some(_) -> {sourceFile with Link = Some newFile}
+            | None -> {sourceFile with Include = newFile}
 
         let rec updateLoop oldDir newDir (keys:ResizeArray<string>) =
             let subDirs,files = keys |> ResizeArray.partition (fun x -> x.EndsWith "/")
             // update the Include paths and keys in SorceFiles inside this Dir
             files |> ResizeArray.iter (fun file ->
                 if data.ContainsKey (oldDir+file) then
-                    let srcFile = {data.[oldDir+file] with Include = newDir+file}
+                    let srcFile = data.[oldDir + file] |> pointTo (newDir + file)
                     data.Remove (oldDir+file) |> ignore
                     data.[newDir+file] <- srcFile
             )
