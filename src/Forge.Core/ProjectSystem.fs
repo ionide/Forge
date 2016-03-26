@@ -651,7 +651,7 @@ type SourceTree (files:SourceFile list) =
 
         let rec updateLoop oldDir newDir (keys:ResizeArray<string>) =
             let subDirs,files = keys |> ResizeArray.partition (fun x -> x.EndsWith "/")
-            // update the Include paths and keys in SorceFiles inside this Dir
+            // update the Include or Link paths and keys in SorceFiles inside this Dir
             files |> ResizeArray.iter (fun file ->
                 if data.ContainsKey (oldDir+file) then
                     let srcFile = data.[oldDir + file] |> pointTo (newDir + file)
@@ -684,19 +684,19 @@ type SourceTree (files:SourceFile list) =
 
     member __.DirContents (dir:string) =
         let dir = fixDir dir
-        if  not ^ hasTarget dir then Seq.empty else
         let rec loop dir (arr:ResizeArray<string>) =
+            let dir = if dir = "/" then String.Empty else dir
             seq { for x in arr do
-                    if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
-                    elif data.ContainsKey (dir+x) then
-                        yield data.[dir+x].Include
+                    let path = dir + x
+                    if isDirectory x then yield! loop path (tree.[path])
+                    elif data.ContainsKey path then
+                        yield path
             }
         if not ^ tree.ContainsKey dir then Seq.empty else
         let arr = tree.[dir]
-        loop "" arr
-
+        loop dir arr
+        
     member self.AllFiles() = self.DirContents "/"
-
 
     member __.Data with get() = data
     member __.Tree with get() = tree
@@ -1024,7 +1024,6 @@ type FsProject =
             ProjectReferences = projectReferences |> List.ofSeq
             BuildConfigs      = buildconfigs
         }
-
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
