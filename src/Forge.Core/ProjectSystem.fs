@@ -1,6 +1,6 @@
 ﻿#if INTERACTIVE
 /// Contains project file comparion tools for MSBuild project files.
-#r "bin/Release/Forge.Core.dll"
+#r "bin/Debug/Forge.Core.dll"
 #r "System.Xml.Linq"
 //#load "Prelude.fs"
 //#load "XLinq.fs"
@@ -469,20 +469,22 @@ module internal PathHelpers =
 
     let treeOrder (paths:string list) =
         let paths = paths |> List.map normalizeFileName
-        let rootOrder = ("/", dirOrder paths)
-        let rec loop root acc paths =
-            match List.filter hasRoot paths with
-            | [] -> acc
-            | ps ->
-                let r = List.head ps |> getRoot
-                let ordered =
-                    ps |> List.groupBy getRoot
-                    |> List.map (fun (dir,elems) ->
-                        root+dir, dirOrder (elems |> List.map removeRoot)
-                    )
-                loop (root+r) (ordered@acc) (ps |> List.map removeRoot)
-        loop "" [rootOrder] paths
-        |> List.rev
+        let normalize root = if root = "" then "/" else root
+        
+        let rec loop root paths = 
+            let pathsDeeper = paths |> List.filter hasRoot
+            let directChildren = dirOrder paths
+
+            let subTree =
+                pathsDeeper
+                |> List.groupBy getRoot
+                |> List.collect (fun (dir, entries) -> entries |> List.map removeRoot |> loop (root + dir))
+
+            if directChildren.IsEmpty then subTree
+            else [normalize root, directChildren] @ subTree
+
+        loop "" paths
+
 
     let checkFile (path:string) (warning:string) =
         if isValidPath path then true else
@@ -670,7 +672,7 @@ type SourceTree (files:SourceFile list) =
         // update the name in the directory's parent
         if tree.ContainsKey parent  then
             let arr = tree.[parent]
-            let idx = ResizeArray.findIndex ((=) dir) arr
+            let idx = ResizeArray.findIndex ((=) ^ removeParentDir dir) arr
             arr.[idx] <- newName
             tree.[parent] <- arr
 
