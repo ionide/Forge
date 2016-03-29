@@ -161,6 +161,20 @@ module String =
         | -1    -> str
         | num   -> str.Substring(0,num)
 
+    let inline private min3(a,b,c) = min a (min b c)
+    let inline private distanceCalc (m, u) (n, v) =
+        let d1 = Array.init n id
+        let d0 = Array.create n 0
+        for i=1 to m-1 do
+            d0.[0] <- i
+            let ui = u i
+            for j=1 to n-1 do
+                d0.[j] <- 1 + min3(d1.[j], d0.[j-1], d1.[j-1] + if ui = v j then -1 else 0)
+            Array.blit d0 0 d1 0 n
+        d0.[n-1]
+
+    let editDistance (s: string) (t: string) =
+        distanceCalc (s.Length, fun i -> s.[i]) (t.Length, fun i -> t.[i])
 
 // Process Helpers
 //=====================================================

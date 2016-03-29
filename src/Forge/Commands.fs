@@ -292,6 +292,7 @@ type ListCommands =
     | [<First>][<CLIArg "projects">] Project
     | [<First>][<CLIArg "gac">] GAC
     | [<First>][<CLIArg "templates">] Templates
+    | [<CLIArg "--filter">] Filter of string
     interface IArgParserTemplate with
         member this.Usage =
             match this with
@@ -300,6 +301,7 @@ type ListCommands =
             | Project -> "List projects in solution"
             | Templates -> "List the templates in Forge's cache"
             | GAC -> "List the assembilies in the Global Assembly Cache"
+            | Filter _ -> "Filter list via fuzzy search for this string"
 
 
 type ListFilters =
@@ -316,31 +318,37 @@ type ListFilters =
 type ListFilesArgs =
     | [<CLIAlt "-p">] Project of string
     | [<CLIAlt "-s">] Solution of string
+    | [<CLIArg "--filter">] Filter of string
 
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Project _ -> "List the files in this project"
             | Solution _ -> "List the files in solution folders"
+            | Filter _ -> "Filter list via fuzzy search for this string"
 
 
 type ListReferencesArgs =
     | [<CLIAlt "-p">] Project of string
+    | [<CLIArg "--filter">] Filter of string
 
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Project _ -> "List the refrences in this project"
+            | Filter _ -> "Filter list via fuzzy search for this string"
 
 
 type ListProjectsArgs =
     | [<CLIAlt "-s">] Solution of string
     | [<CLIAlt ("dir")>] Folder of string
+    | [<CLIArg "--filter">] Filter of string
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Solution _ -> "List the projects in this solution"
             | Folder _ -> "List the projects in this directory"
+            | Filter _ -> "Filter list via fuzzy search for this string"
 
 
 //-----------------------------------------------------------------
@@ -609,11 +617,13 @@ let processRename cont args =
 // List Command Handlers
 //-----------------------------------------------------------------
 
+
 let listFiles cont (results : ParseResults<ListFilesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListFilesArgs.Project @>
+        let filter = results.TryGetResult <@ ListFilesArgs.Filter @>
         Furnace.loadFsProject proj
-        |> Furnace.listSourceFiles
+        |> (Furnace.listSourceFiles filter)
         |> ignore
         return cont
     }
@@ -622,8 +632,9 @@ let listFiles cont (results : ParseResults<ListFilesArgs>) =
 let listReferences cont (results : ParseResults<ListReferencesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListReferencesArgs.Project @>
+        let filter = results.TryGetResult <@ ListReferencesArgs.Filter @>
         Furnace.loadFsProject proj
-        |> Furnace.listReferences
+        |> (Furnace.listReferences filter)
         |> ignore
         return cont
     }
@@ -632,6 +643,7 @@ let listReferences cont (results : ParseResults<ListReferencesArgs>) =
 let listProject cont (results : ParseResults<ListProjectsArgs>) =
     maybe {
         let! solution = results.TryGetResult <@ ListProjectsArgs.Solution @>
+        let filter = results.TryGetResult <@ ListProjectsArgs.Filter @>
         traceWarning "not implemented yet" //TODO
         return cont
     }
@@ -708,20 +720,20 @@ let strikeForge args (cont:Result) =
         match res.GetAllResults() with
         | [cmd] ->
             try
-            let subArgs = args.[1 ..]
-            subArgs |>
-            match cmd with
-            | Command.New -> processNew cont
-            | Add -> processAdd cont
-            | Remove -> processRemove cont
-            | Command.Rename -> processRename cont
-            | List -> processList cont
-            | Move -> processMove cont
-            | Update -> processUpdate cont
-            | Command.Fake -> fun a -> Fake.Run a; Some cont
-            | Command.Paket -> fun a -> Paket.Run a; Some cont
-            | Refresh -> fun _ -> Templates.Refresh (); Some cont
-            | Exit -> fun _ -> Some Result.Exit
+                let subArgs = args.[1 ..]
+                subArgs |>
+                match cmd with
+                | Command.New -> processNew cont
+                | Add -> processAdd cont
+                | Remove -> processRemove cont
+                | Command.Rename -> processRename cont
+                | List -> processList cont
+                | Move -> processMove cont
+                | Update -> processUpdate cont
+                | Command.Fake -> fun a -> Fake.Run a; Some cont
+                | Command.Paket -> fun a -> Paket.Run a; Some cont
+                | Refresh -> fun _ -> Templates.Refresh (); Some cont
+                | Exit -> fun _ -> Some Result.Exit
             with
             | _ ->
                 printfn "Unrecognized command or missing required parameter\n"
