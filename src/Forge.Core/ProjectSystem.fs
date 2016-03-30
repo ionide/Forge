@@ -765,6 +765,7 @@ type ProjectSettings =
         TargetFrameworkProfile       : Property<string>
         AutoGenerateBindingRedirects : Property<bool>
         TargetFSharpCoreVersion      : Property<string>
+        DocumentationFile            : Property<string>
     }
 
     static member fromXElem (xelem:XElement) =
@@ -807,6 +808,7 @@ type ProjectSettings =
             TargetFrameworkProfile       = elem    Constants.TargetFrameworkProfile
             AutoGenerateBindingRedirects = elemmap Constants.AutoGenerateBindingRedirects Boolean.Parse
             TargetFSharpCoreVersion      = elem    Constants.TargetFSharpCoreVersion
+            DocumentationFile            = elem    Constants.DocumentationFile
         }
 
         member self.ToXElem () =
@@ -824,6 +826,7 @@ type ProjectSettings =
             |> XElem.addElement ^ toXElem self.TargetFrameworkProfile
             |> XElem.addElement ^ toXElem self.AutoGenerateBindingRedirects
             |> XElem.addElement ^ toXElem self.TargetFSharpCoreVersion
+            |> XElem.addElement ^ toXElem self.DocumentationFile
 
 
 // parse the condition strings in property groups to create config settings
@@ -840,7 +843,6 @@ type ConfigSettings =
         CompilationConstants : Property<string list>
         WarningLevel         : Property<WarningLevel>
         PlatformTarget       : Property<PlatformType>
-        Documentationfile    : Property<string>
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
     }
@@ -855,7 +857,6 @@ type ConfigSettings =
             CompilationConstants = property Constants.CompilationConstants ["DEBUG;TRACE"]
             WarningLevel         = property Constants.WarningLevel ^ WarningLevel 3
             PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
-            Documentationfile    = property Constants.DocumentationFile ""
             Prefer32Bit          = property Constants.Prefer32Bit false
             OtherFlags           = property Constants.OtherFlags []
         }
@@ -896,7 +897,6 @@ type ConfigSettings =
             CompilationConstants = elemmap Constants.CompilationConstants split
             WarningLevel         = elemmap Constants.WarningLevel (Int32.Parse>>WarningLevel)
             PlatformTarget       = elemmap Constants.PlatformTarget PlatformType.Parse
-            Documentationfile    = elem    Constants.DocumentationFile
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
         }
@@ -913,7 +913,6 @@ type ConfigSettings =
         |> XElem.addElement ^ toXElem self.CompilationConstants
         |> XElem.addElement ^ toXElem self.WarningLevel
         |> XElem.addElement ^ toXElem self.PlatformTarget
-        |> XElem.addElement ^ toXElem self.Documentationfile
         |> XElem.addElement ^ toXElem self.Prefer32Bit
         |> XElem.addElement ^ toXElem self.OtherFlags
 
@@ -1109,6 +1108,20 @@ module FsProject =
         File.WriteAllText(path,proj.ToXmlString())
         with
         | ex -> traceException ex
+
+    let renameProject name (proj:FsProject) =
+        let s = proj.Settings
+        let b = proj.BuildConfigs
+        //let docFile = b |> List.tryFind (fun cfg -> cfg.Documentationfile.Data.Value = name)
+        if Some name = s.AssemblyName.Data || Some name = s.RootNamespace.Data then
+            traceWarning "New project name must be different than existing"
+            proj
+        else
+            let nameProperty = property name name
+            let s' = { s with 
+                        AssemblyName = nameProperty
+                        RootNamespace = nameProperty }
+            { proj with Settings = s' }
 
 #if INTERACTIVE
 ;;

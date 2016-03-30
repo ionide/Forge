@@ -26,6 +26,7 @@ module ``ProjectSystem Tests`` =
     let ``ProjectSystem parse - AST gets correct settings`` () =
         let projectFile = FsProject.parse astInput
         let s = projectFile.Settings
+        printfn "%A" s.DocumentationFile
         s.Configuration.Data |> should be (equal ^ Some "Debug")
         s.Platform.Data |> should be (equal ^ Some "AnyCPU")
         s.SchemaVersion.Data |> should be (equal ^ Some "2.0")
@@ -33,6 +34,7 @@ module ``ProjectSystem Tests`` =
         s.OutputType.Data |> should be (equal ^ Some OutputType.Library)
         s.TargetFrameworkVersion.Data |> should be (equal ^ Some "v4.5")
         s.AssemblyName.Data |> should be (equal ^ Some "Test")
+        s.DocumentationFile.Data |> should be (equal ^ Some "bin\Debug\Test.XML")
 
     [<Test>]
     let ``ProjectSystem - add new file``() =
@@ -107,10 +109,9 @@ module ``ProjectSystem Tests`` =
         let pf = FsProject.parse astInput
         let pf' = FsProject.renameProject "TestRename" pf
         let s = pf'.Settings
-        let df = pf'.BuildConfigs |> List.pick (fun cfg -> cfg.Documentationfile.Data) |> Some
         s.AssemblyName.Data |> should be (equal ^ Some "TestRename")
         s.RootNamespace.Data |> should be (equal ^ Some "TestRename")
-        df |> should be (equal ^ Some "TestRename")
+        s.DocumentationFile.Data |> should be (equal ^ Some "bin\Debug\TestRename.XML")
 
     // TODO: complete test code
     [<Test>]

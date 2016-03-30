@@ -30,6 +30,7 @@ let astInput =
                 <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
                 <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
                 <Name>Test</Name>
+                <DocumentationFile>bin\Debug\Test.XML</DocumentationFile>
             </PropertyGroup>
             <ItemGroup>
                 <Reference Include="mscorlib" />

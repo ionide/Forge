@@ -74,7 +74,7 @@ let [<Literal>] OutputPath                   = "OutputPath"
 let [<Literal>] CompilationConstants         = "CompilationConstants"
 let [<Literal>] WarningLevel                 = "WarningLevel"
 let [<Literal>] PlatformTarget               = "PlatformTarget"
-let [<Literal>] DocumentationFile            = "Documentationfile"
+let [<Literal>] DocumentationFile            = "DocumentationFile"
 let [<Literal>] Prefer32Bit                  = "Prefer32Bit"
 let [<Literal>] OtherFlags                   = "OtherFlags"
 
