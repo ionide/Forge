@@ -226,14 +226,24 @@ module Furnace =
             updateProj (FsProject.renameFile path newName)  state
 
 
-    let listSourceFiles (state: ActiveState) =
+    let listSourceFiles (filter: string option) (state: ActiveState) =
+        let filterFn = 
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5) 
+            | None   -> (fun _ -> true)
         FsProject.listSourceFiles state.ProjectData
+        |> List.filter filterFn
         |> List.iter trace
         state
 
 
-    let listReferences (state: ActiveState) =
+    let listReferences (filter: string option) (state: ActiveState) =
+        let filterFn = 
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5) 
+            | None   -> (fun _ -> true)
         FsProject.listReferences state.ProjectData
+        |> List.filter filterFn
         |> List.iter trace
         state
         
