@@ -1,6 +1,6 @@
 ﻿#if INTERACTIVE
 /// Contains project file comparion tools for MSBuild project files.
-#r "bin/Release/Forge.Core.dll"
+#r "bin/Debug/Forge.Core.dll"
 #r "System.Xml.Linq"
 //#load "Prelude.fs"
 //#load "XLinq.fs"
@@ -406,11 +406,10 @@ module internal PathHelpers =
     let normalizeFileName (fileName : string) =
         let file = if (fileName = (Path.DirectorySeparatorChar |> string)) 
                    then fileName
-                   else fileName.Replace(@"\", "/").TrimEnd(Path.DirectorySeparatorChar).ToLower()
+                   else fileName.Replace(@"\", "/").ToLower()
         match file with
         | "/" -> "/"
         | f -> f.TrimStart '/'
-
 
     let hasRoot (path:string) =
         match Path.GetDirectoryName path with
@@ -471,20 +470,22 @@ module internal PathHelpers =
 
     let treeOrder (paths:string list) =
         let paths = paths |> List.map normalizeFileName
-        let rootOrder = ("/", dirOrder paths)
-        let rec loop root acc paths =
-            match List.filter hasRoot paths with
-            | [] -> acc
-            | ps ->
-                let r = List.head ps |> getRoot
-                let ordered =
-                    ps |> List.groupBy getRoot
-                    |> List.map (fun (dir,elems) ->
-                        root+dir, dirOrder (elems |> List.map removeRoot)
-                    )
-                loop (root+r) (ordered@acc) (ps |> List.map removeRoot)
-        loop "" [rootOrder] paths
-        |> List.rev
+        let normalize root = if root = "" then "/" else root
+        
+        let rec loop root paths = 
+            let pathsDeeper = paths |> List.filter hasRoot
+            let directChildren = dirOrder paths
+
+            let subTree =
+                pathsDeeper
+                |> List.groupBy getRoot
+                |> List.collect (fun (dir, entries) -> entries |> List.map removeRoot |> loop (root + dir))
+
+            if directChildren.IsEmpty then subTree
+            else [normalize root, directChildren] @ subTree
+
+        loop "" paths
+
 
     let checkFile (path:string) (warning:string) =
         if isValidPath path then true else
@@ -500,8 +501,9 @@ type SourceTree (files:SourceFile list) =
 
     do
         files |> List.map (fun x ->
-            let path = normalizeFileName x.Include
-            data.Add (path, {x with Include = path})
+            let path = Option.getOrElse x.Include x.Link |> normalizeFileName
+            let file = {x with Include = normalizeFileName x.Include; Link = Option.map normalizeFileName x.Link}
+            data.Add (path, file)
             path)
         |> treeOrder
         |> List.iter (fun (dir,files) ->
@@ -644,13 +646,18 @@ type SourceTree (files:SourceFile list) =
         if   not ^ hasTarget dir then ()
         elif not ^ checkFile newName "is not a valid file name" then () else
         let parent = getParentDir dir
+        
+        let pointTo newFile sourceFile =
+            match sourceFile.Link with
+            | Some(_) -> {sourceFile with Link = Some newFile}
+            | None -> {sourceFile with Include = newFile}
 
         let rec updateLoop oldDir newDir (keys:ResizeArray<string>) =
             let subDirs,files = keys |> ResizeArray.partition (fun x -> x.EndsWith "/")
-            // update the Include paths and keys in SorceFiles inside this Dir
+            // update the Include or Link paths and keys in SorceFiles inside this Dir
             files |> ResizeArray.iter (fun file ->
                 if data.ContainsKey (oldDir+file) then
-                    let srcFile = {data.[oldDir+file] with Include = newDir+file}
+                    let srcFile = data.[oldDir + file] |> pointTo (newDir + file)
                     data.Remove (oldDir+file) |> ignore
                     data.[newDir+file] <- srcFile
             )
@@ -666,7 +673,7 @@ type SourceTree (files:SourceFile list) =
         // update the name in the directory's parent
         if tree.ContainsKey parent  then
             let arr = tree.[parent]
-            let idx = ResizeArray.findIndex ((=) dir) arr
+            let idx = ResizeArray.findIndex ((=) ^ removeParentDir dir) arr
             arr.[idx] <- newName
             tree.[parent] <- arr
 
@@ -680,19 +687,19 @@ type SourceTree (files:SourceFile list) =
 
     member __.DirContents (dir:string) =
         let dir = fixDir dir
-        if  not ^ hasTarget dir then Seq.empty else
         let rec loop dir (arr:ResizeArray<string>) =
+            let dir = if dir = "/" then String.Empty else dir
             seq { for x in arr do
-                    if isDirectory x then yield! loop (dir+x) (tree.[dir+x])
-                    elif data.ContainsKey (dir+x) then
-                        yield data.[dir+x].Include
+                    let path = dir + x
+                    if isDirectory x then yield! loop path (tree.[path])
+                    elif data.ContainsKey path then
+                        yield path
             }
         if not ^ tree.ContainsKey dir then Seq.empty else
         let arr = tree.[dir]
-        loop "" arr
-
+        loop dir arr
+        
     member self.AllFiles() = self.DirContents "/"
-
 
     member __.Data with get() = data
     member __.Tree with get() = tree
@@ -1036,7 +1043,6 @@ type FsProject =
             ProjectReferences = projectReferences |> List.ofSeq
             BuildConfigs      = buildconfigs
         }
-
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

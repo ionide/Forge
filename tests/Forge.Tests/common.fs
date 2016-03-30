@@ -2,6 +2,7 @@ module Forge.Tests.Common
 open Forge
 
 open NUnit.Framework
+open NUnit.Framework.Constraints
 
 
 
@@ -15,6 +16,8 @@ let shouldbetext expected actual =
     let cleanupActual = cleanup actual
 
     Assert.AreEqual(cleanupExpected, cleanupActual)
+
+let equivalent (x: seq<_>) = CollectionEquivalentConstraint x
 
 let astInput =
     """<?xml version="1.0" encoding="utf-8"?>
@@ -79,6 +82,32 @@ let projectWithFiles = """<?xml version="1.0" encoding="utf-8"?>
             <Compile Include="FixProject.fs" />
             <None Include="App.config" />
             <Compile Include="a_file.fs" />
+        </ItemGroup>
+    </Project>
+    """
+
+let projectWithLinkedFiles = """<?xml version="1.0" encoding="utf-8"?>
+    <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+        <ItemGroup>
+            <Reference Include="mscorlib" />
+            <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+              <Private>True</Private>
+            </Reference>
+            <Reference Include="System" />
+            <Reference Include="System.Core" />
+            <Reference Include="System.Numerics" />
+        </ItemGroup>
+        <ItemGroup>
+            <Compile Include="FixProject.fs" />
+            <None Include="App.config" />
+            <Compile Include="a_file.fs" />
+            <Compile Include="foo/bar/some-file.fs" />
+            <Compile Include="foo/bar/some-file2.fs" />
+            <Compile Include="foo/abc/some-file3.fs" />
+            <Compile Include="fldr/some-file2.fs" />
+            <Compile Include="../foo/external.fs">
+                <Link>linked/ext/external.fs</Link>
+            </Compile>
         </ItemGroup>
     </Project>
     """

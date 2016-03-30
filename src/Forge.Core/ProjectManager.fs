@@ -188,12 +188,33 @@ module Furnace =
 
 
     let renameDirectory (path:string, newName:string) (state: ActiveState) =
-        if not ^ directoryExists path then
-            traceError ^ sprintf "Cannot Rename Directory - '%s' does not exist" path
+        let fullOldPath = state.ProjectPath </> path
+        let fullNewPath = state.ProjectPath </> newName
+        
+        let (|Physical|Virtual|None|) directory = 
+            let sourceFiles = 
+                state.ProjectData.SourceFiles.DirContents ^ normalizeFileName directory
+                |> Seq.map (fun file -> state.ProjectData.SourceFiles.Data.[file])
+                |> List.ofSeq
+                
+            if sourceFiles.IsEmpty then None
+            elif sourceFiles |> List.exists (fun f -> f.Link.IsNone) then Physical
+            else Virtual
+            
+        let rename() = updateProj (FsProject.renameDir path newName) state
+    
+        match path with
+        | Physical ->
+            if directoryExists fullOldPath then
+                renameDir fullNewPath fullOldPath
+                rename()
+            else 
+                traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist on disk" fullOldPath
+                state
+        | Virtual -> rename()
+        | None -> 
+            traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist in the project" path
             state
-        else
-            renameDir path newName
-            updateProj (FsProject.renameDir path newName)  state
             
 
     let renameSourceFile (path:string, newName:string) (state: ActiveState) =
@@ -204,13 +225,25 @@ module Furnace =
             renameFile path newName
             updateProj (FsProject.renameFile path newName)  state
 
-    let listSourceFiles (state: ActiveState) =
+
+    let listSourceFiles (filter: string option) (state: ActiveState) =
+        let filterFn = 
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5) 
+            | None   -> (fun _ -> true)
         FsProject.listSourceFiles state.ProjectData
+        |> List.filter filterFn
         |> List.iter trace
         state
 
-    let listReferences (state: ActiveState) =
+
+    let listReferences (filter: string option) (state: ActiveState) =
+        let filterFn = 
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5) 
+            | None   -> (fun _ -> true)
         FsProject.listReferences state.ProjectData
+        |> List.filter filterFn
         |> List.iter trace
         state
         
