@@ -69,6 +69,7 @@
     <Compile Include="ProjectSystemTest.fs" />
     <Compile Include="ProjectManagerTests.fs" />
     <Compile Include="SolutionTests.fs" />
+    <Compile Include="GacTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
