@@ -16,6 +16,7 @@ module Forge.ProjectSystem
 #endif
 open System
 open System.Text
+open System.Text.RegularExpressions
 open System.IO
 open System.Collections.Generic
 open System.Xml
@@ -963,6 +964,23 @@ type FsProject =
         doc.Root.LastNode.AddAfterSelf extraElems
         String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
 
+    member self.RenameProject name =
+        let s = self.Settings
+        let name' = Some name
+        
+        if name' = s.AssemblyName.Data || name' = s.RootNamespace.Data || name' = s.DocumentationFile.Data then
+            traceWarning "New project name must be different than existing"
+            self
+        else
+            let nameProperty = property name name
+            let projName = s.AssemblyName.Data
+            let docFile = Regex.Replace(s.DocumentationFile.Data.Value, projName.Value, name, RegexOptions.IgnoreCase)
+            let docProperty = property docFile docFile
+            let s' = { s with 
+                        AssemblyName = nameProperty
+                        RootNamespace = nameProperty
+                        DocumentationFile = docProperty }
+            { self with Settings = s' }
 
     static member fromXDoc (xdoc:XDocument) =
         let xdoc = xdoc.Root
@@ -1110,18 +1128,7 @@ module FsProject =
         | ex -> traceException ex
 
     let renameProject name (proj:FsProject) =
-        let s = proj.Settings
-        let b = proj.BuildConfigs
-        //let docFile = b |> List.tryFind (fun cfg -> cfg.Documentationfile.Data.Value = name)
-        if Some name = s.AssemblyName.Data || Some name = s.RootNamespace.Data then
-            traceWarning "New project name must be different than existing"
-            proj
-        else
-            let nameProperty = property name name
-            let s' = { s with 
-                        AssemblyName = nameProperty
-                        RootNamespace = nameProperty }
-            { proj with Settings = s' }
+        proj.RenameProject name
 
 #if INTERACTIVE
 ;;
