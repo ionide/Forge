@@ -204,12 +204,10 @@ module Furnace =
             renameFile path newName
             updateProj (FsProject.renameFile path newName)  state
 
-
     let listSourceFiles (state: ActiveState) =
         FsProject.listSourceFiles state.ProjectData
         |> List.iter trace
         state
-
 
     let listReferences (state: ActiveState) =
         FsProject.listReferences state.ProjectData
@@ -223,6 +221,14 @@ module Furnace =
         | None -> 
             if dir' = directory then None 
             else dir' |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
+
+    let renameProject (name:string, newName:string) (state: ActiveState) =
+        let proj = tryFindProject name
+        if proj.IsNone then
+            traceError ^ sprintf "Cannot Rename Project - '%s' does not exist" name
+            state
+        else
+            updateProj (FsProject.renameProject newName) state
 
 
 

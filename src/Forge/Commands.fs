@@ -577,9 +577,13 @@ let renameFile cont (results : ParseResults<RenameFileArgs>) =
     }
 
 
-let renameProject cont (results : ParseResults<_>) =
-    traceWarning "not implemented yet"
-    Some cont
+let renameProject cont (results : ParseResults<RenameProjectArgs>) =
+    maybe {
+     let! name = results.TryGetResult <@ RenameProjectArgs.Name @>
+     let! newName = results.TryGetResult <@ RenameProjectArgs.Rename @>
+
+     return cont   
+    }
 
 
 let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
