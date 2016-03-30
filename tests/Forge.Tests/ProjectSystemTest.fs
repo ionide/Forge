@@ -1,6 +1,9 @@
 [<NUnit.Framework.TestFixture>]
 [<NUnit.Framework.Category "ProjectSystem">]
+
 module Forge.Tests.ProjectSystem
+
+open System.IO
 open System.Diagnostics
 open Forge
 open Forge.Tests.Common
@@ -15,6 +18,18 @@ let ``ProjectSystem parse - AST gets all project files`` () =
     System.Diagnostics.Debug.WriteLine projectFile
     projectFile.SourceFiles.AllFiles() |> Seq.length |> should be (equal 3)
 
+
+
+[<Test>]
+let ``ProjectSystem parse - parse project files with nested folders and linked files``() =
+    let pf = FsProject.parse projectWithLinkedFiles
+
+    pf.SourceFiles.AllFiles() |> Seq.length |> should be (equal 8)
+    pf.SourceFiles.Tree.["/"] |> should be (equivalent ["fixproject.fs"; "app.config"; "a_file.fs"; "foo/"; "fldr/"; "linked/"])
+    pf.SourceFiles.Tree.["foo/"] |> should be (equivalent ["bar/"; "abc/"])
+    pf.SourceFiles.Tree.["linked/"] |> should be (equivalent ["ext/"])
+    pf.SourceFiles.Tree.["linked/ext/"] |> should be (equivalent ["external.fs"])
+    pf.SourceFiles.Data.["linked/ext/external.fs"].Include |> should be (equal "../foo/external.fs")
 
 [<Test>]
 let ``ProjectSystem parse - AST gets all references`` () =
@@ -110,3 +125,26 @@ let ``ProjectSystem - remove not existing reference``() =
     let r = {Reference.Empty with Include = "System.Xml"}
     let pf' = FsProject.removeReference r pf
     pf'.References |> Seq.length |> should be (equal 5)
+
+[<Test>]
+let ``ProjectSystem - rename physical folder``() =
+    let pf = FsProject.parse projectWithLinkedFiles
+    let tree = pf.SourceFiles.Tree.["foo/"]
+    let pf' = FsProject.renameDir "foo" "foo-renamed" pf
+    pf'.SourceFiles.Tree.["foo-renamed/"] |> should be (equal tree)
+    
+[<Test>]
+let ``ProjectSystem - rename folder with linked file``() =
+    let pf = FsProject.parse projectWithLinkedFiles
+    printfn "%+A" pf.SourceFiles.Tree
+    printfn "%+A" pf.SourceFiles.Data
+    let originalTree = pf.SourceFiles.Tree.["linked/ext/"]
+    let originalFile = pf.SourceFiles.Data.["linked/ext/external.fs"]
+
+    let pf' = FsProject.renameDir "linked/ext" "linked/ext-renamed" pf
+    pf'.SourceFiles.Tree.["linked/ext-renamed/"] |> should be (equal originalTree)
+
+    let renamedFile = pf'.SourceFiles.Data.["linked/ext-renamed/external.fs"]
+    renamedFile.Include |> should be (equal originalFile.Include)
+    renamedFile.Link |> should be (equal ^ Some "linked/ext-renamed/external.fs")
+

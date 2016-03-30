@@ -188,13 +188,34 @@ module Furnace =
 
 
     let renameDirectory (path:string, newName:string) (state: ActiveState) =
-        if not ^ directoryExists path then
-            traceError ^ sprintf "Cannot Rename Directory - '%s' does not exist" path
-            state
-        else
-            renameDir path newName
-            updateProj (FsProject.renameDir path newName)  state
+        let fullOldPath = state.ProjectPath </> path
+        let fullNewPath = state.ProjectPath </> newName
+        
+        let (|Physical|Virtual|None|) directory = 
+            let sourceFiles = 
+                state.ProjectData.SourceFiles.DirContents ^ normalizeFileName directory
+                |> Seq.map (fun file -> state.ProjectData.SourceFiles.Data.[file])
+                |> List.ofSeq
+                
+            if sourceFiles.IsEmpty then None
+            elif sourceFiles |> List.exists (fun f -> f.Link.IsNone) then Physical
+            else Virtual
             
+        let rename() = updateProj (FsProject.renameDir path newName) state
+    
+        match path with
+        | Physical ->
+            if directoryExists fullOldPath then
+                renameDir fullNewPath fullOldPath
+                rename()
+            else 
+                traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist on disk" fullOldPath
+                state
+        | Virtual -> rename()
+        | None -> 
+            traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist in the project" path
+            state
+    
 
     let renameSourceFile (path:string, newName:string) (state: ActiveState) =
         if not ^ File.Exists path then
