@@ -38,6 +38,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{8E6D
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ED8079DD-2B06-4030-9F0F-DC548F98E1C4}"
+	ProjectSection(SolutionItems) = preProject
+		tests\TestCoverage.md = tests\TestCoverage.md
+	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.Tests", "tests\Forge.Tests\Forge.Tests.fsproj", "{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}"
 EndProject
