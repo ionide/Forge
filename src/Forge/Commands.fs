@@ -36,17 +36,17 @@ let getUsage (x:#IArgParserTemplate) = sprintf "  %s : %s" (getCaseName x) x.Usa
 
 
 type Command =
-    | [<First>][<CLIArg "new">] New
-    | [<First>][<CLIArg "add">] Add
-    | [<First>][<CLIArg "move">] Move
-    | [<First>][<CLIArg "remove">] Remove
-    | [<First>][<CLIArg "rename">] Rename
-    | [<First>][<CLIArg "list">] List
-    | [<First>][<CLIArg "update">] Update
-    | [<First>][<CLIArg "paket">] Paket
-    | [<First>][<CLIArg "fake">] Fake
-    | [<First>][<CLIArg "refresh">] Refresh
-    | [<First>][<CLIArg "exit">][<CLIAlt("quit","-q")>] Exit
+    | [<CLIArg "new">] New
+    | [<CLIArg "add">] Add
+    | [<CLIArg "move">] Move
+    | [<CLIArg "remove">] Remove
+    | [<CLIArg "rename">] Rename
+    | [<CLIArg "list">] List
+    | [<CLIArg "update">] Update
+    | [<CLIArg "paket">] Paket
+    | [<CLIArg "fake">] Fake
+    | [<CLIArg "refresh">] Refresh
+    | [<CLIArg "exit">][<CLIAlt("quit","-q")>] Exit
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -730,8 +730,8 @@ let processUpdate cont args =
 // Main Command Handlers
 //-----------------------------------------------------------------
 
-let strikeForge args (cont:Result) =
-    let result = parseCommand<Command> args
+let strikeForge (args : string []) (cont:Result) =
+    let result = parseCommand<Command> [| args.[0] |]
     let check (res:ParseResults<_>) =
         match res.GetAllResults() with
         | [cmd] ->
