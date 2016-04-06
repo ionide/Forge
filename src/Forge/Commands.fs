@@ -481,27 +481,35 @@ let processNew cont args =
 let addFile cont (results : ParseResults<AddFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ AddFileArgs.Name @>
-        let! project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
+        let project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
         let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
         let build = results.TryGetResult <@ AddFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
         let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
         let below = results.TryGetResult <@ AddFileArgs.Below @>
         let above = results.TryGetResult <@ AddFileArgs.Above @>
-        let activeState = Furnace.loadFsProject project
+        let project' = 
+            match project with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            let activeState = Furnace.loadFsProject project
 
-        match below, above with
-        | Some b, _ ->
-            activeState
-            |> Furnace.addBelow (b, name, build, link, None, None)
-            |> ignore
-        | None, Some a ->
-            activeState
-            |> Furnace.addAbove (a, name, build, link, None, None)
-            |> ignore
-        | None, None ->
-            activeState
-            |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None)
-            |> ignore
+            match below, above with
+            | Some b, _ ->
+                activeState
+                |> Furnace.addBelow (b, name, build, link, None, None)
+                |> ignore
+            | None, Some a ->
+                activeState
+                |> Furnace.addAbove (a, name, build, link, None, None)
+                |> ignore
+            | None, None ->
+                activeState
+                |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None)
+                |> ignore
+        
 
         return cont
     }
@@ -534,10 +542,17 @@ let processAdd cont args =
 let removeFile cont (results : ParseResults<RemoveFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveFileArgs.Project @>
-        Furnace.loadFsProject project
-        |> Furnace.removeSourceFile name
-        |> ignore
+        let project = results.TryGetResult <@ RemoveFileArgs.Project @>
+        let project' = 
+            match project with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            Furnace.loadFsProject project
+            |> Furnace.removeSourceFile name
+            |> ignore
         return cont
     }
 
@@ -555,10 +570,17 @@ let removeReference cont (results : ParseResults<RemoveReferenceArgs>) =
 let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
-        let! project = results.TryGetResult <@ RemoveFolderArgs.Project @>
-        Furnace.loadFsProject project
-        |> Furnace.removeDirectory name
-        |> ignore
+        let project = results.TryGetResult <@ RemoveFolderArgs.Project @>
+        let project' = 
+            match project with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            Furnace.loadFsProject project
+            |> Furnace.removeDirectory name
+            |> ignore
         return cont
     }
 
@@ -581,11 +603,17 @@ let renameFile cont (results : ParseResults<RenameFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFileArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
-        let! project = results.TryGetResult <@ RenameFileArgs.Project @>
-
-        Furnace.loadFsProject project
-        |> Furnace.renameSourceFile (name, newName)
-        |> ignore
+        let project = results.TryGetResult <@ RenameFileArgs.Project @>
+        let project' = 
+            match project with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            Furnace.loadFsProject project
+            |> Furnace.renameSourceFile (name, newName)
+            |> ignore
         return cont
     }
 
@@ -603,11 +631,17 @@ let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
-        let! project = results.TryGetResult <@ RenameFolderArgs.Project @>
-
-        Furnace.loadFsProject project
-        |> Furnace.renameDirectory (name, newName)
-        |> ignore
+        let project = results.TryGetResult <@ RenameFolderArgs.Project @>
+        let project' = 
+            match project with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            Furnace.loadFsProject project
+            |> Furnace.renameDirectory (name, newName)
+            |> ignore
 
         return cont
     }
