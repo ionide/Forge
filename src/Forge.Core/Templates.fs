@@ -154,9 +154,18 @@ module Project =
 
         let templates = GetList()
 
-        let projectName' = defaultArg projectName ^ prompt "Enter project name:"
-        let projectDir' = defaultArg projectDir ^ prompt "Enter project directory (relative to working directory):" 
-        let templateName' = defaultArg templateName (templates |> promptSelect "Choose a template:")
+        let projectName' = 
+            match projectName with
+            | Some p -> p 
+            | None -> prompt "Enter project name:"
+        let projectDir' =
+            match projectDir with 
+            | Some p -> p
+            | None -> prompt "Enter project directory (relative to working directory):" 
+        let templateName' =
+            match templateName with
+            | Some p -> p
+            | None -> (templates |> promptSelect "Choose a template:")
         let projectFolder = directory </> projectDir' </> projectName'
         let templateDir = templatesLocation </> templateName'
 
