@@ -236,7 +236,7 @@ module File =
         | None ->
             traceWarning "Project file not found, use `add file --project<string>` to add file to project"
 
-        sed "<%= namespace %>" (fun _ -> fileName) newFile'
+        sed "<%= namespace %>" (fun _ -> fileName.Split('\\', '/', '.') |> Seq.last ) newFile'
         sed "<%= guid %>" (fun _ -> System.Guid.NewGuid().ToString()) newFile'
         sed "<%= paketPath %>" (relative directory) newFile'
         sed "<%= packagesPath %>" (relative packagesDirectory) newFile'
