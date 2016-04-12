@@ -346,4 +346,13 @@ module Seq =
             match Map.tryFind x xs with
             | Some false -> Some x
             | None | Some true -> None)
+
+let relative (path1 : string) (path2 : string) =
+    let p1, p2 = Uri path1, Uri path2
+    Uri.UnescapeDataString(
+        p2.MakeRelativeUri(p1)
+            .ToString()
+            .Replace('/', Path.DirectorySeparatorChar)
+    )  
+    
             

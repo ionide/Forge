@@ -248,12 +248,15 @@ module Furnace =
         state
         
     let rec tryFindProject dir = 
-        let dir' = System.IO.Path.GetDirectoryName dir 
-        match Globbing.search dir' "*.fsproj" |> List.tryHead with
-        | Some f -> Some f
-        | None -> 
-            if dir' = directory then None 
-            else dir' |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
+        try
+            let dir' = System.IO.Path.GetDirectoryName dir 
+            match Globbing.search dir' "*.fsproj" |> List.tryHead with
+            | Some f -> Some f
+            | None -> 
+                if dir' = directory then None 
+                else dir' |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
+        with
+        | _ -> None
 
     let renameProject (name:string, newName:string) (state: ActiveState) =
         let proj = tryFindProject name

@@ -116,14 +116,7 @@ let GetList () =
     |> Seq.map Path.GetFileName
     |> Seq.filter (fun x -> not ^ x.StartsWith ".")
 
-let relative (path1 : string) (path2 : string) =
-    let p1, p2 = Uri path1, Uri path2
-    Uri.UnescapeDataString(
-        p2.MakeRelativeUri(p1)
-            .ToString()
-            .Replace('/', Path.DirectorySeparatorChar)
-    )  
-    
+
 //type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">  
     
  
