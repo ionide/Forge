@@ -113,10 +113,11 @@ let Refresh () =
     cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
 
 let GetList () =
-    Directory.GetDirectories templatesLocation
-    |> Seq.map Path.GetFileName
-    |> Seq.filter (fun x -> not ^ x.StartsWith ".")
-
+    if Directory.Exists templatesLocation then
+        Directory.GetDirectories templatesLocation
+        |> Seq.map Path.GetFileName
+        |> Seq.filter (fun x -> not ^ x.StartsWith ".")
+    else Seq.empty
 
 //type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">  
     
