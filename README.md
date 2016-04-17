@@ -53,15 +53,20 @@ On the first run Forge will download the templates found in the [Generator F# Re
 	> new --name MySuaveProject --dir src
 	Choose a template:
 	 - aspwebapi2
-	 - classlib
-	 - console
-	 - fslabbasic
-	 - fslabjournal
-	 - sln
-	 - suave
-	 - websharperserverclient
-	 - websharperspa
-	 - windows
+     - classlib
+     - console
+     - fslabbasic
+     - fslabjournal
+     - pcl259
+     - servicefabrichost
+     - servicefabricsuavestateless
+     - sln
+     - suave
+     - suaveazurebootstrapper
+     - websharperserverclient
+     - websharperspa
+     - websharpersuave
+     - windows
 
 	> suave
 	Forging template suave

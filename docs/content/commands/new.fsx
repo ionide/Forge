@@ -1,5 +1,5 @@
 (**
-## fix new
+## forge new
 
 Creates a new project.
 

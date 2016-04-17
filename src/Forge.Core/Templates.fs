@@ -4,6 +4,7 @@ open Forge.Git
 open Forge.ProjectSystem
 open System.IO
 open System
+open Mono.Unix.Native
 open FSharp.Data
 
 /// Result type for project comparisons.
@@ -178,6 +179,11 @@ module Project =
                 if paket then 
                     Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
+                if isMono then
+                    let buildSh = projectDir' </> "build.sh"
+                    let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
+                    Syscall.chmod(buildSh, perms) |> ignore
+
 
             printfn "Done!"
         else

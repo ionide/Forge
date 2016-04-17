@@ -12,11 +12,11 @@ Creating a project
 
     new [--name <string>] [--dir <string>] [--template <string>] [--no-paket]
 
-On the first run Fix will download the templates found in the [Generator F# Repository](https://github.com/fsprojects/generator-fsharp) and then allow you to choose which template you'd like to base your new project from.
+On the first run Forge will download the templates found in the [Generator F# Repository](https://github.com/fsprojects/generator-fsharp) and then allow you to choose which template you'd like to base your new project from.
 
-	C:\Dev>c:\tools\fix\fix.exe
+	C:\Dev>c:\tools\forge\forge.exe
 	>
-	Fix (Mix for F#)
+	Forge (F# Project Builder)
 	Available commands:
         new: Create new project
         file: Adds or removes file from current folder and project.
@@ -30,28 +30,33 @@ On the first run Fix will download the templates found in the [Generator F# Repo
 
 	> new --name MySuaveProject --dir src
 	Choose a template:
-	 - aspwebapi2
-	 - classlib
-	 - console
-	 - fslabbasic
-	 - fslabjournal
-	 - sln
-	 - suave
-	 - websharperserverclient
-	 - websharperspa
-	 - windows
+     - aspwebapi2
+     - classlib
+     - console
+     - fslabbasic
+     - fslabjournal
+     - pcl259
+     - servicefabrichost
+     - servicefabricsuavestateless
+     - sln
+     - suave
+     - suaveazurebootstrapper
+     - websharperserverclient
+     - websharperspa
+     - websharpersuave
+     - windows
 
 	> suave
-	Fixing template suave
+	Forging template suave
 	Creating C:\Dev\MySuaveProject
 	Changing filenames from ApplicationName.* to MySuaveProject.*
 	Changing namespace to MySuaveProject
 	Changing guid to bb3d79ee-318d-435f-8807-54b2585b057c
 	Done!
 
-Unless `--no-paket` flag is used, solution folder (folder in which `Fix` is running) will contain `.paket` folder and `paket.dependencies` and `paket.lock` file. Project folder will contain `paket.references` file.
+Unless `--no-paket` flag is used, solution folder (folder in which `Forge` is running) will contain `.paket` folder and `paket.dependencies` and `paket.lock` file. Project folder will contain `paket.references` file.
 
-Unless `--no-fake` flag is used, solution folder (folder in which `Fix` is running) will contain `build.fsx`, `build.cmd`, and `build.sh` files. It won't override previously existing files.
+Unless `--no-fake` flag is used, solution folder (folder in which `Forge` is running) will contain `build.fsx`, `build.cmd`, and `build.sh` files. It won't override previously existing files.
 
 
 *)
