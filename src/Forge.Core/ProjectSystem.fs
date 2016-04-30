@@ -573,7 +573,7 @@ type SourceTree (files:SourceFile list) =
         //if tree.ContainsKey dir |> not then tree.Add(dir, new ResizeArray<_>())
         if  not ^ data.ContainsKey keyPath then
             let arr = tree.["/"]
-            tree.["/"] <- ResizeArray.add fileName arr
+            tree.["/"] <- ResizeArray.add keyPath arr
             data.[keyPath] <- srcFile
 
 

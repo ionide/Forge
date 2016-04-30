@@ -497,7 +497,11 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
         | None -> traceWarning "Project not found"
         | Some project ->
             let activeState = Furnace.loadFsProject project
-            let n = relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
+            let n = 
+                if Path.IsPathRooted name then 
+                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString()) 
+                else 
+                    relative (Path.GetFullPath name) (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
             let name' = n |> Path.GetFileName
             let dir = n |> Path.GetDirectoryName
             match below, above with
@@ -726,19 +730,31 @@ let processList cont args =
 
 let moveFile cont (results : ParseResults<_>) =
     maybe {
-        let! proj = results.TryGetResult <@ MoveFileArgs.Project @>
+        let proj = results.TryGetResult <@ MoveFileArgs.Project @>
         let! name = results.TryGetResult <@ MoveFileArgs.Name @>
         let up = results.TryGetResult <@ MoveFileArgs.Up @>
         let down = results.TryGetResult <@ MoveFileArgs.Down @>
-        let activeState = Furnace.loadFsProject proj
+        let project' = 
+            match proj with
+            | Some p -> Some p 
+            | None -> Furnace.tryFindProject name
+        match project' with
+        | None -> traceWarning "Project not found"
+        | Some project ->
+            let activeState = Furnace.loadFsProject project
+            let n = 
+                if Path.IsPathRooted name then 
+                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString()) 
+                else 
+                    relative (Path.GetFullPath name) (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
 
-        match up, down with
-        | Some u, _ ->
-            activeState |> Furnace.moveUp name |> ignore
-        | None, Some d ->
-            activeState |> Furnace.moveDown name |> ignore
-        | None, None ->
-            traceWarning "Up or Down must be specified"
+            match up, down with
+            | Some u, _ ->
+                activeState |> Furnace.moveUp n |> ignore
+            | None, Some d ->
+                activeState |> Furnace.moveDown n |> ignore
+            | None, None ->
+                traceWarning "Up or Down must be specified"
 
         return cont
     }
