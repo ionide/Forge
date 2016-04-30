@@ -497,19 +497,21 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
         | None -> traceWarning "Project not found"
         | Some project ->
             let activeState = Furnace.loadFsProject project
-
+            let n = relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
+            let name' = n |> Path.GetFileName
+            let dir = n |> Path.GetDirectoryName
             match below, above with
             | Some b, _ ->
                 activeState
-                |> Furnace.addBelow (b, name, build, link, None, None)
+                |> Furnace.addBelow (b, name', build, link, None, None)
                 |> ignore
             | None, Some a ->
                 activeState
-                |> Furnace.addAbove (a, name, build, link, None, None)
+                |> Furnace.addAbove (a, name', build, link, None, None)
                 |> ignore
             | None, None ->
                 activeState
-                |> Furnace.addSourceFile (name, Some activeState.ProjectPath, build, link, None, None)
+                |> Furnace.addSourceFile (n, Some dir , build, link, None, None)
                 |> ignore
         
 

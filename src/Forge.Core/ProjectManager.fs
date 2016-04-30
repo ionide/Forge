@@ -249,12 +249,17 @@ module Furnace =
         
     let rec tryFindProject dir = 
         try
-            let dir' = System.IO.Path.GetDirectoryName dir 
-            match Globbing.search dir' "*.fsproj" |> List.tryHead with
+            let dir = 
+                try
+                    if (File.GetAttributes(dir).HasFlag FileAttributes.Directory |> not) then System.IO.Path.GetDirectoryName dir else dir
+                with
+                | _ -> System.IO.Path.GetDirectoryName dir
+
+            match Globbing.search dir "*.fsproj" |> List.tryHead with
             | Some f -> Some f
             | None -> 
-                if dir' = directory then None 
-                else dir' |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
+                if dir = directory then None 
+                else dir |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
         with
         | _ -> None
 

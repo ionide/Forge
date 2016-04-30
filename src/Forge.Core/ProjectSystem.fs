@@ -566,15 +566,16 @@ type SourceTree (files:SourceFile list) =
 
     member __.AddSourceFile (dir:string) (srcFile:SourceFile) =
         let dir = fixDir dir
-        if not ^ hasTarget dir then () else
+       // if not ^ hasTarget dir then () else
         let fileName = removeParentDir srcFile.Include
         let keyPath  = normalizeFileName (dir + fileName)
         let srcFile = { srcFile with Include = keyPath }
-        if  tree.ContainsKey dir
-         && not ^ data.ContainsKey keyPath then
-            let arr = tree.[dir]
-            tree.[dir] <- ResizeArray.add fileName arr
+        //if tree.ContainsKey dir |> not then tree.Add(dir, new ResizeArray<_>())
+        if  not ^ data.ContainsKey keyPath then
+            let arr = tree.["/"]
+            tree.["/"] <- ResizeArray.add fileName arr
             data.[keyPath] <- srcFile
+
 
 
     member __.RemoveSourceFile (filePath:string) =
@@ -1051,7 +1052,7 @@ module FsProject =
 
     let addReference (refr:Reference) (proj:FsProject) =
         if proj.References |> ResizeArray.contains refr then
-            traceWarning "already contains this reference"
+            //traceWarning "already contains this reference"
             proj
         else
         { proj with References = ResizeArray.add refr proj.References }
