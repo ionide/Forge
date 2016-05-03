@@ -27,7 +27,7 @@ module ``ProjectSystem Tests`` =
         let pf = FsProject.parse projectWithLinkedFiles
 
         pf.SourceFiles.AllFiles() |> Seq.length |> should be (equal 8)
-        pf.SourceFiles.Tree.["/"] |> should be (equivalent ["fixproject.fs"; "app.config"; "a_file.fs"; "foo/"; "fldr/"; "linked/"])
+        pf.SourceFiles.Tree.["/"] |> should be (equivalent ["FixProject.fs"; "App.config"; "a_file.fs"; "foo/"; "fldr/"; "linked/"])
         pf.SourceFiles.Tree.["foo/"] |> should be (equivalent ["bar/"; "abc/"])
         pf.SourceFiles.Tree.["linked/"] |> should be (equivalent ["ext/"])
         pf.SourceFiles.Tree.["linked/ext/"] |> should be (equivalent ["external.fs"])
