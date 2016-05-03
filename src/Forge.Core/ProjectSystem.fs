@@ -406,7 +406,7 @@ module internal PathHelpers =
     let normalizeFileName (fileName : string) =
         let file = if (fileName = (Path.DirectorySeparatorChar |> string)) 
                    then fileName
-                   else fileName.Replace(@"\", "/").ToLower()
+                   else fileName.Replace(@"\", "/")
         match file with
         | "/" -> "/"
         | f -> f.TrimStart '/'
