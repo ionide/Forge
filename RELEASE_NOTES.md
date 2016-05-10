@@ -1,4 +1,4 @@
-### 1.0.0-alpha001 - 2016-05-10
+### 1.0.0-alpha002 - 2016-05-10
 * Change command format
 * Lot of fixes
 * Can break stuff (or might not work)
