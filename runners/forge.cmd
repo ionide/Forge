@@ -1,1 +1,1 @@
-bin\forge.exe %*
+%~dp0\bin\forge.exe %*
