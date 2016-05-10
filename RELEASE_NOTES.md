@@ -1,3 +1,8 @@
+### 1.0.0-alpha001 - 2016-05-10
+* Change command format
+* Lot of fixes
+* Can break stuff (or might not work)
+
 ### 0.7.0 - 2016-02-22
 * Split into core and CLI
 * Multiple small fixes
