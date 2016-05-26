@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%= namespace %></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="Content/<%= namespace %>.css" />
+    <script type="text/javascript" src="Content/<%= namespace %>.head.js"></script>
+</head>
+<body>
+    <h1>My list of unique people</h1>
+    <div id="main" data-children-template="Main">
+        <ul data-hole="ListContainer">
+            <li data-template="ListItem">$!{Name}</li>
+        </ul>
+        <div>
+            <input data-var="Name" placeholder="Name" />
+            <button data-event-click="Add">Add</button>
+            <div>You are about to add: $!{Name}</div>
+        </div>
+    </div>
+    <script type="text/javascript" src="Content/<%= namespace %>.min.js"></script>
+</body>
+</html>
