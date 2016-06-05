@@ -4,7 +4,6 @@
         { "name": "Class Library", "value": "classlib" },
         { "name": "Portable Class Library (Profile 259)", "value": "pcl259" },
         { "name": "Windows (WPF) Application", "value": "windows" },
-        { "name": "ASP.Net Web API 2 Application", "value": "aspwebapi2" },
         { "name": "Suave Application", "value": "suave" },
         { "name": "FsLab Basic", "value": "fslabbasic" },
         { "name": "FsLab Journal", "value": "fslabjournal" },
