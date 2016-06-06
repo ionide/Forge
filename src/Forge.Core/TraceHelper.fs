@@ -145,13 +145,13 @@ let traceEndTarget name =
    // ReportProgressFinish <| sprintf "Target: %s" name
 
 /// Traces the begin of a task
-let traceStartTask task description = 
+let traceStartTask task _ = 
     openTag "task"
     OpenTag ("task", task) |> postMessage
    // ReportProgressStart <| sprintf "Task: %s %s" task description
 
 /// Traces the end of a task
-let traceEndTask task description = 
+let traceEndTask _ _ = 
     closeTag "task"
    // ReportProgressFinish <| sprintf "Task: %s %s" task description
 

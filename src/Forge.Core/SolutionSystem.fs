@@ -179,15 +179,17 @@ type Solution =
                 MinimumVisualStudioVersion = 10.0.40219.1"
         
             Folders = []
-            Projects = []
-            SolutionConfigurationPlatforms = [
-                { Name = "Debug"; Platform = AnyCPU }
-                { Name = "Release"; Platform = AnyCPU }
-            ]
+            Projects = [] 
+            SolutionConfigurationPlatforms = 
+                [
+                    { Name = "Debug"; Platform = AnyCPU }
+                    { Name = "Release"; Platform = AnyCPU }
+                ]
             ProjectConfigurationPlatforms = []
-            SolutionProperties = [
-                { Name = "HideSolutionNode"; Value = "FALSE" }
-            ]
+            SolutionProperties = 
+                [
+                    { Name = "HideSolutionNode"; Value = "FALSE" }
+                ]
             NestedProjects = []
         }
 
