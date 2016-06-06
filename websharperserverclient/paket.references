@@ -1,0 +1,9 @@
+Microsoft.Owin
+Microsoft.Owin.Host.SystemWeb
+Microsoft.Owin.Hosting
+Mono.Cecil
+Owin
+WebSharper
+WebSharper.UI.Next
+WebSharper.Owin
+FSharp.Core

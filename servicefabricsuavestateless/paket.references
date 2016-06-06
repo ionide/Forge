@@ -1,0 +1,5 @@
+FSharp.Core
+Microsoft.ServiceFabric
+Microsoft.ServiceFabric.Data
+Microsoft.ServiceFabric.Services
+Suave
