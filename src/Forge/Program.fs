@@ -22,6 +22,7 @@ let darkGrey    = ConsoleColor.DarkGray
 let darkGreen   = ConsoleColor.DarkGreen
 let darkMagenta = ConsoleColor.DarkMagenta
 let green       = ConsoleColor.Green
+let yellow      = ConsoleColor.Yellow
 
 let parser = ArgumentParser.Create<Command>()
 
@@ -66,11 +67,17 @@ let rec consoleLoop () =
 
 [<EntryPoint>]
 let main argv =
-    match argv with
-    | [||] ->
-        writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
-        consoleLoop ()
-    | _ ->        
-        match singlePass argv with
-        | Continue -> consoleLoop ()
-        | Result.Exit -> 1
+    writeln yellow "\nForge should be run from solution/repository root. Please ensure you don't run it from folder containing other solutions"
+    writeln yellow "\nDo You want to continue? [Y/n]"
+    let k = Console.ReadLine ()
+    if k = "Y" || k = "" then
+        match argv with
+        | [||] ->
+            writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
+            consoleLoop ()
+        | _ ->        
+            match singlePass argv with
+            | Continue -> consoleLoop ()
+            | Result.Exit -> 1
+    else
+        0

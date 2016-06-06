@@ -110,7 +110,7 @@ let CompareProjectsTo templateProject projects =
 let Refresh () =
     printfn "Getting templates..."
     cleanDir templatesLocation
-    cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/generator-fsharp.git" "templates" "templates"
+    cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/forge.git" "templates" "templates"
 
 let GetList () =
     if Directory.Exists templatesLocation then
@@ -144,7 +144,7 @@ module Project =
         DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
 
 
-    let New projectName projectDir templateName paket fake =
+    let New projectName projectDir templateName _ fake =
         if not ^ Directory.Exists templatesLocation then Refresh ()
 
         let templates = GetList()
@@ -173,19 +173,22 @@ module Project =
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
             sed "<%= paketPath %>" (relative directory) projectFolder
             sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-            if paket then
-                Paket.Copy directory
-                Paket.Run ["convert-from-nuget";"-f"]
-            if fake then
-                if paket then 
-                    Paket.Run ["add"; "nuget"; "FAKE"]
+            
+            Paket.Copy directory
+            if Directory.GetFiles directory |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
+                Paket.Run ["init"]
+
+            Directory.GetFiles projectFolder 
+            |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
+            |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
+            Paket.Run ["install"; "--hard"]
+            if fake then                
+                Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
                 if isMono then
                     let buildSh = projectDir' </> "build.sh"
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
-
-
             printfn "Done!"
         else
             printfn "Wrong template name"
@@ -240,7 +243,3 @@ module File =
         sed "<%= guid %>" (fun _ -> System.Guid.NewGuid().ToString()) newFile'
         sed "<%= paketPath %>" (relative directory) newFile'
         sed "<%= packagesPath %>" (relative packagesDirectory) newFile'
-
-        
-                
-        
