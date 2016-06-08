@@ -58,7 +58,7 @@ module Furnace =
             )
         let proj = FsProject.fromXDoc xdoc
     
-        let projectPath = 
+        let projectPath' = 
             match Path.GetDirectoryName projectPath with
             | "" -> Environment.CurrentDirectory
             | p  -> Environment.CurrentDirectory </> p
@@ -67,8 +67,8 @@ module Furnace =
         let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
         {   StoredXml       = List.ofSeq detritus
             ProjectData     = proj
-            ProjectPath     = projectPath
-            ProjectFileName = Path.GetFileName projectPath
+            ProjectPath     = projectPath'
+            ProjectFileName = Path.GetFileNameWithoutExtension projectPath
             ActiveConfig    = config
         }
 
