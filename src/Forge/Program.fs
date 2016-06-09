@@ -67,9 +67,13 @@ let rec consoleLoop () =
 
 [<EntryPoint>]
 let main argv =
-    writeln yellow "\nForge should be run from solution/repository root. Please ensure you don't run it from folder containing other solutions"
-    writeln yellow "\nDo You want to continue? [Y/n]"
-    let k = if argv.[argv.Length - 1] = "--no-prompt" then "" else Console.ReadLine ()
+    let k = 
+        if argv.[argv.Length - 1] = "--no-prompt" then 
+            "" 
+        else 
+            writeln yellow "\nForge should be run from solution/repository root. Please ensure you don't run it from folder containing other solutions"
+            writeln yellow "\nDo You want to continue? [Y/n]"
+            Console.ReadLine ()
     if k = "Y" || k = "" then
         match argv with
         | [||] ->
