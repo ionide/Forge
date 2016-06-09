@@ -70,7 +70,7 @@ let main argv =
     writeln yellow "\nForge should be run from solution/repository root. Please ensure you don't run it from folder containing other solutions"
     writeln yellow "\nDo You want to continue? [Y/n]"
     let k = Console.ReadLine ()
-    if k = "Y" || k = "" then
+    if k = "Y" || k = "" || argv.[argv.Length - 1] = "--no-prompt" then
         match argv with
         | [||] ->
             writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
