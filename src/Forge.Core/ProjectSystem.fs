@@ -947,8 +947,8 @@ type FsProject =
             |> XElem.setAttribute Constants.DefaultTargets (self.DefaultTargets |> String.concat " ")
             |> XElem.addElement  ^ toXElem self.Settings
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
-            |> XElem.addElement  ^
-               XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
+            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
+            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> List.map toXElem)
             |> XElem.addElement  ^ toXElem self.SourceFiles
 
 
