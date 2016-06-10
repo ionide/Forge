@@ -128,12 +128,12 @@ type NewFileArgs =
 type AddCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "reference">] Reference
-
+    | [<First>][<CLIArg "project">] Project
     interface IArgParserTemplate with
         member self.Usage = self |> function
             | File -> "Adds file to project or solution"
             | Reference -> "Adds reference to project"
-
+            | Project -> "Adds project reference to project"
 
 
 
@@ -171,6 +171,16 @@ type AddReferenceArgs =
             | Name _-> "Reference name"
             | Project _ -> "Project to which reference will be added"
 
+type AddProjectArgs =
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIAlt "-p">] Project of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "Project reference path"
+            | Project _ -> "Project to which reference will be added"
+
 
 //-----------------------------------------------------------------
 // Remove commands
@@ -180,6 +190,7 @@ type AddReferenceArgs =
 type RemoveCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "reference">] Reference
+    | [<First>][<CLIArg "project">] Project
     | [<First>][<CLIArg "folder">][<CLIAlt "dir">] Folder
 
     interface IArgParserTemplate with
@@ -188,7 +199,7 @@ type RemoveCommands =
             | File -> "Removes file from project or solution"
             | Reference -> "Removes reference from project"
             | Folder -> "Removes the folder from the project or solution"
-
+            | Project -> "Removes project reference from project"
 
 
 
@@ -213,6 +224,16 @@ type RemoveReferenceArgs =
         member this.Usage =
             match this with
             | Name _-> "Reference name"
+            | Project _ -> "Project from which reference will be removed"
+
+type RemoveProjectReferenceArgs =
+    | [<CLIAlt "-n">] Name of string
+    | [<CLIAlt "-p">] Project of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "Path of project reference"
             | Project _ -> "Project from which reference will be removed"
 
 
@@ -533,6 +554,17 @@ let addReference cont (results : ParseResults<AddReferenceArgs>) =
         return cont
     }
 
+let addProject cont (results : ParseResults<AddProjectArgs>) = 
+    maybe {
+        let! path = results.TryGetResult <@ AddProjectArgs.Name @>
+        let! project = results.TryGetResult <@ AddProjectArgs.Project @>
+        let name = Path.GetFileName path
+        Furnace.loadFsProject project
+        |> Furnace.addProjectReference(path, Some name, None, None, None)
+        |> ignore
+        return cont
+    }
+
 
 let processAdd cont args =
     match subCommandArgs args  with
@@ -540,6 +572,7 @@ let processAdd cont args =
         match cmd with
         | AddCommands.Reference -> execCommand (addReference cont) subArgs
         | AddCommands.File -> execCommand (addFile cont) subArgs
+        | AddCommands.Project -> execCommand (addProject cont) subArgs
     | _ -> Some cont
 
 
@@ -590,6 +623,18 @@ let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
             Furnace.loadFsProject project
             |> Furnace.removeDirectory name
             |> ignore
+        return cont
+    }
+
+let removeProjecr cont (results : ParseResults<RemoveProjectReferenceArgs>) =
+    maybe {
+        let! name = results.TryGetResult <@ RemoveProjectReferenceArgs.Name @>
+        let! project = results.TryGetResult <@ RemoveProjectReferenceArgs.Project @>
+        
+        
+        Furnace.loadFsProject project
+        |> Furnace.removeProjectReference name
+        |> ignore
         return cont
     }
 

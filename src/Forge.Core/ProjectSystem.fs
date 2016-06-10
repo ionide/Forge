@@ -862,7 +862,7 @@ type ConfigSettings =
             DebugType            = property Constants.DebugType DebugType.Full
             Optimize             = property Constants.Optimize false
             Tailcalls            = property Constants.Tailcalls false
-            OutputPath           = property Constants.OutputPath "/bin/Debug"
+            OutputPath           = property Constants.OutputPath "/bin/Debug" 
             CompilationConstants = property Constants.CompilationConstants ["DEBUG;TRACE"]
             WarningLevel         = property Constants.WarningLevel ^ WarningLevel 3
             PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
@@ -933,7 +933,7 @@ type FsProject =
         DefaultTargets      : string list
         Settings            : ProjectSettings
         BuildConfigs        : ConfigSettings list
-        ProjectReferences   : ProjectReference list
+        ProjectReferences   : ProjectReference ResizeArray
         References          : Reference ResizeArray
         SourceFiles         : SourceTree
     }
@@ -948,7 +948,7 @@ type FsProject =
             |> XElem.addElement  ^ toXElem self.Settings
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
             |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
-            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> List.map toXElem)
+            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem)
             |> XElem.addElement  ^ toXElem self.SourceFiles
 
 
@@ -1041,7 +1041,7 @@ type FsProject =
             References        = references |> ResizeArray
             Settings          = projectSetting
             SourceFiles       = srcTree
-            ProjectReferences = projectReferences |> List.ofSeq
+            ProjectReferences = projectReferences |> ResizeArray
             BuildConfigs      = buildconfigs
         }
 
@@ -1063,6 +1063,16 @@ module FsProject =
         else
         { proj with References = ResizeArray.remove refr proj.References }
 
+    let addProjectReference (refr: ProjectReference) (proj: FsProject) = 
+        if proj.ProjectReferences |> ResizeArray.contains refr then 
+            proj 
+        else
+        { proj with ProjectReferences = proj.ProjectReferences |> ResizeArray.add refr }
+
+    let removeProjectReference (refr:ProjectReference) (proj:FsProject) =
+        if not (proj.ProjectReferences |> ResizeArray.contains refr) then proj
+        else
+        { proj with ProjectReferences = proj.ProjectReferences |> ResizeArray.remove refr  }
 
     let moveUp target (proj:FsProject) =
         proj.SourceFiles.MoveUp target

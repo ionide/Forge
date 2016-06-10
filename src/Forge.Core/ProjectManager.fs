@@ -113,6 +113,32 @@ module Furnace =
             FsProject.removeReference reference project |> ignore
             updateProj (FsProject.removeReference reference) state 
 
+    let addProjectReference (path : string, name : string option, condition : string option, guid : Guid option, copyLocal : bool option) (state: ActiveState) = 
+        let path = if path.StartsWith "." then path else relative path state.ProjectPath
+        let projRef = {
+            Include = path
+            Condition = condition
+            Name = name
+            CopyLocal = copyLocal
+            Guid = guid
+        }
+        FsProject.addProjectReference projRef state.ProjectData |> ignore
+        updateProj (FsProject.addProjectReference projRef) state 
+
+    let removeProjectReference (path : string) (state: ActiveState) = 
+        let project = state.ProjectData
+        let r = project.ProjectReferences |> ResizeArray.tryFind (fun refr -> refr.Include = path)
+        let path = if path.StartsWith "." then path else relative path state.ProjectPath
+        
+        let projectName = defaultArg project.Settings.Name.Data "fsproject"
+        match r with 
+        | None -> 
+            traceWarning ^ sprintf "'%s' does not contain a project Reference for '%s'" projectName path
+            state
+        | Some reference ->
+            FsProject.removeProjectReference reference project |> ignore
+            updateProj (FsProject.removeProjectReference reference) state
+
             
     let moveUp (target: string) (state: ActiveState) =
         updateProj (FsProject.moveUp target)  state
@@ -208,11 +234,11 @@ module Furnace =
             if directoryExists fullOldPath then
                 renameDir fullNewPath fullOldPath
                 rename()
-            else 
+            else
                 traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist on disk" fullOldPath
                 state
         | Virtual -> rename()
-        | None -> 
+        | None ->
             traceError ^ sprintf "Cannot Rename Directory - directory '%s' does not exist in the project" path
             state
             

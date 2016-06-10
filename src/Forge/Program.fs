@@ -68,7 +68,7 @@ let rec consoleLoop () =
 [<EntryPoint>]
 let main argv =
     let k = 
-        if argv.[argv.Length - 1] = "--no-prompt" then 
+        if argv.Length <> 0 && argv.[argv.Length - 1] = "--no-prompt" then 
             "" 
         else 
             writeln yellow "\nForge should be run from solution/repository root. Please ensure you don't run it from folder containing other solutions"
