@@ -789,6 +789,7 @@ let processList cont args =
         | ListCommands.File      -> execCommand (listFiles cont) subArgs
         | ListCommands.Reference -> execCommand (listReferences cont) subArgs
         | ListCommands.GAC       -> execCommand (listGac cont) subArgs
+        | ListCommands.ProjectReferences -> execCommand (listProjectReferences cont) subArgs
         | ListCommands.Templates -> listTemplates(); Some cont
         | ListCommands.Filter _ -> Some cont 
     | _ -> Some cont
