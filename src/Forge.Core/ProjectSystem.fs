@@ -1123,6 +1123,10 @@ module FsProject =
         proj.References |> ResizeArray.map (fun x -> x.Include)
         |> ResizeArray.toList
 
+    let listProjectReferences (proj:FsProject) =
+        proj.ProjectReferences |> ResizeArray.map (fun x -> x.Include)
+        |> ResizeArray.toList
+
 
     let listSourceFiles (proj:FsProject) =
         proj.SourceFiles.AllFiles() |> List.ofSeq

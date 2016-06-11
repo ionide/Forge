@@ -272,6 +272,16 @@ module Furnace =
         |> List.filter filterFn
         |> List.iter trace
         state
+
+    let listProjectReferences (filter: string option) (state: ActiveState) =
+        let filterFn = 
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5) 
+            | None   -> (fun _ -> true)
+        FsProject.listProjectReferences state.ProjectData
+        |> List.filter filterFn
+        |> List.iter trace
+        state
         
     let rec tryFindProject dir = 
         try

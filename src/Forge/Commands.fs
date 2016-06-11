@@ -315,12 +315,14 @@ type ListCommands =
     | [<First>][<CLIArg "projects">] Project
     | [<First>][<CLIArg "gac">] GAC
     | [<First>][<CLIArg "templates">] Templates
+    | [<First>][<CLIArg "projectReferences">] ProjectReferences
     | [<CLIArg "--filter">] Filter of string
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | File -> "List file from project"
             | Reference -> "List reference from project"
+            | ProjectReferences -> "List project reference from project"
             | Project -> "List projects in solution"
             | Templates -> "List the templates in Forge's cache"
             | GAC -> "List the assembilies in the Global Assembly Cache"
@@ -359,6 +361,16 @@ type ListReferencesArgs =
         member this.Usage =
             match this with
             | Project _ -> "List the refrences in this project"
+            | Filter _ -> "Filter list via fuzzy search for this string"
+
+type ListProjectReferencesArgs =
+    | [<CLIAlt "-p">] Project of string
+    | [<CLIArg "--filter">] Filter of string
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Project _ -> "List project refrences in this project"
             | Filter _ -> "Filter list via fuzzy search for this string"
 
 
@@ -626,7 +638,7 @@ let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
         return cont
     }
 
-let removeProjecr cont (results : ParseResults<RemoveProjectReferenceArgs>) =
+let removeProject cont (results : ParseResults<RemoveProjectReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveProjectReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveProjectReferenceArgs.Project @>
@@ -646,6 +658,7 @@ let processRemove cont args =
         | RemoveCommands.Reference -> execCommand (removeReference cont) subArgs
         | RemoveCommands.File -> execCommand (removeFile cont) subArgs // TODO - change to reflect mutual exclusion of removing solution files and project files
         | RemoveCommands.Folder -> execCommand (removeFolder cont) subArgs
+        | RemoveCommands.Project -> execCommand (removeProject cont) subArgs
     | _ -> Some cont
 
 
@@ -732,6 +745,16 @@ let listReferences cont (results : ParseResults<ListReferencesArgs>) =
         let filter = results.TryGetResult <@ ListReferencesArgs.Filter @>
         Furnace.loadFsProject proj
         |> (Furnace.listReferences filter)
+        |> ignore
+        return cont
+    }
+
+let listProjectReferences cont (results : ParseResults<ListProjectReferencesArgs>) = 
+    maybe {
+        let! proj = results.TryGetResult <@ ListProjectReferencesArgs.Project @>
+        let filter = results.TryGetResult <@ ListProjectReferencesArgs.Filter @>
+        Furnace.loadFsProject proj
+        |> (Furnace.listProjectReferences filter)
         |> ignore
         return cont
     }
