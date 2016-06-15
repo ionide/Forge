@@ -156,6 +156,9 @@ module String =
     /// Trims the given string with the DirectorySeparatorChar
     let inline trimSeparator (s : string) = s.TrimEnd Path.DirectorySeparatorChar
 
+    /// Strips non-printable (control) characters from the string
+    let inline stripControls (s : string) = s |> Seq.filter (fun c -> not (Char.IsControl(c))) |> String.Concat
+
     let takeUntil (c:char) (str:string) =
         match str.IndexOf c with
         | -1    -> str
@@ -182,21 +185,21 @@ module String =
 let prompt text =
     printfn text
     Console.Write "> "
-    Console.ReadLine ()
+    Console.ReadLine () |> String.stripControls
 
 let promptSelect text list =
     printfn text
     list |> Seq.iter (printfn " - %s")
     printfn ""
     Console.Write "> "
-    Console.ReadLine ()
+    Console.ReadLine () |> String.stripControls
 
 let promptSelect2 text list =
      printfn text
      list |> Array.iter (fun (n, v) -> printfn " - %s (%s)" n v)
      printfn ""
      Console.Write("> ")
-     Console.ReadLine()
+     Console.ReadLine () |> String.stripControls
 
 /// Loads the given text into a XmlDocument
 let XMLDoc text =
