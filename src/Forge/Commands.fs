@@ -86,7 +86,7 @@ type NewCommand =
 
 type NewProjectArgs =
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "dir">] Folder of string
+    | [<CLIAlt "dir">][<CLIAlt "--dir">] Folder of string
     | [<CLIAlt "-t">] Template of string
     | No_Paket
     | No_Fake
@@ -142,7 +142,7 @@ type AddFileArgs =
     | [<First>][<CLIAlt "-p">] Project of string
     | [<First>][<CLIAlt "-s">] Solution of string
     | [<CLIAlt "-n">] Name of string
-    | [<CLIAlt "dir">] Folder of string
+    | [<CLIAlt "dir">][<CLIAlt "--dir">] Folder of string
     | [<CLIArg "--build-action">] [<CLIAlt "-ba">] BuildAction of string
     | [<CLIArg "--above">] [<CLIAlt "-a">] Above of string
     | [<CLIArg "--below">] [<CLIAlt "-b">] Below of string
@@ -191,7 +191,7 @@ type RemoveCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "reference">] Reference
     | [<First>][<CLIArg "project">] Project
-    | [<First>][<CLIArg "folder">][<CLIAlt "dir">] Folder
+    | [<First>][<CLIArg "folder">][<CLIAlt "dir">][<CLIAlt "--dir">] Folder
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -257,7 +257,7 @@ type RemoveFolderArgs =
 type RenameCommands =
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "project">] Project
-    | [<First>][<CLIArg "folder">][<CLIAlt "dir">] Folder
+    | [<First>][<CLIArg "folder">][<CLIAlt "dir">][<CLIAlt "--dir">] Folder
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -376,7 +376,7 @@ type ListProjectReferencesArgs =
 
 type ListProjectsArgs =
     | [<CLIAlt "-s">] Solution of string
-    | [<CLIAlt ("dir")>] Folder of string
+    | [<CLIAlt ("dir")>][<CLIAlt "--dir">] Folder of string
     | [<CLIArg "--filter">] Filter of string
     interface IArgParserTemplate with
         member this.Usage =
