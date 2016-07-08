@@ -755,8 +755,12 @@ type Property<'a> =
         }
 
     member self.ToXElem () =
-        XElem.create self.Name (if self.Data.IsSome then [self.Data.Value] else [])
-        |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
+        if self.Data.IsSome then
+            XElem.create self.Name [self.Data.Value]
+            |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
+            |> Some
+        else
+            None
 
 
 let property name data =
@@ -825,23 +829,24 @@ type ProjectSettings =
             TargetFSharpCoreVersion      = elem    Constants.TargetFSharpCoreVersion
             DocumentationFile            = elem    Constants.DocumentationFile
         }
-
+        //|> mapOpt self.Link      ^ XElem.addElem Constants.Link
         member self.ToXElem () =
             XElem.create Constants.PropertyGroup []
-            |> XElem.addElement ^ toXElem self.Name
-            |> XElem.addElement ^ toXElem self.AssemblyName
-            |> XElem.addElement ^ toXElem self.RootNamespace
-            |> XElem.addElement ^ toXElem self.Configuration
-            |> XElem.addElement ^ toXElem self.Platform
-            |> XElem.addElement ^ toXElem self.SchemaVersion
-            |> XElem.addElement ^ toXElem self.ProjectGuid
-            |> XElem.addElement ^ toXElem self.ProjectType
-            |> XElem.addElement ^ toXElem self.OutputType
-            |> XElem.addElement ^ toXElem self.TargetFrameworkVersion
-            |> XElem.addElement ^ toXElem self.TargetFrameworkProfile
-            |> XElem.addElement ^ toXElem self.AutoGenerateBindingRedirects
-            |> XElem.addElement ^ toXElem self.TargetFSharpCoreVersion
-            |> XElem.addElement ^ toXElem self.DocumentationFile
+            |> mapOpt (toXElem self.Name) XElem.addElement
+            |> mapOpt (toXElem self.AssemblyName) XElem.addElement
+            |> mapOpt (toXElem self.RootNamespace) XElem.addElement
+            |> mapOpt (toXElem self.Configuration) XElem.addElement
+            |> mapOpt (toXElem self.Platform) XElem.addElement
+            |> mapOpt (toXElem self.SchemaVersion) XElem.addElement
+            |> mapOpt (toXElem self.ProjectGuid) XElem.addElement
+            |> mapOpt (toXElem self.ProjectType) XElem.addElement
+            |> mapOpt (toXElem self.OutputType) XElem.addElement
+            |> mapOpt (toXElem self.TargetFrameworkVersion) XElem.addElement
+            |> mapOpt (toXElem self.TargetFrameworkProfile) XElem.addElement
+            |> mapOpt (toXElem self.AutoGenerateBindingRedirects) XElem.addElement
+            |> mapOpt (toXElem self.TargetFSharpCoreVersion) XElem.addElement
+            |> mapOpt (toXElem self.DocumentationFile) XElem.addElement
+
 
 
 // parse the condition strings in property groups to create config settings
@@ -920,17 +925,16 @@ type ConfigSettings =
     member self.ToXElem () =
         XElem.create Constants.PropertyGroup []
         |> XElem.setAttribute Constants.Condition self.Condition
-        |> XElem.addElement ^ toXElem self.DebugSymbols
-        |> XElem.addElement ^ toXElem self.DebugType
-        |> XElem.addElement ^ toXElem self.Optimize
-        |> XElem.addElement ^ toXElem self.Tailcalls
-        |> XElem.addElement ^ toXElem self.OutputPath
-        |> XElem.addElement ^ toXElem self.CompilationConstants
-        |> XElem.addElement ^ toXElem self.WarningLevel
-        |> XElem.addElement ^ toXElem self.PlatformTarget
-        |> XElem.addElement ^ toXElem self.Prefer32Bit
-        |> XElem.addElement ^ toXElem self.OtherFlags
-
+        |> mapOpt (toXElem self.DebugSymbols) XElem.addElement
+        |> mapOpt (toXElem self.DebugType) XElem.addElement
+        |> mapOpt (toXElem self.Optimize) XElem.addElement
+        |> mapOpt (toXElem self.Tailcalls) XElem.addElement
+        |> mapOpt (toXElem self.OutputPath) XElem.addElement
+        |> mapOpt (toXElem self.CompilationConstants) XElem.addElement
+        |> mapOpt (toXElem self.WarningLevel) XElem.addElement
+        |> mapOpt (toXElem self.PlatformTarget) XElem.addElement
+        |> mapOpt (toXElem self.Prefer32Bit) XElem.addElement
+        |> mapOpt (toXElem self.OtherFlags) XElem.addElement
 
 // TODO - Check for duplicate files
 
