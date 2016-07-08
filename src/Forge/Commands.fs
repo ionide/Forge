@@ -3,10 +3,10 @@
 open System
 open System.IO
 open System.Text
-open Argu 
+open Argu
 open Forge
 open Forge.Prelude
-open Forge.ProjectSystem 
+open Forge.ProjectSystem
 open Forge.ProjectManager
 
 /// Custom Command Line Argument
@@ -15,7 +15,7 @@ type CLIArg = CustomCommandLineAttribute
 type CLIAlt = AltCommandLineAttribute
 
 type Result =
-| Continue 
+| Continue
 | Exit
 
 
@@ -487,7 +487,7 @@ let newProject cont (results : ParseResults<_>) =
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
     Templates.Project.New projectName projectDir templateName paket fake
-    Some cont 
+    Some cont
 
 
 let newFile cont (results : ParseResults<_>) =
@@ -496,7 +496,7 @@ let newFile cont (results : ParseResults<_>) =
     let ba = results.TryGetResult <@ NewFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
     let project = results.TryGetResult <@ NewFileArgs.Project @>
     Templates.File.New fn template project ba
-    
+
     Some cont
 
 
@@ -522,18 +522,18 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
         let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
         let below = results.TryGetResult <@ AddFileArgs.Below @>
         let above = results.TryGetResult <@ AddFileArgs.Above @>
-        let project' = 
+        let project' =
             match project with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
         | Some project ->
             let activeState = Furnace.loadFsProject project
-            let n = 
-                if Path.IsPathRooted name then 
-                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString()) 
-                else 
+            let n =
+                if Path.IsPathRooted name then
+                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
+                else
                     relative (Path.GetFullPath name) (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
             let name' = n |> Path.GetFileName
             let dir = n |> Path.GetDirectoryName
@@ -550,7 +550,7 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
                 activeState
                 |> Furnace.addSourceFile (n, Some dir , build, link, None, None)
                 |> ignore
-        
+
 
         return cont
     }
@@ -566,13 +566,14 @@ let addReference cont (results : ParseResults<AddReferenceArgs>) =
         return cont
     }
 
-let addProject cont (results : ParseResults<AddProjectArgs>) = 
+let addProject cont (results : ParseResults<AddProjectArgs>) =
     maybe {
         let! path = results.TryGetResult <@ AddProjectArgs.Name @>
         let! project = results.TryGetResult <@ AddProjectArgs.Project @>
         let name = Path.GetFileName path
+        let newProject = Furnace.loadFsProject name
         Furnace.loadFsProject project
-        |> Furnace.addProjectReference(path, Some name, None, None, None)
+        |> Furnace.addProjectReference(path, Some name, None, newProject.ProjectData.Settings.ProjectGuid.Data, None)
         |> ignore
         return cont
     }
@@ -596,14 +597,14 @@ let removeFile cont (results : ParseResults<RemoveFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
         let project = results.TryGetResult <@ RemoveFileArgs.Project @>
-        let project' = 
+        let project' =
             match project with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
         | Some project ->
-            let name' = relative (directory </> name) ((directory </> project |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  ) 
+            let name' = relative (directory </> name) ((directory </> project |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
             Furnace.loadFsProject project
             |> Furnace.removeSourceFile name'
             |> ignore
@@ -625,9 +626,9 @@ let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
         let project = results.TryGetResult <@ RemoveFolderArgs.Project @>
-        let project' = 
+        let project' =
             match project with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
@@ -642,8 +643,8 @@ let removeProject cont (results : ParseResults<RemoveProjectReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveProjectReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveProjectReferenceArgs.Project @>
-        
-        
+
+
         Furnace.loadFsProject project
         |> Furnace.removeProjectReference name
         |> ignore
@@ -671,9 +672,9 @@ let renameFile cont (results : ParseResults<RenameFileArgs>) =
         let! name = results.TryGetResult <@ RenameFileArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
         let project = results.TryGetResult <@ RenameFileArgs.Project @>
-        let project' = 
+        let project' =
             match project with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
@@ -690,7 +691,7 @@ let renameProject cont (results : ParseResults<RenameProjectArgs>) =
      let! name = results.TryGetResult <@ RenameProjectArgs.Name @>
      let! newName = results.TryGetResult <@ RenameProjectArgs.Rename @>
 
-     return cont   
+     return cont
     }
 
 
@@ -699,9 +700,9 @@ let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
         let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
         let project = results.TryGetResult <@ RenameFolderArgs.Project @>
-        let project' = 
+        let project' =
             match project with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
@@ -749,7 +750,7 @@ let listReferences cont (results : ParseResults<ListReferencesArgs>) =
         return cont
     }
 
-let listProjectReferences cont (results : ParseResults<ListProjectReferencesArgs>) = 
+let listProjectReferences cont (results : ParseResults<ListProjectReferencesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListProjectReferencesArgs.Project @>
         let filter = results.TryGetResult <@ ListProjectReferencesArgs.Filter @>
@@ -791,7 +792,7 @@ let processList cont args =
         | ListCommands.GAC       -> execCommand (listGac cont) subArgs
         | ListCommands.ProjectReferences -> execCommand (listProjectReferences cont) subArgs
         | ListCommands.Templates -> listTemplates(); Some cont
-        | ListCommands.Filter _ -> Some cont 
+        | ListCommands.Filter _ -> Some cont
     | _ -> Some cont
 
 //-----------------------------------------------------------------
@@ -804,18 +805,18 @@ let moveFile cont (results : ParseResults<_>) =
         let! name = results.TryGetResult <@ MoveFileArgs.Name @>
         let up = results.TryGetResult <@ MoveFileArgs.Up @>
         let down = results.TryGetResult <@ MoveFileArgs.Down @>
-        let project' = 
+        let project' =
             match proj with
-            | Some p -> Some p 
+            | Some p -> Some p
             | None -> Furnace.tryFindProject name
         match project' with
         | None -> traceWarning "Project not found"
         | Some project ->
             let activeState = Furnace.loadFsProject project
-            let n = 
-                if Path.IsPathRooted name then 
-                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString()) 
-                else 
+            let n =
+                if Path.IsPathRooted name then
+                    relative name (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
+                else
                     relative (Path.GetFullPath name) (activeState.ProjectPath + Path.DirectorySeparatorChar.ToString())
 
             match up, down with
