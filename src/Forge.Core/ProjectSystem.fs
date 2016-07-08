@@ -1031,7 +1031,7 @@ type FsProject =
 
         let references =
             filterItems Constants.Reference
-            //|> Seq.filter  (not << XElem.hasElement Constants.Paket) // we only manage references paket isn't already managing
+            |> Seq.filter  (not << XElem.hasElement Constants.Paket) // we only manage references paket isn't already managing
             |> Seq.map Reference.fromXElem
 
         let srcTree =
