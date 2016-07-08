@@ -33,7 +33,7 @@ let findMissingFiles templateProject projects =
     |> Seq.map (fun (ps,fn) ->
             let missingFiles = Set.difference templateFilesSet (Set.ofSeq ps.SourceFiles.Files)
 
-            let duplicateFiles =                 
+            let duplicateFiles =
                 Seq.duplicates ps.SourceFiles.Files
 
             let unorderedFiles =
@@ -56,19 +56,19 @@ let findMissingFiles templateProject projects =
 
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
 let FixMissingFiles templateProject projects =
-    
+
 
     findMissingFiles templateProject projects
     |> Seq.iter (fun pc ->
             let addMissing project missingFile =
                 printfn "Adding %s to %s" missingFile pc.ProjectFileName
-                project |> FsProject.addSourceFile  "" {SourceFile.Include = missingFile; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
-    
-    
+                project |> FsProject.addSourceFile  "" {SourceFile.Include = missingFile; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+
+
             let project = FsProject.load pc.ProjectFileName
             if not ^ Seq.isEmpty pc.MissingFiles then
-                pc.MissingFiles 
-                |> Seq.fold addMissing project 
+                pc.MissingFiles
+                |> Seq.fold addMissing project
                 |> FsProject.save pc.ProjectFileName )
 
 /// It removes duplicate files from the project files.
@@ -76,10 +76,10 @@ let RemoveDuplicateFiles projects =
     projects
     |> Seq.iter (fun fileName ->
             let project = FsProject.load fileName
-            let duplicates = 
+            let duplicates =
                 Seq.duplicates project.SourceFiles.Files
             if not ^ Seq.isEmpty duplicates then
-                let newProject = project //TODO: .RemoveDuplicates() 
+                let newProject = project //TODO: .RemoveDuplicates()
                 newProject |> FsProject.save fileName)
 
 /// Compares the given projects to the template project and adds all missing files to the projects if needed.
@@ -119,10 +119,10 @@ let GetList () =
         |> Seq.filter (fun x -> not ^ x.StartsWith ".")
     else Seq.empty
 
-//type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">  
-    
- 
-module Project = 
+//type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">
+
+
+module Project =
     open System
     open System.IO
     open Forge.ProjectSystem
@@ -138,7 +138,7 @@ module Project =
         |> Seq.iter (fun x ->
                         let r = replace x
                         let contents = File.ReadAllText(x).Replace(find, r)
-                        File.WriteAllText(x, contents))    
+                        File.WriteAllText(x, contents))
 
     let getProjects() =
         DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
@@ -149,14 +149,14 @@ module Project =
 
         let templates = GetList()
 
-        let projectName' = 
+        let projectName' =
             match projectName with
-            | Some p -> p 
+            | Some p -> p
             | None -> prompt "Enter project name:"
         let projectDir' =
-            match projectDir with 
+            match projectDir with
             | Some p -> p
-            | None -> prompt "Enter project directory (relative to working directory):" 
+            | None -> prompt "Enter project directory (relative to working directory):"
         let templateName' =
             match templateName with
             | Some p -> p
@@ -173,16 +173,16 @@ module Project =
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
             sed "<%= paketPath %>" (relative directory) projectFolder
             sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
-            
+
             Paket.Copy directory
             if Directory.GetFiles directory |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
                 Paket.Run ["init"]
 
-            Directory.GetFiles projectFolder 
+            Directory.GetFiles projectFolder
             |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
             |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
             Paket.Run ["install"; "--hard"]
-            if fake then                
+            if fake then
                 Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
                 if isMono then
@@ -192,21 +192,21 @@ module Project =
             printfn "Done!"
         else
             printfn "Wrong template name"
-            
-module File = 
+
+module File =
     open System
     open System.IO
     open Forge.ProjectSystem
     open Forge.Json
     open Json.JsonExtensions
-    
+
     let getTemplates () =
         let value = System.IO.File.ReadAllText(templateFile) |> JsonValue.Parse
-        value?Files |> JsonValue.AsArray |> Array.map (fun n -> 
-            n?name.ToString().Replace("\"","" ), 
-            n?value.ToString().Replace("\"","" ), 
+        value?Files |> JsonValue.AsArray |> Array.map (fun n ->
+            n?name.ToString().Replace("\"","" ),
+            n?value.ToString().Replace("\"","" ),
             n?extension.ToString().Replace("\"","" ) )
-    
+
     let sed (find:string) replace file =
         let r = replace file
         let contents = File.ReadAllText(file).Replace(find, r)
@@ -215,9 +215,9 @@ module File =
 
     let New fileName template project buildAction =
         if not ^ Directory.Exists templatesLocation then Refresh ()
-        
+
         let templates = getTemplates ()
-        let template' = 
+        let template' =
             match template with
             | Some t -> t
             | None -> (templates |> Array.map( fun (n,v,_) -> n,v) |> promptSelect2 "Choose a template:")
@@ -225,7 +225,7 @@ module File =
         let oldFile = value + "." + ext
         let newFile = fileName + "." + ext
         let newFile' =  (directory </> newFile)
-        let project' = 
+        let project' =
             match project with
             | Some p -> Some p
             | None -> ProjectManager.Furnace.tryFindProject newFile'
@@ -233,7 +233,7 @@ module File =
         System.IO.File.Copy(filesLocation </> oldFile, newFile')
         match project' with
         | Some f ->
-            ProjectManager.Furnace.loadFsProject f 
+            ProjectManager.Furnace.loadFsProject f
             |> ProjectManager.Furnace.addSourceFile (newFile, None, buildAction, None, None, None)
             |> ignore
         | None ->

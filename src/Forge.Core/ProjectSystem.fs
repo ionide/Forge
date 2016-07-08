@@ -211,7 +211,7 @@ type WarningLevel (x:int) =
     member __.Value =
         if x < 0 then 0 elif x > 5 then 5 else x
 
-    override self.ToString() = 
+    override self.ToString() =
         self.Value.ToString()
 
 
@@ -233,6 +233,7 @@ type Reference =
         /// This attribute matches the Copy Local property of the reference that's in the Visual Studio IDE.
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
+        Paket : bool option
     }
     static member Empty =
         {   Include         = ""
@@ -241,6 +242,7 @@ type Reference =
             Name            = None
             SpecificVersion = None
             CopyLocal       = None
+            Paket           = None
         }
 
     static member fromXElem (xelem:XElement) =
@@ -254,6 +256,7 @@ type Reference =
             Name            = XElem.tryGetElementValue Constants.Name            xelem
             CopyLocal       = XElem.tryGetElementValue Constants.Private         xelem |> Option.bind parseBool
             SpecificVersion = XElem.tryGetElementValue Constants.SpecificVersion xelem |> Option.bind parseBool
+            Paket           = XElem.tryGetElementValue Constants.Paket           xelem |> Option.bind parseBool
         }
 
     member self.ToXElem () =
@@ -264,7 +267,7 @@ type Reference =
         |> mapOpt self.HintPath         ^ XElem.addElem Constants.HintPath
         |> mapOpt self.SpecificVersion  ^ fun b node -> XElem.addElem Constants.SpecificVersion (string b) node
         |> mapOpt self.CopyLocal        ^ fun b node -> XElem.addElem Constants.Private (string b) node
-
+        |> mapOpt self.Paket            ^ XElem.addElem Constants.Paket
 
 /// Represents a reference to another project
 // https://msdn.microsoft.com/en-us/library/bb629388.aspx
@@ -301,7 +304,7 @@ type ProjectReference =
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
         |> mapOpt self.Name      ^ XElem.addElem Constants.Name
         |> mapOpt self.Guid      ^ fun guid node ->
-            XElem.addElem Constants.Private (sprintf "{%s}" ^ string guid) node
+            XElem.addElem Constants.Project (sprintf "{%s}" ^ string guid) node
         |> mapOpt self.CopyLocal ^ fun b node ->
             XElem.addElem Constants.Private (string b) node
 
@@ -329,6 +332,7 @@ type SourceFile =
         OnBuild     : BuildAction
         Link        : string option
         Copy        : CopyToOutputDirectory option
+        Paket       : bool option
     }
 
     static member fromXElem (xelem:XElement) =
@@ -343,6 +347,7 @@ type SourceFile =
             Copy      =
                 XElem.tryGetElement Constants.CopyToOutputDirectory xelem
                 |> Option.bind (XElem.value >> CopyToOutputDirectory.TryParse)
+            Paket     = XElem.tryGetElementValue Constants.Paket xelem |> Option.bind parseBool
         }
 
     member self.ToXElem () =
@@ -350,6 +355,7 @@ type SourceFile =
         |> XElem.setAttribute Constants.Include self.Include
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
         |> mapOpt self.Link      ^ XElem.addElem Constants.Link
+        |> mapOpt self.Paket     ^ XElem.addElem Constants.Paket
         |> mapOpt self.Copy ^ fun copy node ->
             match copy with
             | Never          -> node
@@ -404,7 +410,7 @@ type SourceElement =
 module internal PathHelpers =
 
     let normalizeFileName (fileName : string) =
-        let file = if (fileName = (Path.DirectorySeparatorChar |> string)) 
+        let file = if (fileName = (Path.DirectorySeparatorChar |> string))
                    then fileName
                    else fileName.Replace(@"\", "/")
         match file with
@@ -471,8 +477,8 @@ module internal PathHelpers =
     let treeOrder (paths:string list) =
         let paths = paths |> List.map normalizeFileName
         let normalize root = if root = "" then "/" else root
-        
-        let rec loop root paths = 
+
+        let rec loop root paths =
             let pathsDeeper = paths |> List.filter hasRoot
             let directChildren = dirOrder paths
 
@@ -647,7 +653,7 @@ type SourceTree (files:SourceFile list) =
         if   not ^ hasTarget dir then ()
         elif not ^ checkFile newName "is not a valid file name" then () else
         let parent = getParentDir dir
-        
+
         let pointTo newFile sourceFile =
             match sourceFile.Link with
             | Some(_) -> {sourceFile with Link = Some newFile}
@@ -699,7 +705,7 @@ type SourceTree (files:SourceFile list) =
         if not ^ tree.ContainsKey dir then Seq.empty else
         let arr = tree.[dir]
         loop dir arr
-        
+
     member self.AllFiles() = self.DirContents "/"
 
     member __.Data with get() = data
@@ -849,7 +855,7 @@ type ConfigSettings =
         Optimize             : Property<bool>
         Tailcalls            : Property<bool>
         OutputPath           : Property<string>
-        CompilationConstants : Property<string list>
+        CompilationConstants : Property<string>
         WarningLevel         : Property<WarningLevel>
         PlatformTarget       : Property<PlatformType>
         Prefer32Bit          : Property<bool>
@@ -862,8 +868,8 @@ type ConfigSettings =
             DebugType            = property Constants.DebugType DebugType.Full
             Optimize             = property Constants.Optimize false
             Tailcalls            = property Constants.Tailcalls false
-            OutputPath           = property Constants.OutputPath "/bin/Debug" 
-            CompilationConstants = property Constants.CompilationConstants ["DEBUG;TRACE"]
+            OutputPath           = property Constants.OutputPath "/bin/Debug"
+            CompilationConstants = property Constants.CompilationConstants "DEBUG;TRACE"
             WarningLevel         = property Constants.WarningLevel ^ WarningLevel 3
             PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
             Prefer32Bit          = property Constants.Prefer32Bit false
@@ -903,7 +909,7 @@ type ConfigSettings =
             Optimize             = elemmap Constants.Optimize Boolean.Parse
             Tailcalls            = elemmap Constants.Tailcalls Boolean.Parse
             OutputPath           = elem    Constants.OutputPath
-            CompilationConstants = elemmap Constants.CompilationConstants split
+            CompilationConstants = elem    Constants.CompilationConstants
             WarningLevel         = elemmap Constants.WarningLevel (Int32.Parse>>WarningLevel)
             PlatformTarget       = elemmap Constants.PlatformTarget PlatformType.Parse
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
@@ -975,7 +981,7 @@ type FsProject =
     member self.RenameProject name =
         let s = self.Settings
         let name' = Some name
-        
+
         if name' = s.AssemblyName.Data || name' = s.RootNamespace.Data || name' = s.DocumentationFile.Data then
             traceWarning "New project name must be different than existing"
             self
@@ -984,7 +990,7 @@ type FsProject =
             let projName = s.AssemblyName.Data
             let docFile = Regex.Replace(s.DocumentationFile.Data.Value, projName.Value, name, RegexOptions.IgnoreCase)
             let docProperty = property docFile docFile
-            let s' = { s with 
+            let s' = { s with
                         AssemblyName = nameProperty
                         RootNamespace = nameProperty
                         DocumentationFile = docProperty }
@@ -1025,7 +1031,7 @@ type FsProject =
 
         let references =
             filterItems Constants.Reference
-            |> Seq.filter  (not << XElem.hasElement Constants.Paket) // we only manage references paket isn't already managing
+            //|> Seq.filter  (not << XElem.hasElement Constants.Paket) // we only manage references paket isn't already managing
             |> Seq.map Reference.fromXElem
 
         let srcTree =
@@ -1034,6 +1040,7 @@ type FsProject =
                 XElem.descendants itemgroup
                 |> Seq.filter (fun x -> isSrcFile x.Name.LocalName))
             |> Seq.map SourceFile.fromXElem
+            //|> Seq.filter (fun n-> n.Paket |> Option.exists id |> not)
             |> Seq.toList |> SourceTree
 
         {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc
@@ -1063,9 +1070,9 @@ module FsProject =
         else
         { proj with References = ResizeArray.remove refr proj.References }
 
-    let addProjectReference (refr: ProjectReference) (proj: FsProject) = 
-        if proj.ProjectReferences |> ResizeArray.contains refr then 
-            proj 
+    let addProjectReference (refr: ProjectReference) (proj: FsProject) =
+        if proj.ProjectReferences |> ResizeArray.contains refr then
+            proj
         else
         { proj with ProjectReferences = proj.ProjectReferences |> ResizeArray.add refr }
 

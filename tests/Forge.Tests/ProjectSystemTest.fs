@@ -54,7 +54,7 @@ module ``ProjectSystem Tests`` =
     [<Test>]
     let ``ProjectSystem - add new file``() =
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+        let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
         let pf' = FsProject.addSourceFile "/" f pf
         let files = pf'.SourceFiles.AllFiles()
         TestContext.WriteLine  (sprintf "%A" files)
@@ -63,7 +63,7 @@ module ``ProjectSystem Tests`` =
     [<Test>]
     let ``ProjectSystem - add duplicate file``() =
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None}
+        let f = {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
         let pf' = FsProject.addSourceFile "/" f pf
         let files = pf'.SourceFiles.AllFiles()
         TestContext.WriteLine (sprintf "%A" files)
@@ -86,7 +86,7 @@ module ``ProjectSystem Tests`` =
     [<Test>]
     let ``ProjectSystem - order file``() =
         let pf = FsProject.parse astInput
-        let pf' = pf |> FsProject.moveUp "a_file.fs" |> FsProject.moveUp "a_file.fs" 
+        let pf' = pf |> FsProject.moveUp "a_file.fs" |> FsProject.moveUp "a_file.fs"
         let files = pf'.SourceFiles.AllFiles()
         files |> Seq.head |> should be (equal "a_file.fs")
         files |> Seq.length |> should be (equal 3)
