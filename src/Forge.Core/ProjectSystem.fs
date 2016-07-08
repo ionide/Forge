@@ -958,7 +958,7 @@ type FsProject =
             |> XElem.addElement  ^ toXElem self.Settings
             |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
             |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
-            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem)
+            |> fun n -> if self.ProjectReferences.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem) else n
             |> XElem.addElement  ^ toXElem self.SourceFiles
 
 
