@@ -579,8 +579,11 @@ type SourceTree (files:SourceFile list) =
         //if tree.ContainsKey dir |> not then tree.Add(dir, new ResizeArray<_>())
         if  not ^ data.ContainsKey keyPath then
             let arr = tree.["/"]
-            tree.["/"] <- ResizeArray.add keyPath arr
-            data.[keyPath] <- srcFile
+            if ResizeArray.contains keyPath arr |> not then
+                tree.["/"] <- ResizeArray.add keyPath arr
+                data.[keyPath] <- srcFile
+            else
+                printfn "File %s already exists" keyPath
 
 
 
