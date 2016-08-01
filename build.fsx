@@ -35,10 +35,11 @@ let authors = [ "Reid Evans"; "Krzysztof Cieslak"; "Jared Hester" ]
 let tags = ""
 
 // File system information
-let solutionFile  = "Forge.sln"
+let projectFile  = "src/Forge/Forge.fsproj"
+let testProjectFiles = "tests/Forge.Tests/Forge.Tests.fsproj"
 
 // Pattern specifying assemblies to be tested using NUnit
-let testAssemblies = "temp/bin/*Tests*.dll"
+let testAssemblies = "temp/test/*Tests*.dll"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -55,6 +56,7 @@ let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 let release = LoadReleaseNotes "RELEASE_NOTES.md"
 
 let tempDir = "temp"
+let testBuildDir = "temp/test"
 let buildDir = "temp/bin"
 
 // Helper active pattern for project types
@@ -107,9 +109,15 @@ Target "CleanDocs" (fun _ ->
 // Build library & test project
 
 Target "Build" (fun _ ->
-    !! solutionFile
+    !! projectFile
     |> MSBuildRelease buildDir "Rebuild"
     |> ignore
+
+    !! (buildDir </> "*.dll")
+    ++ (buildDir </> "*.pdb")
+    ++ (buildDir </> "*.xml")
+    -- (buildDir </> "Mono.Posix.dll")
+    |> DeleteFiles
 )
 
 Target "CopyRunners" (fun _ ->
@@ -118,6 +126,11 @@ Target "CopyRunners" (fun _ ->
 
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
+
+Target "BuildTests" (fun _ ->
+    !! testProjectFiles
+    |> MSBuildRelease testBuildDir "Rebuild"
+    |> ignore)
 
 Target "RunTests" (fun _ ->
     !! testAssemblies
@@ -146,6 +159,7 @@ Target "ZipRelease" (fun _ ->
     ++ (tempDir  </> "forge.cmd")
     ++ (buildDir </> "*.exe")
     ++ (buildDir </> "*.config")
+    ++ (buildDir </> "Mono.Posix.dll")
     -- (buildDir </> "Forge.Core.dll.config")
     -- (buildDir </> "*templates*")
     -- (buildDir </> "*Tests*")
@@ -203,6 +217,7 @@ Target "GenerateDocs" DoNothing
   ==> "AssemblyInfo"
   ==> "Build"
   ==> "CopyRunners"
+  ==> "BuildTests"
   ==> "RunTests"
   ==> "Default"
 
@@ -213,7 +228,6 @@ Target "GenerateDocs" DoNothing
   ==> "ReleaseDocs"
 
 "Default"
-
   ==> "ZipRelease"
   ==> "ReleaseDocs"
   ==> "Release"
