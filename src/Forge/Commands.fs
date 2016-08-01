@@ -877,8 +877,8 @@ let strikeForge (args : string []) (cont:Result) =
                 | Refresh -> fun _ -> Templates.Refresh (); Some cont
                 | Exit -> fun _ -> Some Result.Exit
             with
-            | _ ->
-                printfn "Unrecognized command or missing required parameter\n"
+            | ex ->
+                eprintfn "Unhandled error:\n%s" ex.Message
                 Some cont
         | _ -> Some cont
     defaultArg (Option.bind check result) cont
