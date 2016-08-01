@@ -351,6 +351,9 @@ module Seq =
             | None | Some true -> None)
 
 let relative (path1 : string) (path2 : string) =
+    let path1 = if Path.IsPathRooted path1 then path1 else directory </> path1
+    let path2 = if Path.IsPathRooted path2 then path2 else directory </> path2
+
     let p1, p2 = Uri path1, Uri path2
     Uri.UnescapeDataString(
         p2.MakeRelativeUri(p1)

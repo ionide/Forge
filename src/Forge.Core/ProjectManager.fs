@@ -115,7 +115,7 @@ module Furnace =
             updateProj (FsProject.removeReference reference) state
 
     let addProjectReference (path : string, name : string option, condition : string option, guid : Guid option, copyLocal : bool option) (state: ActiveState) =
-        let path = if path.StartsWith "." then path else relative path (state.ProjectPath + Path.DirectorySeparatorChar.ToString())
+        let path = if path.StartsWith "." then path else relative path state.ProjectPath //(state.ProjectPath + Path.DirectorySeparatorChar.ToString())
         let projRef = {
             Include = path
             Condition = condition
