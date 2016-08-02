@@ -18,6 +18,7 @@ let loadProject dir =
     Forge.ProjectManager.Furnace.loadFsProject dir
 
 
+let makeAbsolute dir = TestContext.CurrentContext.TestDirectory </> dir
 
 module Assertions =
     let reference (ref : string) (proj : Forge.ProjectManager.ActiveState) =
@@ -44,3 +45,21 @@ module Assertions =
 
         Assert.That(res, EqualConstraint(name))
 
+    let notReference (ref : string) (proj : Forge.ProjectManager.ActiveState) =
+        let res =
+            proj.ProjectData.References
+            |> Seq.map (fun r -> r.Include)
+
+        Assert.That(res, NotConstraint <| ContainsConstraint(ref))
+
+    let notReferenceProject (ref : string) (proj : Forge.ProjectManager.ActiveState) =
+        let res =
+            proj.ProjectData.ProjectReferences
+            |> Seq.map (fun r -> r.Include)
+
+        Assert.That(res, NotConstraint <| ContainsConstraint(ref))
+
+    let hasNotFile (file : string) (proj : Forge.ProjectManager.ActiveState) =
+        let res = proj.ProjectData.SourceFiles.Files
+
+        Assert.That(res, NotConstraint <| ContainsConstraint(file))
