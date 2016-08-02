@@ -15,7 +15,7 @@ let ``Add Project Reference`` () =
     |> initTest dir
 
     let project = dir </> "test" </> "Test" </> "Test.fsproj" |> loadProject
-    project |> referenceProject "..\\src\\Sample\\Sample.fsproj"
+    project |> referenceProject  (".." </> "src" </> "Sample" </> "Sample.fsproj")
 
 
 [<Test>]
@@ -29,7 +29,7 @@ let ``Remove Project Reference`` () =
     |> initTest dir
 
     let project = dir </> "test" </> "Test" </> "Test.fsproj" |> loadProject
-    project |> notReferenceProject "..\\src\\Sample\\Sample.fsproj"
+    project |> notReferenceProject (".." </> "src" </> "Sample" </> "Sample.fsproj")
 
 
 [<Test>]
@@ -44,7 +44,7 @@ let ``Add Project Reference - absolute path`` () =
     |> initTest dir
 
     let project = path1 |> loadProject
-    project |> referenceProject "..\\src\\Sample\\Sample.fsproj"
+    project |> referenceProject  (".." </> "src" </> "Sample" </> "Sample.fsproj")
 
 
 [<Test>]
@@ -60,4 +60,4 @@ let ``Remove Project Reference - absolute path`` () =
     |> initTest dir
 
     let project = path1 |> loadProject
-    project |> notReferenceProject "..\\src\\Sample\\Sample.fsproj"
+    project |> notReferenceProject  (".." </> "src" </> "Sample" </> "Sample.fsproj")
