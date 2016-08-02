@@ -36,7 +36,7 @@ let tags = ""
 
 // File system information
 let projectFile  = "src/Forge/Forge.fsproj"
-let testProjectFiles = "tests/Forge.Tests/Forge.Tests.fsproj"
+let testProjectFiles = "tests/**/*Tests.fsproj"
 
 // Pattern specifying assemblies to be tested using NUnit
 let testAssemblies = "temp/test/*Tests*.dll"

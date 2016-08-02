@@ -212,7 +212,11 @@ let XMLDoc text =
 // Environment Config
 //====================================================
 
-let exeLocation       = System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
+let exeLocation = 
+    try
+        System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
+    with 
+    | _ -> ""
 let templatesLocation = exeLocation </> ".." </> "templates"
 let directory         = System.Environment.CurrentDirectory
 let packagesDirectory = directory </> "packages"
