@@ -25,7 +25,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\Forge.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
-    <StartWorkingDirectory>D:\Programowanie\Tests\test5\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
