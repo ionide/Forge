@@ -66,6 +66,7 @@
     <None Include="paket.references" />
     <Content Include="app.config" />
     <Compile Include="common.fs" />
+    <Compile Include="PreludeTest.fs" />
     <Compile Include="ProjectSystemTest.fs" />
     <Compile Include="ProjectManagerTests.fs" />
     <Compile Include="SolutionTests.fs" />
