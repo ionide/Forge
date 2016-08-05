@@ -212,6 +212,8 @@ Target "KeepRunning" (fun _ ->
 
 Target "Default" DoNothing
 Target "GenerateDocs" DoNothing
+Target "PaketBuild" DoNothing
+
 
 "Clean"
   ==> "AssemblyInfo"
@@ -231,5 +233,10 @@ Target "GenerateDocs" DoNothing
   ==> "ZipRelease"
   ==> "ReleaseDocs"
   ==> "Release"
+
+"Build"
+  ==> "ZipRelease"
+  ==> "PaketBuild"
+
 
 RunTargetOrDefault "Default"
