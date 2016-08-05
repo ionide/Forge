@@ -163,11 +163,13 @@ module Project =
             | None -> (templates |> promptSelect "Choose a template:")
         let projectFolder = directory </> projectDir' </> projectName'
         let templateDir = templatesLocation </> templateName'
+        let gitignorePath = (templatesLocation </> ".vcsignore" </> ".gitignore")
 
         if templates |> Seq.contains templateName' then
             printfn "Generating project..."
             copyDir projectFolder templateDir (fun _ -> true)
             applicationNameToProjectName projectFolder projectName'
+            File.Copy(gitignorePath, (projectDir' </> ".gitignore"), false)
 
             sed "<%= namespace %>" (fun _ -> projectName') projectFolder
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
