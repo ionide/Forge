@@ -169,7 +169,7 @@ module Project =
             printfn "Generating project..."
             copyDir projectFolder templateDir (fun _ -> true)
             applicationNameToProjectName projectFolder projectName'
-            File.Copy(gitignorePath, (projectDir' </> ".gitignore"), false)
+            File.Copy(gitignorePath, (directory </> ".gitignore"), false)
 
             sed "<%= namespace %>" (fun _ -> projectName') projectFolder
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
