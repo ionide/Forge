@@ -8,9 +8,10 @@ let [<Literal>] Reference   = "Reference"
 
 // Platform Constants
 
-let [<Literal>] X86       = "x86"
-let [<Literal>] X64       = "x64"
-let [<Literal>] AnyCPU    = "AnyCPU"
+let [<Literal>] X86         = "x86"
+let [<Literal>] X64         = "x64"
+let [<Literal>] AnyCPU      = "AnyCPU"
+let [<Literal>] PlatformVar = "$(Platform)"
 
 // BuildAction Constants
 
