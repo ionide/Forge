@@ -61,26 +61,29 @@ open Forge
 *)
 
 type PlatformType =
-    | X86 |  X64 | AnyCPU
+    | X86 |  X64 | AnyCPU | PlatformVar
 
     override self.ToString () = self |> function
-        | X86     -> Constants.X86
-        | X64     -> Constants.X64
-        | AnyCPU  -> Constants.AnyCPU
+        | X86         -> Constants.X86
+        | X64         -> Constants.X64
+        | AnyCPU      -> Constants.AnyCPU
+        | PlatformVar -> Constants.PlatformVar
 
     static member Parse text = text |> function
-        | InvariantEqual Constants.X86     -> X86
-        | InvariantEqual Constants.X64     -> X64
+        | InvariantEqual Constants.X86         -> X86
+        | InvariantEqual Constants.X64         -> X64
         | InvariantEqual "Any CPU"
-        | InvariantEqual Constants.AnyCPU  -> AnyCPU
+        | InvariantEqual Constants.AnyCPU      -> AnyCPU
+        | InvariantEqual Constants.PlatformVar -> PlatformVar
         | _ ->
             failwithf "Could not parse '%s' into a `PlatformType`" text
 
     static member TryParse text = text |> function
-        | InvariantEqual Constants.X86     -> Some X86
-        | InvariantEqual Constants.X64     -> Some X64
+        | InvariantEqual Constants.X86         -> Some X86
+        | InvariantEqual Constants.X64         -> Some X64
         | InvariantEqual "Any CPU"
-        | InvariantEqual Constants.AnyCPU  -> Some AnyCPU
+        | InvariantEqual Constants.AnyCPU      -> Some AnyCPU
+        | InvariantEqual Constants.PlatformVar -> Some PlatformVar
         | _ -> None
 
 
