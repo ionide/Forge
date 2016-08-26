@@ -25,7 +25,7 @@ let ``Remove Project Reference`` () =
     [ "new project -n Sample --dir src -t console"
       "new project -n Test --dir test -t fsunit"
       "add project -p test/Test/Test.fsproj -n src/Sample/Sample.fsproj"
-      "remove project -p test/Test/Test.fsproj -n src/Sample/Sample.fsproj"  ]
+      "remove project -p test/Test/Test.fsproj -n src/Sample/Sample.fsproj" ]
     |> initTest dir
 
     let project = dir </> "test" </> "Test" </> "Test.fsproj" |> loadProject

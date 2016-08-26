@@ -1089,7 +1089,7 @@ module FsProject =
     let removeProjectReference (refr:ProjectReference) (proj:FsProject) =
         if not (proj.ProjectReferences |> ResizeArray.contains refr) then proj
         else
-        { proj with ProjectReferences = proj.ProjectReferences |> ResizeArray.remove refr  }
+        { proj with ProjectReferences = proj.ProjectReferences |> ResizeArray.remove refr }
 
     let moveUp target (proj:FsProject) =
         proj.SourceFiles.MoveUp target

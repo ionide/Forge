@@ -56,9 +56,9 @@ type Command =
             | New -> "<project|file> Create new file or project"
             | Add -> "<file|reference> Adds file or reference"
             | Move -> "<file|folder> Move the file or folder within the project hierarchy"
-            | Remove -> "<file|reference> Removes file or refrence"
+            | Remove -> "<file|reference> Removes file or reference"
             | Rename -> "<project|file> Renames file or project"
-            | List -> "<project|files|reference|templates|gac> List files or refrences"
+            | List -> "<project|files|reference|templates|gac> List files or references"
             | Update -> "<paket|fake> Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
@@ -643,7 +643,6 @@ let removeProject cont (results : ParseResults<RemoveProjectReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveProjectReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveProjectReferenceArgs.Project @>
-
 
         Furnace.loadFsProject project
         |> Furnace.removeProjectReference name
