@@ -62,6 +62,7 @@
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Compile Include="Prelude.fs" />
+    <Compile Include="Environment.fs" />
     <Compile Include="XLinq.fs" />
     <Compile Include="JsonValue.fs" />
     <Compile Include="ResizeArray.fs" />

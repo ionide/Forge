@@ -437,7 +437,12 @@ let iteri (action : int -> 'T -> unit) (resizeArray : ResizeArray<'T>) : unit =
 let inline map (mapping : 'T -> 'U) (resizeArray : ResizeArray<'T>) : ResizeArray<'U> =
     // Preconditions
     checkNonNull "resizeArray" resizeArray
-    resizeArray.ConvertAll (System.Converter mapping)
+
+    let len = length resizeArray
+    let res = ResizeArray<_>(len)
+    for i = 0 to len - 1 do
+        res.Add(mapping resizeArray.[i])
+    res    
 
 
 
