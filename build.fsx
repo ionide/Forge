@@ -120,6 +120,13 @@ Target "Build" (fun _ ->
     |> DeleteFiles
 )
 
+Target "BuildProjetcSystem" (fun _ ->
+    !! "src/Forge.ProjectSystem/Forge.ProjectSystem.fsproj"
+    |> MSBuildRelease "temp/bin_projectSystem" "Rebuild"
+    |> ignore
+
+)
+
 Target "CopyRunners" (fun _ ->
     CopyFiles "temp" ["runners/forge.cmd"; "runners/forge.sh"]
 )
@@ -214,6 +221,10 @@ Target "Default" DoNothing
 Target "GenerateDocs" DoNothing
 Target "PaketBuild" DoNothing
 
+
+"Clean"
+  ==> "AssemblyInfo"
+  ==> "BuildProjectSystem"
 
 "Clean"
   ==> "AssemblyInfo"
