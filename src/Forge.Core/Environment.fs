@@ -81,10 +81,10 @@ let environVars target =
 // Environment Config
 //====================================================
 
-let exeLocation = 
+let exeLocation =
     try
         System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
-    with 
+    with
     | _ -> ""
 let templatesLocation = exeLocation </> ".." </> "templates"
 let directory         = System.Environment.CurrentDirectory
@@ -106,5 +106,5 @@ let relative (path1 : string) (path2 : string) =
         p2.MakeRelativeUri(p1)
             .ToString()
             .Replace('/', Path.DirectorySeparatorChar)
-    )  
-    
+    )
+

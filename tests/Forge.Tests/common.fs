@@ -1,5 +1,4 @@
 module Forge.Tests.Common
-open Forge
 
 open NUnit.Framework
 open NUnit.Framework.Constraints

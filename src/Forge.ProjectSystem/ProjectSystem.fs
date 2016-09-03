@@ -1,27 +1,15 @@
-﻿#if INTERACTIVE
-/// Contains project file comparion tools for MSBuild project files.
-#r "bin/Debug/Forge.Core.dll"
-#r "System.Xml.Linq"
-//#load "Prelude.fs"
-//#load "XLinq.fs"
-//#load "Constants.fs"
-//#load "ResizeArray.fs"
-open Forge.Prelude
-open Forge.XLinq
-open Forge
-open Forge.TraceListener
-open Forge.TraceHelper
-#else
-module Forge.ProjectSystem
-#endif
+﻿module Forge.ProjectSystem
+
 open System
 open System.Text
-open System.Text.RegularExpressions
 open System.IO
 open System.Collections.Generic
+open Forge
+open Forge.Prelude
 open System.Xml
 open System.Xml.Linq
-open Forge
+open System.Text.RegularExpressions
+
 
 (*  Project System AST
     ==================
@@ -410,7 +398,7 @@ type SourceElement =
 //
 
 [<AutoOpen>]
-module internal PathHelpers =
+module PathHelpers =
 
     let normalizeFileName (fileName : string) =
         let file = if (fileName = (Path.DirectorySeparatorChar |> string))
@@ -497,9 +485,7 @@ module internal PathHelpers =
 
 
     let checkFile (path:string) (warning:string) =
-        if isValidPath path then true else
-        traceWarning ^ sprintf "'%s' %s" path warning //contains invalid path character
-        false
+        isValidPath path
 
 
 type SourceTree (files:SourceFile list) =
@@ -522,12 +508,8 @@ type SourceTree (files:SourceFile list) =
     /// Check if the target exists in the project file tree
     let hasTarget (target:string) =
         let target = normalizeFileName target
-        if isDirectory target then
-            if tree.ContainsKey target then true else
-            traceWarning ^ sprintf "target directory '%s' is not found in the project tree" target
-            false
+        if isDirectory target then tree.ContainsKey target
         elif data.ContainsKey target then true else
-        traceWarning ^ sprintf "target file '%s' does not exist in the project" target
         false
 
     let moveFile shift target =
@@ -993,7 +975,6 @@ type FsProject =
         let name' = Some name
 
         if name' = s.AssemblyName.Data || name' = s.RootNamespace.Data || name' = s.DocumentationFile.Data then
-            traceWarning "New project name must be different than existing"
             self
         else
             let nameProperty = property name name
@@ -1160,10 +1141,7 @@ module FsProject =
         |> FsProject.fromXDoc
 
     let save path (proj:FsProject) =
-        try
         File.WriteAllText(path,proj.ToXmlString())
-        with
-        | ex -> traceException ex
 
     let renameProject name (proj:FsProject) =
         proj.RenameProject name

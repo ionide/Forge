@@ -40,6 +40,10 @@
       <Name>Forge.Core.fsproj</Name>
       <Project>{d28ce980-2040-4b62-aca6-f07eb6b31920}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Forge.ProjectSystem\Forge.ProjectSystem.fsproj">
+      <Name>Forge.ProjectSystem.fsproj</Name>
+      <Project>{9029be0f-a72c-4281-9fd1-aa15f5722306}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />
