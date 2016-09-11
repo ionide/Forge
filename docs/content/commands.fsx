@@ -2,20 +2,17 @@
 
 ### Available Commands
 
-     new [--name <string>] [--dir <string>] [--template <string>] [--no-paket] - Creates a new project.
-     file add <string>            - Adds a file to the current folder and project.
-     file remove <string>         - Removes a file from the current folder and project.
-     file list                    - List all files of the current project.
-	 file order <string> <string> - orders `file1` immediately before `file2` in the project.
-     reference add <string>       - Add a reference to the current project.
-     reference remove <string>    - Remove a reference from the current project.
-     reference list               - List all references of the current project.
-     update paket                 - Updates Paket to latest version
-     update fake                  - Updates FAKE to latest version
-     paket <string>               - Runs Paket with given arguments
-     fake <string>                - Runs FAKE with given arguments
-     refresh                      - Refreshes the template cache
-     help                         - Displays this help
-     exit                         - Exit interactive mode
+    new: <project|file> Create new file or project
+    add: <file|reference> Adds file or reference
+    move: <file|folder> Move the file or folder within the project hierarchy
+    remove: <file|reference> Removes file or reference
+    rename: <project|file> Renames file or project
+    list: <project|files|reference|templates|gac> List files or references
+    update: <paket|fake> Updates Paket or FAKE
+    paket: Runs Paket
+    fake: Runs FAKE
+    refresh: Refreshes the template cache
+    exit [quit|-q]: Exits interactive mode
+    --help [-h|/h|/help|/?]: display this list of options.
 
 *)
