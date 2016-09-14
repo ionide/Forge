@@ -54,11 +54,11 @@ type Command =
         member this.Usage =
             match this with
             | New -> "<project|file> Create new file or project"
-            | Add -> "<file|reference> Adds file or reference"
-            | Move -> "<file|folder> Move the file or folder within the project hierarchy"
-            | Remove -> "<file|reference> Removes file or reference"
+            | Add -> "<file|reference|project> Adds file, reference or project reference"
+            | Move -> "<file> Move the file within the project hierarchy"
+            | Remove -> "<file|folder|reference|project> Removes file, folder, reference or project reference"
             | Rename -> "<project|file> Renames file or project"
-            | List -> "<project|files|reference|templates|gac> List files or references"
+            | List -> "<files|projects|references|projectReferences|templates|gac> List files, project in solution, references, project references, avaliable templates or libraries installed in gac"
             | Update -> "<paket|fake> Updates Paket or FAKE"
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"

@@ -14,11 +14,11 @@ When called without any arguments Forge automatically goes into an interactive m
 
     Available parameters:
         new: <project|file> Create new file or project
-        add: <file|reference> Adds file or reference
-        move: <file|folder> Move the file or folder within the project hierarchy
-        remove: <file|reference> Removes file or reference
+        add: <file|reference|project> Adds file, reference or project reference
+        remove: <file|folder|reference|project> Removes file, folder, reference or project reference
         rename: <project|file> Renames file or project
-        list: <project|files|reference|templates|gac> List files or references
+        move: <file> Move the file within the project hierarchy
+        list: <files|projects|references|projectReferences|templates|gac> List files, project in solution, references, project references, avaliable templates or libraries installed in gac
         update: <paket|fake> Updates Paket or FAKE
         paket: Runs Paket
         fake: Runs FAKE
