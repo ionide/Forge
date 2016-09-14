@@ -1,3 +1,6 @@
+### 1.0.1 - 2016-09-15
+* Update help
+
 ### 1.0.0 - 2016-09-11
 * Change command format
 * Lot of fixes
