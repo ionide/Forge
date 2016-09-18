@@ -13,6 +13,7 @@
         { "name": "WebSharper.UI.Next Suave", "value": "websharpersuave" },
         { "name": "Azure Service Fabric Host", "value": "servicefabrichost" },
         { "name": "Azure Service Fabric Suave Stateless Service", "value": "servicefabricsuavestateless" }
+		{ "name": "Nancy Selfhosted", "value": "nancyselfhosted" }
     ],
     "Files": [
         {"name": "F# Module", "value": "fs", "extension": "fs"},
