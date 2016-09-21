@@ -485,6 +485,7 @@ module PathHelpers =
 
 
     let checkFile (path:string) (warning:string) =
+        ignore warning
         isValidPath path
 
 
