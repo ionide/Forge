@@ -56,6 +56,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge", "src\Forge\Forge.fs
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.IntegrationTests", "tests\Forge.IntegrationTests\Forge.IntegrationTests.fsproj", "{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.ProjectSystem", "src\Forge.ProjectSystem\Forge.ProjectSystem.fsproj", "{9029BE0F-A72C-4281-9FD1-AA15F5722306}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +80,10 @@ Global
 		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
