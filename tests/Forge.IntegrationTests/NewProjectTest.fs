@@ -12,7 +12,7 @@ let ``Create new solution`` () =
 
     ["new solution -n Sample"]
     |> initTest dir
-    let path = dir </> "Sample.sln"
+    let path = getPath (dir </> "Sample.sln")
     System.IO.File.Exists path |> should be True
 
 [<Test>]

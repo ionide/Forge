@@ -13,6 +13,9 @@ let initTest dir args =
     Forge.FileHelper.cleanDir dir
     args |> List.iter (fun a -> run path (a + " --no-prompt") dir)
 
+let getPath file =
+    TestContext.CurrentContext.TestDirectory </> file
+
 let loadProject dir =
     let dir = TestContext.CurrentContext.TestDirectory </> dir
     Forge.ProjectManager.Furnace.loadFsProject dir
