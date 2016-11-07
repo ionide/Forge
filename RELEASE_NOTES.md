@@ -1,3 +1,6 @@
+### 1.1.0 - 2016-11-07
+* Add `new solution` command
+
 ### 1.0.1 - 2016-09-15
 * Update help
 

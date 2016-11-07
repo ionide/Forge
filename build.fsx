@@ -240,7 +240,7 @@ Target "PaketBuild" DoNothing
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
 
-"Default"
+"BuildTests"
   ==> "ZipRelease"
   ==> "ReleaseDocs"
   ==> "Release"
