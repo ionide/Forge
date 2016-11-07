@@ -7,6 +7,15 @@ open Assertions
 open FsUnit
 
 [<Test>]
+let ``Create new solution`` () =
+    let dir = "new_project - create_new_solution"
+
+    ["new solution -n Sample"]
+    |> initTest dir
+    let path = dir </> "Sample.sln"
+    System.IO.File.Exists path |> should be True
+
+[<Test>]
 let ``Create New Console Application`` () =
     let dir = "new_project - create_new_console_application"
 

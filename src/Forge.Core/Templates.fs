@@ -246,3 +246,10 @@ module File =
         sed "<%= guid %>" (fun _ -> System.Guid.NewGuid().ToString()) newFile'
         sed "<%= paketPath %>" (relative directory) newFile'
         sed "<%= packagesPath %>" (relative packagesDirectory) newFile'
+
+module Solution =
+    let New name =
+        let template = templatesLocation </> ".sln" </> "ApplicationName.sln"
+        let newName = directory </> (name + ".sln")
+        File.Copy(template, newName, false)
+

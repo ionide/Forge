@@ -53,7 +53,7 @@ type Command =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | New -> "<project|file> Create new file or project"
+            | New -> "<project|file|solution> Create new file, project or solution"
             | Add -> "<file|reference|project> Adds file, reference or project reference"
             | Move -> "<file> Move the file within the project hierarchy"
             | Remove -> "<file|folder|reference|project> Removes file, folder, reference or project reference"
@@ -74,12 +74,14 @@ type Command =
 type NewCommand =
     | [<First>][<CLIArg "project">] Project
     | [<First>][<CLIArg "file">] File
+    | [<First>][<CLIArg "solution">] Solution
 
     interface IArgParserTemplate with
         member this.Usage =
             match this with
             | Project -> "Creates new project"
             | File -> "Creates new file"
+            | Solution -> "Creates new solution"
 
 
 
@@ -118,6 +120,13 @@ type NewFileArgs =
             | Solution _ -> "Solution to which file will be added"
             | BuildAction _ -> "File build action"
 
+
+type NewSolutionArgs =
+    | [<CLIAlt "-n">] Name of string
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Name _-> "Solution name"
 
 
 
@@ -499,13 +508,18 @@ let newFile cont (results : ParseResults<_>) =
 
     Some cont
 
+let newSolution cont (results : ParseResults<_>) =
+    let name = results.GetResult <@ NewSolutionArgs.Name @>
+    Templates.Solution.New name
+    Some cont
 
 let processNew cont args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | NewCommand.Project -> execCommand (newProject cont) subArgs
-        | NewCommand.File    -> execCommand (newFile cont) subArgs
+        | NewCommand.Project  -> execCommand (newProject cont) subArgs
+        | NewCommand.File     -> execCommand (newFile cont) subArgs
+        | NewCommand.Solution -> execCommand (newSolution cont) subArgs
     | _ -> Some cont
 
 
