@@ -184,7 +184,7 @@ module Project =
             Directory.GetFiles projectFolder
             |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
             |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
-            Paket.Run ["install"; "--hard"]
+            Paket.Run ["install";]
             if fake then
                 Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
