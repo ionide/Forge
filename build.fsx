@@ -43,7 +43,7 @@ let testAssemblies = "temp/test/*Tests*.dll"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
-let gitOwner = "fsprojects"
+let gitOwner = "fsharp-editing"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
@@ -234,7 +234,8 @@ Target "PaketBuild" DoNothing
   ==> "RunTests"
   ==> "Default"
 
-"CleanDocs"
+"Build"
+  ==> "CleanDocs"
   ==> "GenerateHelp"
   ==> "GenerateReferenceDocs"
   ==> "GenerateDocs"
