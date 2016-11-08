@@ -29,7 +29,7 @@ When called without any arguments Forge automatically goes into an interactive m
 
     new project [--name <string>] [--dir <string>] [--template <string>] [--no-paket]
 
-On the first run Forge will download the templates found in the [Forge Repository](https://github.com/fsprojects/forge/tree/templates) and then allow you to choose which template you'd like to base your new project from.
+On the first run Forge will download the templates found in the [Forge Repository](https://github.com/fsharp-editing/forge/tree/templates) and then allow you to choose which template you'd like to base your new project from.
 
 	C:\Dev>c:\tools\forge\forge.exe
 	>
