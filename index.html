@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>What is Forge?
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"/>
+    <meta name="author" content="Reid Evans"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/Forge/content/style.css" />
+    <script type="text/javascript" src="/Forge/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/fsprojects/Forge">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/Forge/index.html">Forge</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1><a name="What-is-Forge" class="anchor" href="#What-is-Forge">What is Forge?</a></h1>
+<p>Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages.</p>
+<p>It can be run both as single run executable when command and parameters are provided or when called without any arguments Forge automatically goes into an interactive mode.</p>
+<p>If you want to learn how to use Forge then read the <a href="tutorial.html">"Getting started" tutorial</a>, check <a href="commands.html">command list</a> or look at documentation of particular command</p>
+<p><a href="https://gitter.im/fsprojects/Forge?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/fsprojects/Forge.svg" alt="Join the chat at https://gitter.im/fsprojects/Forge" /></a></p>
+<h2><a name="Installation" class="anchor" href="#Installation">Installation</a></h2>
+<h4><a name="Via-Scoop-sh-Windows" class="anchor" href="#Via-Scoop-sh-Windows">Via Scoop.sh (Windows)</a></h4>
+<p>You can install Forge via the <a href="http://scoop.sh/">Scoop</a> package manager on Windows</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="i">scoop</span> <span class="i">install</span> <span class="i">forge</span>
+</code></pre></td>
+</tr>
+</table>
+<h4><a name="Via-Homebrew-OSX" class="anchor" href="#Via-Homebrew-OSX">Via Homebrew (OSX)</a></h4>
+<p>You can install Forge via the <a href="http://brew.sh">Homebrew</a> package manager on OS X</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="i">brew</span> <span class="i">tap</span> <span class="i">samritchie</span><span class="o">/</span><span class="i">forge</span> <span class="o">&amp;&amp;</span> <span class="i">brew</span> <span class="i">install</span> <span class="i">forge</span>
+</code></pre></td>
+</tr>
+</table>
+<h4><a name="Other" class="anchor" href="#Other">Other</a></h4>
+<ol>
+<li>Download latest version of Forge from <a href="https://github.com/fsprojects/Forge/releases">GitHub</a></li>
+<li>Extract zip file</li>
+<li>Add Forge location to PATH</li>
+</ol>
+<h2><a name="Contributing-and-copyright" class="anchor" href="#Contributing-and-copyright">Contributing and copyright</a></h2>
+<p>The project is hosted on <a href="https://github.com/fsprojects/Forge">GitHub</a> where you can <a href="https://github.com/fsprojects/Forge/issues">report issues</a>, fork
+the project and submit pull requests. If you're adding a new public API, please also
+consider adding <a href="https://github.com/fsprojects/Forge/tree/master/docs/content">samples</a> that can be turned into a documentation. You might
+also want to read the <a href="https://github.com/fsprojects/Forge/blob/master/README.md">library design notes</a> to understand how it works.</p>
+<p>The library is available under Public Domain license, which allows modification and
+redistribution for both commercial and non-commercial purposes. For more information see the
+<a href="https://github.com/fsprojects/Forge/blob/master/LICENSE.txt">License file</a> in the GitHub repository.</p>
+
+
+        </div>
+        <div class="span3">
+          <img src="/Forge/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">Forge</li>
+            <li><a href="/Forge/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="/Forge/license.html">License</a></li>
+            <li><a href="/Forge/release-notes.html">Release Notes</a></li>
+
+            <li class="nav-header">Getting started</li>
+            <li><a href="/Forge/tutorial.html">Sample tutorial</a></li>
+            <li><a href="/Forge/commands.html">Commands list</a></li>
+
+            <li class="nav-header">GitHub</li>
+            <li><a href="https://github.com/fsprojects/Forge">Source Code</a></li>
+            <li><a href="https://github.com/fsprojects/Forge/releases">Releases</a></li>
+            <li><a href="https://github.com/fsprojects/Forge/issues">Report an issue</a></li>
+
+            <li class="nav-header">Forge commands</li>
+            <li><a href="/Forge/commands/new.html">Forge new</a></li>
+            <li><a href="/Forge/commands/file.html">Forge file</a></li>
+            <li><a href="/Forge/commands/reference.html">Forge reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/fsprojects/Forge"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
