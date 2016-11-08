@@ -93,7 +93,7 @@ You can install Forge via the [Homebrew](http://brew.sh) package manager on OS X
 
 #### Other
 
-You can download one of the releases found at https://github.com/fsprojects/Forge/releases
+You can download one of the releases found at https://github.com/fsharp-editing/Forge/releases
 
 Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
 
