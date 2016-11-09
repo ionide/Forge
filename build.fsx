@@ -100,10 +100,6 @@ Target "Clean" (fun _ ->
     CleanDirs ["temp"; ]
 )
 
-Target "CleanDocs" (fun _ ->
-    CleanDirs ["docs/output"]
-)
-
 // --------------------------------------------------------------------------------------
 // Build library & test project
 
@@ -148,17 +144,6 @@ Target "RunTests" (fun _ ->
 )
 // --------------------------------------------------------------------------------------
 // Release Scripts
-
-Target "ReleaseDocs" (fun _ ->
-    let tempDocsDir = "temp/gh-pages"
-    CleanDir tempDocsDir
-    Repository.cloneSingleBranch "" (gitHome + "/" + gitName + ".git") "gh-pages" tempDocsDir
-
-    CopyRecursive "docs/output" tempDocsDir true |> tracefn "%A"
-    StageAll tempDocsDir
-    Git.Commit.Commit tempDocsDir (sprintf "Update generated documentation for version %s" release.NugetVersion)
-    Branches.push tempDocsDir
-)
 
 Target "ZipRelease" (fun _ ->
     !! (tempDir  </> "forge.sh")
