@@ -4,7 +4,6 @@
 
 #r @"packages/FAKE/tools/FakeLib.dll"
 #load "paket-files/fsharp/FAKE/modules/Octokit/Octokit.fsx"
-#load "build_docs.fsx"
 open Fake
 open Fake.Git
 open Fake.AssemblyInfoFile
@@ -205,20 +204,11 @@ Target "Release" (fun _ ->
     |> Async.RunSynchronously
 )
 
-Target "KeepRunning" (fun _ ->
-    use watcher = !! "docs/content/**/*.*" |> WatchChanges (fun changes ->
-         Build_docs.generateHelp false
-    )
-    System.Threading.Thread.Sleep -1
-
-    watcher.Dispose()
-)
 
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 
 Target "Default" DoNothing
-Target "GenerateDocs" DoNothing
 Target "PaketBuild" DoNothing
 
 
@@ -234,16 +224,8 @@ Target "PaketBuild" DoNothing
   ==> "RunTests"
   ==> "Default"
 
-"Build"
-  ==> "CleanDocs"
-  ==> "GenerateHelp"
-  ==> "GenerateReferenceDocs"
-  ==> "GenerateDocs"
-  ==> "ReleaseDocs"
-
 "BuildTests"
   ==> "ZipRelease"
-  ==> "ReleaseDocs"
   ==> "Release"
 
 "Build"
