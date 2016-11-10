@@ -1,3 +1,6 @@
+### 1.1.3 - 2016-11-11
+* Add `FSharpTargetsPath` to Project System
+
 ### 1.1.2 - 2016-11-07
 * Add `new solution` command
 
