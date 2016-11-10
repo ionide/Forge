@@ -88,6 +88,7 @@ let [<Literal>] Private                 = "Private"
 let [<Literal>] SpecificVersion         = "SpecificVersion"
 let [<Literal>] Link                    = "Link"
 let [<Literal>] Paket                   = "Paket"
+let [<Literal>] FSharpTargetsPath       = "FSharpTargetsPath"
 
 let [<Literal>] XmlDecl                 = @"<?xml version='1.0' encoding='utf-8'?>"
 let [<Literal>] Xmlns                   = "http://schemas.microsoft.com/developer/msbuild/2003"

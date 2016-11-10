@@ -224,7 +224,7 @@ type Reference =
         /// This attribute matches the Copy Local property of the reference that's in the Visual Studio IDE.
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
-        Paket : bool option
+        Paket : string option
     }
     static member Empty =
         {   Include         = ""
@@ -247,7 +247,7 @@ type Reference =
             Name            = XElem.tryGetElementValue Constants.Name            xelem
             CopyLocal       = XElem.tryGetElementValue Constants.Private         xelem |> Option.bind parseBool
             SpecificVersion = XElem.tryGetElementValue Constants.SpecificVersion xelem |> Option.bind parseBool
-            Paket           = XElem.tryGetElementValue Constants.Paket           xelem |> Option.bind parseBool
+            Paket           = XElem.tryGetElementValue Constants.Paket           xelem
         }
 
     member self.ToXElem () =
@@ -323,7 +323,7 @@ type SourceFile =
         OnBuild     : BuildAction
         Link        : string option
         Copy        : CopyToOutputDirectory option
-        Paket       : bool option
+        Paket       : string option
     }
 
     static member fromXElem (xelem:XElement) =
@@ -338,15 +338,15 @@ type SourceFile =
             Copy      =
                 XElem.tryGetElement Constants.CopyToOutputDirectory xelem
                 |> Option.bind (XElem.value >> CopyToOutputDirectory.TryParse)
-            Paket     = XElem.tryGetElementValue Constants.Paket xelem |> Option.bind parseBool
+            Paket     = XElem.tryGetElementValue Constants.Paket xelem
         }
 
     member self.ToXElem () =
           XElem.create (string self.OnBuild) []
         |> XElem.setAttribute Constants.Include self.Include
         |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
-        |> mapOpt self.Link      ^ XElem.addElem Constants.Link
         |> mapOpt self.Paket     ^ XElem.addElem Constants.Paket
+        |> mapOpt self.Link      ^ XElem.addElem Constants.Link
         |> mapOpt self.Copy ^ fun copy node ->
             match copy with
             | Never          -> node
@@ -854,6 +854,7 @@ type ConfigSettings =
         PlatformTarget       : Property<PlatformType>
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
+        FSharpTargetsPath    : Property<string>
     }
 
     static member Debug =
@@ -868,6 +869,7 @@ type ConfigSettings =
             PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
             Prefer32Bit          = property Constants.Prefer32Bit false
             OtherFlags           = property Constants.OtherFlags []
+            FSharpTargetsPath    = {Name = Constants.FSharpTargetsPath; Condition = None; Data = None}
         }
 
     static member fromXElem (xelem:XElement) =
@@ -908,6 +910,7 @@ type ConfigSettings =
             PlatformTarget       = elemmap Constants.PlatformTarget PlatformType.Parse
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
+            FSharpTargetsPath    = elem    Constants.FSharpTargetsPath
         }
 
 
@@ -924,6 +927,7 @@ type ConfigSettings =
         |> mapOpt (toXElem self.PlatformTarget) XElem.addElement
         |> mapOpt (toXElem self.Prefer32Bit) XElem.addElement
         |> mapOpt (toXElem self.OtherFlags) XElem.addElement
+        |> mapOpt (toXElem self.FSharpTargetsPath) XElem.addElement
 
 // TODO - Check for duplicate files
 
