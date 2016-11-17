@@ -31,6 +31,7 @@ NUGET
     Octokit (0.19)
     SharpZipLib (0.86)
     SourceLink.Fake (1.1)
+    Nett (0.5)
 GITHUB
   remote: fsharp/FAKE
   specs:
