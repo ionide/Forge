@@ -33,11 +33,11 @@ let private parse path =
         Map.empty
 
 let private loadLocal () =
-    let path = directory </> "forge.config"
+    let path = directory </> "forge.toml"
     parse path
 
 let private loadGlobal () =
-    let path = exeLocation </> "forge.config"
+    let path = exeLocation </> "forge.toml"
     parse path
 
 let load () =
