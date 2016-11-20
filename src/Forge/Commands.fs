@@ -476,11 +476,15 @@ let parseCommand<'T when 'T :> IArgParserTemplate> args =
 let execCommand fn args =
     args |> parseCommand |> Option.bind fn
 
-
 let subCommandArgs args =
     args |> parseCommand<_>
-    |> Option.map (fun res ->
-        res.GetAllResults().Head, args.[1..]
+    |> Option.bind (fun res ->
+        match res.GetAllResults() |> List.tryHead |> Option.map (fun x -> x, args.[1..]) with
+        | None -> 
+            traceWarning "Bad or missing parameters."
+            res.Usage "   Available parameters:" |> System.Console.WriteLine
+            None
+        | x -> x
     )
 
 
