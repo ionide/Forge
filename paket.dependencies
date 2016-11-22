@@ -12,5 +12,6 @@ nuget SharpZipLib
 nuget SourceLink.Fake
 nuget FParsec
 nuget Mono.Posix
+nuget Nett
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

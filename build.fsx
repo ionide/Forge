@@ -112,6 +112,7 @@ Target "Build" (fun _ ->
     ++ (buildDir </> "*.pdb")
     ++ (buildDir </> "*.xml")
     -- (buildDir </> "Mono.Posix.dll")
+    -- (buildDir </> "Nett.dll")
     |> DeleteFiles
 )
 

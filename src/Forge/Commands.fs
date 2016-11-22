@@ -873,7 +873,17 @@ let processUpdate cont args =
 // Main Command Handlers
 //-----------------------------------------------------------------
 
+let applyAlias (args : string []) =
+    let alias = Alias.load () |> Map.tryFind args.[0]
+    match alias with
+    | None -> args
+    | Some a ->
+        [| yield! a.Split(' '); yield! args.[1 ..] |]
+
+
+
 let strikeForge (args : string []) (cont:Result) =
+    let args = applyAlias args
     let result = parseCommand<Command> [| args.[0] |]
     let check (res:ParseResults<_>) =
         match res.GetAllResults() with

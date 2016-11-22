@@ -65,6 +65,7 @@
     <Compile Include="SolutionSystem.fs" />
     <Compile Include="ProjectManager.fs" />
     <Compile Include="Templates.fs" />
+    <Compile Include="Alias.fs"/>
     <EmbeddedResource Include="XmlSchemas/Microsoft.Build.Commontypes.xsd" />
     <EmbeddedResource Include="XmlSchemas/Microsoft.Build.Core.xsd" />
     <EmbeddedResource Include="XmlSchemas/Microsoft.Build.xsd" />
@@ -105,6 +106,17 @@
       <ItemGroup>
         <Reference Include="FSharp.Core">
           <HintPath>..\..\packages\FSharp.Core\lib\net40\FSharp.Core.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="Nett">
+          <HintPath>..\..\packages\Nett\lib\Net40\Nett.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
