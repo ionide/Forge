@@ -128,11 +128,15 @@ module ``ProjectSystem Tests`` =
         s.RootNamespace.Data |> should be (equal ^ Some "TestRename")
         s.DocumentationFile.Data |> should be (equal ^ Some "bin\Debug\TestRename.XML")
 
-    // TODO: complete test code
     [<Test>]
     let ``ProjectSystem - move up``() =
-        true |> should equal true
+        let pf = FsProject.parse astInput
+        let pf' = pf |> FsProject.moveUp "a_file.fs"
+        let files = pf'.SourceFiles.AllFiles()
+        files |> Seq.last |> should be (equal "App.config")
+        files |> Seq.length |> should be (equal 3)
 
+    // TODO: complete test code
     [<Test>]
     let ``ProjectSystem - move down``() =
         true |> should equal true
