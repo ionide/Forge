@@ -14,7 +14,7 @@
 * [x] Parse - add existing reference
 * [x] Parse - remove reference
 * [x] Parse - remove non-existing reference
-* [ ] Parse - move up
+* [x] Parse - move up
 * [ ] Parse - move down
 * [ ] Parse - add above (?)
 * [ ] Parse - add below (?)
