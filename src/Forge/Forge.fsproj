@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Name>Forge</Name>
@@ -118,6 +118,17 @@
       <ItemGroup>
         <Reference Include="Mono.Posix">
           <HintPath>..\..\packages\Mono.Posix\lib\net40\Mono.Posix.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="Nett">
+          <HintPath>..\..\packages\Nett\lib\Net40\Nett.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
