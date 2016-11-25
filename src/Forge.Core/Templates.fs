@@ -112,6 +112,9 @@ let Refresh () =
     cleanDir templatesLocation
     cloneSingleBranch (exeLocation </> "..") "https://github.com/fsharp-editing/Forge.git" "templates" "templates"
 
+let EnsureTemplatesExist () =
+    if not ^ Directory.Exists templatesLocation then Refresh ()
+
 let GetList () =
     if Directory.Exists templatesLocation then
         Directory.GetDirectories templatesLocation
@@ -145,7 +148,7 @@ module Project =
 
 
     let New projectName projectDir templateName _ fake =
-        if not ^ Directory.Exists templatesLocation then Refresh ()
+        EnsureTemplatesExist ()
 
         let templates = GetList()
 
@@ -217,7 +220,7 @@ module File =
 
 
     let New fileName template project buildAction =
-        if not ^ Directory.Exists templatesLocation then Refresh ()
+        EnsureTemplatesExist ()
 
         let templates = getTemplates ()
         let template' =
@@ -249,6 +252,7 @@ module File =
 
 module Solution =
     let New name =
+        EnsureTemplatesExist ()
         let template = templatesLocation </> ".sln" </> "ApplicationName.sln"
         let newName = directory </> (name + ".sln")
         File.Copy(template, newName, false)
