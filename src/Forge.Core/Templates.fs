@@ -249,6 +249,7 @@ module File =
 
 module Solution =
     let New name =
+        if not ^ Directory.Exists templatesLocation then Refresh ()
         let template = templatesLocation </> ".sln" </> "ApplicationName.sln"
         let newName = directory </> (name + ".sln")
         File.Copy(template, newName, false)
