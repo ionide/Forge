@@ -15,11 +15,8 @@ let defaultAliases =
     ] |> Map.ofList
 
 let private merge original added =
-    added |> Map.fold (fun (state : Map<string,string>) key value ->
-        if state.ContainsKey key then
-            state.Remove(key).Add(key,value)
-        else
-            state.Add(key, value) ) original
+    added
+    |> Map.fold (fun s k v -> Map.add k v s) original
 
 
 let private parse path =
