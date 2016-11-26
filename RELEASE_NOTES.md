@@ -1,3 +1,7 @@
+### 1.2.0 - 2016-11-26
+* Add aliases
+* Fix `new file` when wrong project name given.
+
 ### 1.1.3 - 2016-11-11
 * Add `FSharpTargetsPath` to Project System
 
