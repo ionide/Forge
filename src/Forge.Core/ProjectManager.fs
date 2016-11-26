@@ -129,7 +129,7 @@ module Furnace =
     let removeProjectReference (path : string) (state: ActiveState) =
         let project = state.ProjectData
         let path = if path.StartsWith "." then path else relative path (state.ProjectPath + Path.DirectorySeparatorChar.ToString())
-        let r = project.ProjectReferences |> ResizeArray.tryFind (fun refr -> refr.Include = path)        
+        let r = project.ProjectReferences |> ResizeArray.tryFind (fun refr -> refr.Include = path)
 
         let projectName = defaultArg project.Settings.Name.Data "fsproject"
         match r with

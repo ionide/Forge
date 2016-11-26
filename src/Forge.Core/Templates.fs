@@ -233,7 +233,13 @@ module File =
         let newFile' =  (directory </> newFile)
         let project' =
             match project with
-            | Some p -> Some p
+            | Some p ->
+                let p = if p |> String.endsWith ".fsproj" then p else p + ".fsproj"
+                if File.Exists p then
+                    Some p
+                else
+                    traceWarning "Provided project not found. Trying to find project file automatically."
+                    ProjectManager.Furnace.tryFindProject newFile'
             | None -> ProjectManager.Furnace.tryFindProject newFile'
 
         System.IO.File.Copy(filesLocation </> oldFile, newFile')
