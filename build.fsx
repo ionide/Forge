@@ -152,6 +152,7 @@ Target "ZipRelease" (fun _ ->
     ++ (buildDir </> "*.exe")
     ++ (buildDir </> "*.config")
     ++ (buildDir </> "Mono.Posix.dll")
+    ++ (buildDir </> "Nett.dll")
     -- (buildDir </> "Forge.Core.dll.config")
     -- (buildDir </> "*templates*")
     -- (buildDir </> "*Tests*")
