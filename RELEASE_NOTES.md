@@ -1,3 +1,6 @@
+### 1.2.1 - 2016-11-28
+* Fix release
+
 ### 1.2.0 - 2016-11-26
 * Add aliases
 * Fix `new file` when wrong project name given.
