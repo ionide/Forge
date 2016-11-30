@@ -136,11 +136,15 @@ module ``ProjectSystem Tests`` =
         files |> Seq.last |> should be (equal "App.config")
         files |> Seq.length |> should be (equal 3)
 
-    // TODO: complete test code
     [<Test>]
     let ``ProjectSystem - move down``() =
-        true |> should equal true
+        let pf = FsProject.parse astInput
+        let pf' = pf |> FsProject.moveDown "FixProject.fs"
+        let files = pf'.SourceFiles.AllFiles()
+        files |> Seq.head |> should be (equal "App.config")
+        files |> Seq.length |> should be (equal 3)
 
+    // TODO: complete test code
     [<Test>]
     let ``ProjectSystem - add above (?)``() =
         true |> should equal true
