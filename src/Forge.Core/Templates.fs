@@ -263,3 +263,10 @@ module Solution =
         let newName = directory </> (name + ".sln")
         File.Copy(template, newName, false)
 
+module ProjectScaffold =
+    let New =
+        EnsureTemplatesExist ()
+        printfn "Cloning project scaffold..."
+        cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" directory
+        ()
+
