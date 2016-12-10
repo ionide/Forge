@@ -45,25 +45,22 @@ if [[ "$OS" != "Windows_NT" ]] &&
        [ $(certmgr -list -c -m Trust | grep X.509 | wc -l) -le 1 ]
 then
   echo "Your Mono installation has no trusted SSL root certificates set up."
-  echo "This may result in the Paket bootstrapper failing to download Paket"
-  echo "because Github's SSL certificate can't be verified. One way to fix"
-  echo "this issue would be to download the list of SSL root certificates"
-  echo "from the Mozilla project by running the following command:"
+  echo "This will result in the Paket bootstrapper failing to download Paket"
+  echo "because Github's SSL certificate can't be verified. You can probably"
+  echo "fix this by installing the latest mono-complete package, which will"
+  echo "automatically sync certificates after installation. If that doesn't"
+  echo "work and you are using mono >= 3.12.0 then you need to run:"
+  echo ""
+  echo "    cert-sync /path/to/certs"
+  echo ""
+  echo "For more information see:"
+  echo ""
+  echo "http://www.mono-project.com/docs/about-mono/releases/3.12.0/#cert-sync"
+  echo ""
+  echo "If you are using an older version of mono, you need to run:"
   echo ""
   echo "    mozroots --import --sync"
-  echo ""
-  echo "This will import over 100 SSL root certificates into your Mono"
-  echo "certificate repository."
-  echo ""
-  if yesno "Run 'mozroots --import --sync' now?"
-  then
-    mozroots --import --sync
-  else
-    echo "Attempting to continue without running mozroots. This might fail."
-  fi
-  # Re-run bootstrapper whether or not the user ran mozroots, because maybe
-  # they fixed the problem in a separate terminal window.
-  run $PAKET_BOOTSTRAPPER_EXE
+  exit 1
 fi
 
 run $PAKET_EXE restore
@@ -71,4 +68,3 @@ run $PAKET_EXE restore
 [ ! -e build.fsx ] && run $PAKET_EXE update
 [ ! -e build.fsx ] && run $FAKE_EXE init.fsx
 run $FAKE_EXE "$@" $FSIARGS build.fsx
-
