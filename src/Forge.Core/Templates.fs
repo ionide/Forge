@@ -269,4 +269,3 @@ module ProjectScaffold =
         printfn "Cloning project scaffold..."
         cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" directory
         ()
-
