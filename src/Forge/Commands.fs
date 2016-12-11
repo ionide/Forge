@@ -75,6 +75,7 @@ type NewCommand =
     | [<First>][<CLIArg "project">] Project
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "solution">] Solution
+    | [<First>][<CLIArg "scaffold">] ProjectScaffold
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -82,6 +83,7 @@ type NewCommand =
             | Project -> "Creates new project"
             | File -> "Creates new file"
             | Solution -> "Creates new solution"
+            | ProjectScaffold -> "Clones project scaffold"
 
 
 
