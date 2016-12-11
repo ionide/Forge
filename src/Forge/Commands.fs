@@ -86,8 +86,6 @@ type NewCommand =
             | ProjectScaffold -> "Clones project scaffold"
 
 
-
-
 type NewProjectArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "dir">][<CLIAlt "--dir">] Folder of string
@@ -145,8 +143,6 @@ type AddCommands =
             | File -> "Adds file to project or solution"
             | Reference -> "Adds reference to project"
             | Project -> "Adds project reference to project"
-
-
 
 
 type AddFileArgs =
@@ -211,7 +207,6 @@ type RemoveCommands =
             | Reference -> "Removes reference from project"
             | Folder -> "Removes the folder from the project or solution"
             | Project -> "Removes project reference from project"
-
 
 
 type RemoveFileArgs =
@@ -519,6 +514,10 @@ let newSolution cont (results : ParseResults<_>) =
     Templates.Solution.New name
     Some cont
 
+let newProjectScaffold cont (results : ParseResults<_>) =
+    Templates.ProjectScaffold.New
+    Some cont
+
 let processNew cont args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
@@ -526,6 +525,7 @@ let processNew cont args =
         | NewCommand.Project  -> execCommand (newProject cont) subArgs
         | NewCommand.File     -> execCommand (newFile cont) subArgs
         | NewCommand.Solution -> execCommand (newSolution cont) subArgs
+        | NewCommand.ProjectScaffold -> execCommand (newProjectScaffold cont) subArgs
     | _ -> Some cont
 
 
