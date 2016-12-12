@@ -5,7 +5,7 @@
 
 # Forge (F# Project Builder)
 
-)Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages. For more documentation please visit [our wiki pages](https://github.com/fsharp-editing/Forge/wiki) 
+)Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages. For more documentation please visit [our wiki pages](https://github.com/fsharp-editing/Forge/wiki)
 
 
 ### Installing
@@ -19,6 +19,12 @@ You can install Forge via the [Scoop](http://scoop.sh/) package manager on Windo
 #### Via Homebrew (OSX)
 
 You can install Forge via the [Homebrew](http://brew.sh) package manager on OS X
+
+    brew tap samritchie/forge && brew install forge
+
+#### Via Linuxbrew (Linux)
+
+You can install Forge via the [Linuxbrew](http://linuxbrew.sh/) package manager on Linux
 
     brew tap samritchie/forge && brew install forge
 
