@@ -52,7 +52,8 @@
     <Compile Include="NewProjectTest.fs" />
     <Compile Include="ReferenceTest.fs" />
     <Compile Include="ProjectReferenceTest.fs" />
-    <Compile Include="FileTests.fs" />
+    <Compile Include="AddFileTests.fs" />
+    <Compile Include="RemoveFileTests.fs" />
     <Compile Include="NewFileTests.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
