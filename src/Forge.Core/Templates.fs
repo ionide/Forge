@@ -195,6 +195,9 @@ module Project =
                     let buildSh = projectDir' </> "build.sh"
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
+                    let ctn = File.ReadAllText buildSh
+                    let ctn = ctn.Replace("\r\n", "\n")
+                    File.WriteAllText(buildSh, ctn)
             printfn "Done!"
         else
             printfn "Wrong template name"
