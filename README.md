@@ -5,7 +5,7 @@
 
 # Forge (F# Project Builder)
 
-)Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages. For more documentation please visit [our wiki pages](https://github.com/fsharp-editing/Forge/wiki)
+Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages. For more documentation please visit [our wiki pages](https://github.com/fsharp-editing/Forge/wiki)
 
 
 ### Installing
