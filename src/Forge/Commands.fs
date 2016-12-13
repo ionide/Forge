@@ -53,7 +53,7 @@ type Command =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | New -> "<project|file|solution> Create new file, project or solution"
+            | New -> "<project|file|solution|scaffold> Create new file, project, solution or scaffold"
             | Add -> "<file|reference|project> Adds file, reference or project reference"
             | Move -> "<file> Move the file within the project hierarchy"
             | Remove -> "<file|folder|reference|project> Removes file, folder, reference or project reference"
