@@ -129,6 +129,13 @@ type NewSolutionArgs =
             | Name _-> "Solution name"
 
 
+type NewScaffoldArgs =
+    | [<Hidden>] NoArgs
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | _ -> "There are no arguments for this command"
 
 //-----------------------------------------------------------------
 // Add commands
@@ -514,7 +521,7 @@ let newSolution cont (results : ParseResults<_>) =
     Templates.Solution.New name
     Some cont
 
-let newScaffold cont (results : ParseResults<_>) =
+let newScaffold cont (results : ParseResults<NewScaffoldArgs>) =
     Templates.ProjectScaffold.New
     Some cont
 
