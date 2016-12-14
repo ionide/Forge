@@ -263,7 +263,7 @@ module Solution =
         let newName = directory </> (name + ".sln")
         File.Copy(template, newName, false)
 
-module ProjectScaffold =
+module Scaffold =
     let New =
         EnsureTemplatesExist ()
         printfn "Cloning project scaffold..."
