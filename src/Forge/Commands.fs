@@ -75,7 +75,7 @@ type NewCommand =
     | [<First>][<CLIArg "project">] Project
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "solution">] Solution
-    | [<First>][<CLIArg "scaffold">] ProjectScaffold
+    | [<First>][<CLIArg "scaffold">] Scaffold
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -83,7 +83,7 @@ type NewCommand =
             | Project -> "Creates new project"
             | File -> "Creates new file"
             | Solution -> "Creates new solution"
-            | ProjectScaffold -> "Clones project scaffold"
+            | Scaffold -> "Clones project scaffold"
 
 
 type NewProjectArgs =
@@ -514,7 +514,7 @@ let newSolution cont (results : ParseResults<_>) =
     Templates.Solution.New name
     Some cont
 
-let newProjectScaffold cont (results : ParseResults<_>) =
+let newScaffold cont (results : ParseResults<_>) =
     Templates.ProjectScaffold.New
     Some cont
 
@@ -525,7 +525,7 @@ let processNew cont args =
         | NewCommand.Project  -> execCommand (newProject cont) subArgs
         | NewCommand.File     -> execCommand (newFile cont) subArgs
         | NewCommand.Solution -> execCommand (newSolution cont) subArgs
-        | NewCommand.ProjectScaffold -> execCommand (newProjectScaffold cont) subArgs
+        | NewCommand.Scaffold -> execCommand (newScaffold cont) subArgs
     | _ -> Some cont
 
 
