@@ -264,7 +264,7 @@ module Solution =
         File.Copy(template, newName, false)
 
 module Scaffold =
-    let New =
+    let New () =
         EnsureTemplatesExist ()
         printfn "Cloning project scaffold..."
         cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" directory

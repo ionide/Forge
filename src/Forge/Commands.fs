@@ -522,7 +522,7 @@ let newSolution cont (results : ParseResults<_>) =
     Some cont
 
 let newScaffold cont (results : ParseResults<NewScaffoldArgs>) =
-    Templates.Scaffold.New
+    Templates.Scaffold.New ()
     Some cont
 
 let processNew cont args =
