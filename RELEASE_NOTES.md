@@ -1,3 +1,6 @@
+### 1.3.0 - 2016-12-17
+* Add integration with ProjectScaffold
+
 ### 1.2.1 - 2016-11-28
 * Fix release
 
