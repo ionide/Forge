@@ -53,7 +53,7 @@ type Command =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | New -> "<project|file|solution> Create new file, project or solution"
+            | New -> "<project|file|solution|scaffold> Create new file, project, solution or scaffold"
             | Add -> "<file|reference|project> Adds file, reference or project reference"
             | Move -> "<file> Move the file within the project hierarchy"
             | Remove -> "<file|folder|reference|project> Removes file, folder, reference or project reference"
@@ -75,6 +75,7 @@ type NewCommand =
     | [<First>][<CLIArg "project">] Project
     | [<First>][<CLIArg "file">] File
     | [<First>][<CLIArg "solution">] Solution
+    | [<First>][<CLIArg "scaffold">] Scaffold
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -82,8 +83,7 @@ type NewCommand =
             | Project -> "Creates new project"
             | File -> "Creates new file"
             | Solution -> "Creates new solution"
-
-
+            | Scaffold -> "Clones project scaffold"
 
 
 type NewProjectArgs =
@@ -129,6 +129,13 @@ type NewSolutionArgs =
             | Name _-> "Solution name"
 
 
+type NewScaffoldArgs =
+    | [<Hidden>] NoArgs
+
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | _ -> "There are no arguments for this command"
 
 //-----------------------------------------------------------------
 // Add commands
@@ -143,8 +150,6 @@ type AddCommands =
             | File -> "Adds file to project or solution"
             | Reference -> "Adds reference to project"
             | Project -> "Adds project reference to project"
-
-
 
 
 type AddFileArgs =
@@ -209,7 +214,6 @@ type RemoveCommands =
             | Reference -> "Removes reference from project"
             | Folder -> "Removes the folder from the project or solution"
             | Project -> "Removes project reference from project"
-
 
 
 type RemoveFileArgs =
@@ -517,6 +521,10 @@ let newSolution cont (results : ParseResults<_>) =
     Templates.Solution.New name
     Some cont
 
+let newScaffold cont (results : ParseResults<NewScaffoldArgs>) =
+    Templates.Scaffold.New ()
+    Some cont
+
 let processNew cont args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
@@ -524,6 +532,7 @@ let processNew cont args =
         | NewCommand.Project  -> execCommand (newProject cont) subArgs
         | NewCommand.File     -> execCommand (newFile cont) subArgs
         | NewCommand.Solution -> execCommand (newSolution cont) subArgs
+        | NewCommand.Scaffold -> execCommand (newScaffold cont) subArgs
     | _ -> Some cont
 
 
