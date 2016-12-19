@@ -1,3 +1,6 @@
+### 1.3.1 - 2016-12-19
+* Fix bug with paths containing whitespaces and `new scaffold` command
+
 ### 1.3.0 - 2016-12-17
 * Add integration with ProjectScaffold
 
