@@ -270,5 +270,6 @@ module Scaffold =
     let New () =
         EnsureTemplatesExist ()
         printfn "Cloning project scaffold..."
-        cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" directory
+        let whiteSpaceProtectedDir = ("\"" + directory + "\"")
+        cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" whiteSpaceProtectedDir
         ()
