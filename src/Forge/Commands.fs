@@ -275,7 +275,7 @@ type RenameCommands =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | File -> "Reneames file"
+            | File -> "Renames file"
             | Project -> "Renames project"
             | Folder -> "Renames folder"
 
@@ -290,7 +290,7 @@ type RenameFileArgs =
             match this with
             | Name _-> "File name"
             | Rename _ -> "New file name"
-            | Project _ -> "Project Containing File"
+            | Project _ -> "Project containing file"
 
 
 type RenameFolderArgs =
@@ -302,8 +302,8 @@ type RenameFolderArgs =
         member this.Usage =
             match this with
             | Name _-> "Folder name"
-            | Rename _ -> "New name"
-            | Project _ -> "Project containg folder"
+            | Rename _ -> "New folder name"
+            | Project _ -> "Project containing folder"
 
 
 type RenameProjectArgs =
@@ -314,7 +314,7 @@ type RenameProjectArgs =
         member this.Usage =
             match this with
             | Name _-> "Project name"
-            | Rename _ -> "New name"
+            | Rename _ -> "New project name"
 
 
 //-----------------------------------------------------------------
@@ -338,7 +338,7 @@ type ListCommands =
             | ProjectReferences -> "List project reference from project"
             | Project -> "List projects in solution"
             | Templates -> "List the templates in Forge's cache"
-            | GAC -> "List the assembilies in the Global Assembly Cache"
+            | GAC -> "List the assemblies in the Global Assembly Cache"
             | Filter _ -> "Filter list via fuzzy search for this string"
 
 
@@ -373,7 +373,7 @@ type ListReferencesArgs =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Project _ -> "List the refrences in this project"
+            | Project _ -> "List the references in this project"
             | Filter _ -> "Filter list via fuzzy search for this string"
 
 type ListProjectReferencesArgs =
@@ -383,7 +383,7 @@ type ListProjectReferencesArgs =
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Project _ -> "List project refrences in this project"
+            | Project _ -> "List project references in this project"
             | Filter _ -> "Filter list via fuzzy search for this string"
 
 
