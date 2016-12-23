@@ -38,8 +38,7 @@ let deleteFile fileName =
     file.Delete ()
 
 /// Renames the file to the target file name.
-let renameFile target fileName = (FileInfo fileName).MoveTo target
-
+let renameFile fileName target = (FileInfo fileName).MoveTo (directory </> target)
 
 /// Renames the directory to the target directory name.
 let renameDir target dirName = (DirectoryInfo dirName).MoveTo target

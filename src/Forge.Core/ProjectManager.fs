@@ -253,7 +253,11 @@ module Furnace =
             state
         else
             renameFile path newName
-            updateProj (FsProject.renameFile path newName)  state
+
+            let dir = getParentDir path
+            let name' = relative (directory </> path) ((directory </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
+            let newName' = relative (directory </> newName) ((directory </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
+            updateProj (FsProject.renameFile name' newName')  state
 
 
     let listSourceFiles (filter: string option) (state: ActiveState) =
