@@ -1,4 +1,4 @@
-module <%= namespace %>
+module <%= namespace %>.Tests
 
 open Expecto
 
