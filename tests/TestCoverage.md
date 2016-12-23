@@ -20,7 +20,7 @@
 * [ ] Parse - add below (?)
 * [ ] Parse - add dir
 * [ ] Parse - remove dir
-* [ ] Parse - rename file
+* [x] Parse - rename file
 * [ ] Parse - rename directory
 * [ ] Path Helper - normalize file name
 * [ ] Path Helper - get root

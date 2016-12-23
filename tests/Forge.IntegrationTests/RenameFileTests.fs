@@ -7,7 +7,7 @@ open Assertions
 open FsUnit
 
 [<Test>]
-let ``Renaming file changes name in fsproj`` () =
+let ``Rename file changes name in fsproj`` () =
     let dir = "rename_file"
 
     ["new project -n Sample --dir src -t console"
@@ -21,7 +21,7 @@ let ``Renaming file changes name in fsproj`` () =
     project |> hasFile "Renamed.fs"
 
 [<Test>]
-let ``Renaming file without project changes name in fsproj`` () =
+let ``Rename file without project changes name in fsproj`` () =
     let dir = "rename_file_no_project"
 
     ["new project -n Sample --dir src -t console"
