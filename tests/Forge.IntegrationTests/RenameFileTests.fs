@@ -19,3 +19,17 @@ let ``Renaming file changes name in fsproj`` () =
     let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
 
     project |> hasFile "Renamed.fs"
+
+[<Test>]
+let ``Renaming file without project changes name in fsproj`` () =
+    let dir = "rename_file_no_project"
+
+    ["new project -n Sample --dir src -t console"
+     "new file -n src/Sample/Test --project src/Sample/Sample.fsproj --template fs"
+     "rename file -n src/Sample/Test.fs -r src/Sample/Renamed.fs"
+    ]
+    |> initTest dir
+
+    let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+
+    project |> hasFile "Renamed.fs"
