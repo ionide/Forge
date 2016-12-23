@@ -508,9 +508,9 @@ type SourceTree (files:SourceFile list) =
 
     /// Check if the target exists in the project file tree
     let hasTarget (target:string) =
-        let target = normalizeFileName target
-        if isDirectory target then tree.ContainsKey target
-        elif data.ContainsKey target then true else
+        let temp = normalizeFileName target
+        if isDirectory temp then tree.ContainsKey temp
+        elif data.ContainsKey temp then true else
         false
 
     let moveFile shift target =
@@ -617,24 +617,25 @@ type SourceTree (files:SourceFile list) =
         // TODO - check path & name for validity
         // TODO - if there's a .fs & .fsi pair rename both files
         if   not ^ hasTarget path then ()
-        elif not ^ checkFile newName "is not a valid file name" then () else
-        let path = normalizeFileName path
-        let dir  = getDirectory path
-        let file = Path.GetFileName path
-        // update the SourceFile record
-        if data.ContainsKey path then
-            let srcfile = {data.[path] with Include = dir+newName}
-            data.Remove path |> ignore
-            data.[dir+newName]  <- srcfile
-        // update the file position listing
-        if tree.ContainsKey dir then
-            let arr = tree.[dir]
-            printfn "%A" arr
-            let idx = ResizeArray.findIndex ((=) file) arr
-            arr.[idx] <- newName
-            tree.[dir] <- arr
+        elif not ^ checkFile newName "is not a valid file name" then () 
+        else
+            let path = normalizeFileName path
+            let dir  = getDirectory path
+            let file = Path.GetFileName path
+            // update the SourceFile record
+            if data.ContainsKey path then
+                let srcfile = {data.[path] with Include = newName}
+                data.Remove path |> ignore
+                data.[newName]  <- srcfile
+            // update the file position listing
+            if tree.ContainsKey dir then
+                let arr = tree.[dir]
+                printfn "%A" arr
+                let idx = ResizeArray.findIndex ((=) file) arr
+                arr.[idx] <- newName
+                tree.[dir] <- arr
 
-        // TODO add railway result/errors
+            // TODO add railway result/errors
 
 
     member __.RenameDir (dir:string) (newName:string) =

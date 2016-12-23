@@ -12,7 +12,7 @@ let ``Renaming file changes name in fsproj`` () =
 
     ["new project -n Sample --dir src -t console"
      "new file -n src/Sample/Test --project src/Sample/Sample.fsproj --template fs"
-     "rename file -n src/Sample/Test -r src/Sample/Renamed --project src/Sample/Sample.fsproj"
+     "rename file -n src/Sample/Test.fs -r src/Sample/Renamed.fs --project src/Sample/Sample.fsproj"
     ]
     |> initTest dir
 
