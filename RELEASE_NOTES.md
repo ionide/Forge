@@ -1,3 +1,6 @@
+### 1.3.2 - 2016-12-28
+* Fix file rename command
+
 ### 1.3.1 - 2016-12-19
 * Fix bug with paths containing whitespaces and `new scaffold` command
 
