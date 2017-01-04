@@ -7,14 +7,12 @@
 
 open Fake
 open Suave
-open Suave.Http.Successful
-open Suave.Web
-open Suave.Types
+open Suave.Successful
 open System.Net
 
 let serverConfig = 
-    let port = getBuildParamOrDefault "port" "8083" |> Sockets.Port.Parse
-    { defaultConfig with bindings = [ HttpBinding.mk HTTP IPAddress.Loopback port ] }
+    let port = getBuildParamOrDefault "port" "8080" |> Sockets.Port.Parse
+    { defaultConfig with bindings = [ HttpBinding.create HTTP IPAddress.Loopback port ] }
 
 startWebServer serverConfig 
     (OK  
