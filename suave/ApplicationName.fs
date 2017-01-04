@@ -1,5 +1,9 @@
-open Suave                 // always open suave
-open Suave.Successful      // for OK-result
-open Suave.Web             // for config
+module MyWebApi.Program
 
-startWebServer defaultConfig (OK "Hello World!")
+open Suave
+open Suave.Successful
+
+[<EntryPoint>]
+let main argv =
+    startWebServer defaultConfig (OK "Hello World!")
+    0
