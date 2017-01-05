@@ -1,3 +1,6 @@
+### 1.3.3 - 2017-01-05
+* Make build.sh executable and fix line endings
+
 ### 1.3.2 - 2016-12-28
 * Fix file rename command
 
