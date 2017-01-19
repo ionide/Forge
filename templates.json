@@ -2,7 +2,7 @@
     "Templates": [
         { "name": "Console Application", "value": "console" },
         { "name": "Class Library", "value": "classlib" },
-        { "name": "Expecto", "value": "expecto" },
+        { "name": "Expecto unit, property and performance testing project", "value": "expecto" },
         { "name": "FsUnit", "value": "fsunit" },
         { "name": "Portable Class Library (Profile 259)", "value": "pcl259" },
         { "name": "Windows (WPF) Application", "value": "windows" },
