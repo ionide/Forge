@@ -34,7 +34,7 @@ You can download one of the releases found at https://github.com/fsharp-editing/
 
 Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
 
-On Linux:
+##### On Linux:
 
 One option is to build the project from source and create a symlink.
 

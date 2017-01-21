@@ -1,3 +1,6 @@
+### 1.4.0 - 2017-01-21
+* Change `update` into `update-version`
+
 ### 1.3.3 - 2017-01-05
 * Make build.sh executable and fix line endings
 
