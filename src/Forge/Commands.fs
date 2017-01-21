@@ -44,7 +44,7 @@ type Command =
     | [<CLIArg "remove">] Remove
     | [<CLIArg "rename">] Rename
     | [<CLIArg "list">] List
-    | [<CLIArg "update">] Update
+    | [<CLIArg "update-version">] Update
     | [<CLIArg "paket">] Paket
     | [<CLIArg "fake">] Fake
     | [<CLIArg "refresh">] Refresh
@@ -484,7 +484,7 @@ let subCommandArgs args =
     args |> parseCommand<_>
     |> Option.bind (fun res ->
         match res.GetAllResults() |> List.tryHead |> Option.map (fun x -> x, args.[1..]) with
-        | None -> 
+        | None ->
             traceWarning "Bad or missing parameters."
             res.Usage "   Available parameters:" |> System.Console.WriteLine
             None
