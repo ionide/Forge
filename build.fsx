@@ -113,6 +113,9 @@ Target "Build" (fun _ ->
     ++ (buildDir </> "*.xml")
     -- (buildDir </> "Mono.Posix.dll")
     -- (buildDir </> "Nett.dll")
+    -- (buildDir </> "FParsec.dll")
+    -- (buildDir </> "FParsecCS.dll")
+    -- (buildDir </> "ICSharpCode.SharpZipLib.dll")
     |> DeleteFiles
 )
 
