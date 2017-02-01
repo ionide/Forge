@@ -113,6 +113,9 @@ Target "Build" (fun _ ->
     ++ (buildDir </> "*.xml")
     -- (buildDir </> "Mono.Posix.dll")
     -- (buildDir </> "Nett.dll")
+    -- (buildDir </> "FParsec.dll")
+    -- (buildDir </> "FParsecCS.dll")
+    -- (buildDir </> "ICSharpCode.SharpZipLib.dll")
     |> DeleteFiles
 )
 
@@ -153,6 +156,9 @@ Target "ZipRelease" (fun _ ->
     ++ (buildDir </> "*.config")
     ++ (buildDir </> "Mono.Posix.dll")
     ++ (buildDir </> "Nett.dll")
+    ++ (buildDir </> "FParsec.dll")
+    ++ (buildDir </> "FParsecCS.dll")
+    ++ (buildDir </> "ICSharpCode.SharpZipLib.dll")
     -- (buildDir </> "Forge.Core.dll.config")
     -- (buildDir </> "*templates*")
     -- (buildDir </> "*Tests*")
