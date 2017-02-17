@@ -16,6 +16,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
         <OutputType>Library</OutputType>
+    <MonoLibraryPath>/run/current-system/sw/lib/mono/4.5</MonoLibraryPath>
     <Name><%= namespace %></Name>
     <RootNamespace><%= namespace %></RootNamespace>
     <AssemblyName><%= namespace %></AssemblyName>
@@ -121,6 +122,9 @@
     <Otherwise>
       <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
         <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      </PropertyGroup>
+      <PropertyGroup Condition="Exists('$(MonoLibraryPath)/Microsoft.FSharp.Targets')">
+          <FSharpTargetsPath>$(MonoLibraryPath)/Microsoft.FSharp.Targets</FSharpTargetsPath>
       </PropertyGroup>
     </Otherwise>
   </Choose>
