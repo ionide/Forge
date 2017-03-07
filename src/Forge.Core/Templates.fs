@@ -152,10 +152,14 @@ module Project =
 
         let templates = GetList()
 
+        let pathCheck path = 
+            try Path.GetFullPath path |> ignore; isValidPath path
+            with _ -> false
+
         let projectName' =
             match projectName with
             | Some p -> p
-            | None -> prompt "Enter project name:"
+            | None -> promptCheck "Enter project name:" (fun p -> pathCheck (directory </> p)) (sprintf "%s is not valid project name.")
         let projectDir' =
             match projectDir with
             | Some p -> p
