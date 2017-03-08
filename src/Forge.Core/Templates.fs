@@ -154,7 +154,7 @@ module Project =
 
         let pathCheck path = 
             let path' = directory </> path
-            try Path.GetFullPath path' |> ignore; isValidPath path' && String.stripControls path <> ""
+            try Path.GetFullPath path' |> ignore; isValidPath path' && not (String.IsNullOrWhiteSpace path)
             with _ -> false
 
         let projectName' =
