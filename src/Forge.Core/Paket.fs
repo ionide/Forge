@@ -9,16 +9,21 @@ let getPaketLocation () =
     if Directory.Exists local then local else paketLocation
 
 let getPaket () =
-    let local = directory </> ".paket" </> "paket.exe"
-    if File.Exists local then local else paketLocation </> "paket.exe"
+    getPaketLocation () </> "paket.exe"
 
-
-let Copy folder =
+let copy folder =
     folder </> ".paket" |> Directory.CreateDirectory |> ignore
     Directory.GetFiles location
     |> Seq.iter (fun x ->
-        let fn = Path.GetFileName x
-        File.Copy (x, folder </> ".paket" </> fn, true) )
+        let filename = Path.GetFileName x
+        File.Copy (x, folder </> ".paket" </> filename, true) )
+
+
+let Init folder =
+    if Directory.GetFiles folder |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
+        copy folder
+        Update ()
+        Run ["init"]
 
 let Update () =
     let f = getPaketLocation ()

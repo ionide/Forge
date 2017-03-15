@@ -180,9 +180,7 @@ module Project =
             sed "<%= paketPath %>" (relative directory) projectFolder
             sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
 
-            Paket.Copy directory
-            if Directory.GetFiles directory |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
-                Paket.Run ["init"]
+            Paket.Init directory
 
             Directory.GetFiles projectFolder
             |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
