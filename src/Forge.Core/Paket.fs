@@ -19,12 +19,6 @@ let copy folder =
         File.Copy (x, folder </> ".paket" </> filename, true) )
 
 
-let Init folder =
-    if Directory.GetFiles folder |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
-        copy folder
-        Update ()
-        Run ["init"]
-
 let Update () =
     let f = getPaketLocation ()
     run (f </> "paket.bootstrapper.exe") "" f
@@ -35,5 +29,9 @@ let Run args =
     let args' = args |> String.concat " "
     run f args' directory
 
-
+let Init folder =
+    if Directory.GetFiles folder |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
+        copy folder
+        Update ()
+        Run ["init"]
 
