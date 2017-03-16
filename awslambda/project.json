@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "compilerName": "fsc",
+    "emitEntryPoint": false,
+    "compile": "*.fs",
+    "debugType": "portable",
+    "outputName": "<%= namespace %>"
+  },
+  "tools": {
+    "dotnet-compile-fsc": {
+      "version": "1.0.0-*",
+      "imports": [
+        "dnxcore50"
+      ]
+    },
+    "Amazon.Lambda.Tools": "1.0.0-preview1"
+  },
+  "dependencies": {
+    "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-*",
+    "Amazon.Lambda.Core": "1.0.0*",
+    "Amazon.Lambda.Serialization.Json": "1.0.0",
+    "Amazon.Lambda.Tools": {
+      "type": "build",
+      "version": "1.0.0-preview1"
+    }
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.1"
+        }
+      },
+      "imports": "dnxcore50"
+    }
+  }
+}
