@@ -7,6 +7,7 @@
     <ProjectGuid><%= guid %></ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputType>Exe</OutputType>
+    <MonoLibraryPath>/run/current-system/sw/lib/mono/4.5</MonoLibraryPath>
     <RootNamespace><%= namespace %></RootNamespace>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -62,6 +63,9 @@
     <Otherwise>
       <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets')">
         <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      </PropertyGroup>
+      <PropertyGroup Condition="Exists('$(MonoLibraryPath)/Microsoft.FSharp.Targets')">
+          <FSharpTargetsPath>$(MonoLibraryPath)/Microsoft.FSharp.Targets</FSharpTargetsPath>
       </PropertyGroup>
     </Otherwise>
   </Choose>

@@ -7,6 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid><%= guid %></ProjectGuid>
     <OutputType>Library</OutputType>
+    <MonoLibraryPath>/run/current-system/sw/lib/mono/4.5</MonoLibraryPath>
     <RootNamespace><%= namespace %></RootNamespace>
     <AssemblyName><%= namespace %></AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
