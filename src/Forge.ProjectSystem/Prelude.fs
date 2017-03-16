@@ -128,6 +128,15 @@ let promptSelect2 text list =
      Console.Write("> ")
      Console.ReadLine () |> String.stripControls
 
+let promptCheck text checkF wrongInputMessage =
+    let rec ask() =
+        let x = prompt text
+        if checkF x then x
+        else
+            printfn "%s" (wrongInputMessage x)
+            ask()
+
+    ask()
 
 let inline mapOpt (opt:'a option) mapfn (x:'b) =
     match opt with

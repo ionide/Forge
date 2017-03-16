@@ -152,14 +152,27 @@ module Project =
 
         let templates = GetList()
 
+        let pathCheck path = 
+            let path' = directory </> path
+            try Path.GetFullPath path' |> ignore; isValidPath path' && not (String.IsNullOrWhiteSpace path)
+            with _ -> false
+
         let projectName' =
             match projectName with
             | Some p -> p
-            | None -> prompt "Enter project name:"
+            | None -> 
+                promptCheck 
+                    "Enter project name:" 
+                    pathCheck 
+                    (sprintf "\"%s\" is not a valid project name.")
         let projectDir' =
             match projectDir with
             | Some p -> p
-            | None -> prompt "Enter project directory (relative to working directory):"
+            | None -> 
+                promptCheck 
+                    "Enter project directory (relative to working directory):" 
+                    pathCheck
+                    (sprintf "\"%s\" is not a valid directory name.")
         let templateName' =
             match templateName with
             | Some p -> p
@@ -168,7 +181,11 @@ module Project =
         let templateDir = templatesLocation </> templateName'
         let gitignorePath = (templatesLocation </> ".vcsignore" </> ".gitignore")
 
-        if templates |> Seq.contains templateName' then
+        if pathCheck projectFolder |> not then
+            printfn "\"%s\" is not a valid project folder." projectFolder
+        elif templates |> Seq.contains templateName' |> not then
+            printfn "Wrong template name"
+        else
             printfn "Generating project..."
             copyDir projectFolder templateDir (fun _ -> true)
             applicationNameToProjectName projectFolder projectName'
@@ -199,8 +216,6 @@ module Project =
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
             printfn "Done!"
-        else
-            printfn "Wrong template name"
 
 module File =
     open System
