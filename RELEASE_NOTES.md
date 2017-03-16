@@ -1,3 +1,8 @@
+### 1.4.1 - 2017-03-16
+* Fix where path has spaces
+* Check validity of new project name and project directory
+* Paket.Init function replace Copy
+
 ### 1.4.0 - 2017-01-21
 * Change `update` into `update-version`
 
