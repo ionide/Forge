@@ -1,4 +1,4 @@
 ﻿namespace <%= namespace %>
 
-type <%= namespace %>() = 
+type <%= namespace %>() =
     member this.X = "F#"
