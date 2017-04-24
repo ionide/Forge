@@ -86,7 +86,12 @@ let exeLocation =
         System.Reflection.Assembly.GetEntryAssembly().Location |> Path.GetDirectoryName
     with
     | _ -> ""
-let templatesLocation = exeLocation </> ".." </> "templates"
+
+let templatesLocation =
+    match Environment.GetEnvironmentVariable "FORGE_TEMPLATE_DIR" with
+    | null -> exeLocation </> ".." </> "templates"
+    | dir -> dir
+
 let directory         = System.Environment.CurrentDirectory
 let packagesDirectory = directory </> "packages"
 
@@ -107,4 +112,3 @@ let relative (path1 : string) (path2 : string) =
             .ToString()
             .Replace('/', Path.DirectorySeparatorChar)
     )
-
