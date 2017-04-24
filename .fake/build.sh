@@ -1,20 +1,15 @@
-#!/bin/bash
-if test "$OS" = "Windows_NT"
-then
-  # use .Net
-  .paket/paket.exe restore
-  exit_code=$?
-  if [ $exit_code -ne 0 ]; then
-  	exit $exit_code
-  fi
+#!/usr/bin/env bash
 
-  packages/FAKE/tools/FAKE.exe $@ --fsiargs build.fsx
-else
-  # use mono
-  mono .paket/paket.exe restore
-  exit_code=$?
-  if [ $exit_code -ne 0 ]; then
-  	exit $exit_code
-  fi
-  mono packages/FAKE/tools/FAKE.exe $@ --fsiargs -d:MONO build.fsx
+mono=
+fsiargs=()
+
+if [[ "$OS" != "Windows_NT" ]]; then
+  mono=mono
+  fsiargs=(--fsiargs -d:MONO)
+
+  # http://fsharp.github.io/FAKE/watch.html
+  export MONO_MANAGED_WATCHER=false
 fi
+
+$mono .paket/paket.exe restore || exit $?
+$mono packages/FAKE/tools/FAKE.exe "$@" "${fsiargs[@]}" build.fsx
