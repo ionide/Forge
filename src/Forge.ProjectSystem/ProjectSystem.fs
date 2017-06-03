@@ -505,6 +505,7 @@ type SourceTree (files:SourceFile list) =
         |> List.iter (fun (dir,files) ->
             tree.Add (dir,ResizeArray files)
         )
+        if not (tree.ContainsKey "/") then tree.Add("/", ResizeArray())
 
     /// Check if the target exists in the project file tree
     let hasTarget (target:string) =
