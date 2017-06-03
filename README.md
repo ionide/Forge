@@ -1,5 +1,3 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/dbrajqyaiewsi9ex?svg=true)](https://ci.appveyor.com/project/fsharpediting/forge)
-[![Build Status](https://travis-ci.org/fsharp-editing/Forge.svg?branch=master)](https://travis-ci.org/fsharp-editing/Forge)
 [![Join the chat at https://gitter.im/fsharp-editing/Forge](https://badges.gitter.im/fsharp-editing/Forge.svg)](https://gitter.im/fsharp-editing/Forge?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 

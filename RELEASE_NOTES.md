@@ -1,3 +1,7 @@
+### 1.4.2 - 2017-06-03
+* Add support for `FORGE_TEMPLATE_DIR` environment variable
+* Fix error when adding a file to a project with no files
+
 ### 1.4.1 - 2017-03-16
 * Fix where path has spaces
 * Check validity of new project name and project directory
