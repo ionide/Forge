@@ -454,7 +454,7 @@ type UpdateArgs =
 
 
 let parseCommand<'T when 'T :> IArgParserTemplate> args =
-    let parser = ArgumentParser.Create<'T>(errorHandler = ProcessExiter())
+    let parser = ArgumentParser.Create<'T>(programName = "forge.exe", errorHandler = ProcessExiter())
     let results =
         parser.Parse
             (inputs = args,
@@ -485,6 +485,7 @@ let subCommandArgs args =
         match res.GetAllResults() |> List.tryHead |> Option.map (fun x -> x, args.[1..]) with
         | None ->
             res.Raise (error = exn "Bad or missing parameters.", showUsage = true)
+            None
         | x -> x
     )
 
