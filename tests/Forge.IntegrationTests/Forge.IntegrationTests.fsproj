@@ -57,7 +57,6 @@
     <Compile Include="NewFileTests.fs" />
     <Compile Include="NewScaffoldTests.fs" />
     <Compile Include="RenameFileTests.fs" />
-    <Compile Include="obj/Release/.NETFramework,Version=v4.5.AssemblyAttribute.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>
