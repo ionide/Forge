@@ -5,7 +5,7 @@ NUGET
     FAKE (4.61.3)
     FParsec (1.0.2)
     FSharp.Compiler.Service (2.0.0.6)
-    FSharp.Core (4.2)
+    FSharp.Core (4.2.1)
     FSharp.Formatting (2.14.4)
       FSharp.Compiler.Service (2.0.0.6)
       FSharpVSPowerTools.Core (>= 2.3 < 2.4)
@@ -16,7 +16,7 @@ NUGET
       NUnit (>= 3.6)
     Mono.Posix (4.0)
     Nett (0.6.3)
-    NUnit (3.7)
+    NUnit (3.7.1)
     NUnit.ConsoleRunner (3.6.1)
     NUnit.Extension.NUnitProjectLoader (3.5)
     NUnit.Extension.NUnitV2Driver (3.6)
@@ -35,5 +35,5 @@ NUGET
     SourceLink.Fake (1.1)
 GITHUB
   remote: fsharp/FAKE
-    modules/Octokit/Octokit.fsx (83c86c80b513f9fa97f7ebe325ce771ac97f4960)
+    modules/Octokit/Octokit.fsx (574f6259c4abec2ae45b8c888aa1bdc9b5d4e842)
       Octokit (>= 0.20)
