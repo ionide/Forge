@@ -327,7 +327,7 @@ type PackageReference =
         XElem.create Constants.PackageReference []
         |> XElem.setAttribute Constants.Include self.Include
         |> XElem.setAttribute Constants.Version self.Version
-        |> mapOpt self.PrivateAssets ^ XElem.setAttribute Constants.Version
+        |> mapOpt self.PrivateAssets ^ XElem.setAttribute Constants.PrivateAssets
 
 (*
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
