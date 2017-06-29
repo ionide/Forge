@@ -17,7 +17,6 @@ type ActiveState =
         ProjectData     : FsProject
         ProjectPath     : string
         ProjectFileName : string
-        ActiveConfig    : ConfigSettings
     }
 
 // Maybe use a persistent vector here to allow timetravel/history & undo?
@@ -54,6 +53,7 @@ module Furnace =
                 |&| XElem.notNamed Constants.PropertyGroup
                 |&| XElem.notNamed Constants.ItemGroup
                 |&| XElem.notNamed Constants.ProjectReference
+                |&| XElem.notNamed Constants.PackageReference
                 )
             )
         let proj = FsProject.fromXDoc xdoc
@@ -64,12 +64,10 @@ module Furnace =
             | p  -> Environment.CurrentDirectory </> p
         // TODO - This is a bad way to deal with loading the configuration settings
 
-        let config = proj.BuildConfigs |> function [] -> ConfigSettings.Debug | hd::_ -> hd
         {   StoredXml       = List.ofSeq detritus
             ProjectData     = proj
             ProjectPath     = projectPath'
             ProjectFileName = Path.GetFileNameWithoutExtension projectPath
-            ActiveConfig    = config
         }
 
 
