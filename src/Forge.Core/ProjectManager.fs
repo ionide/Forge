@@ -54,6 +54,7 @@ module Furnace =
                 |&| XElem.notNamed Constants.ItemGroup
                 |&| XElem.notNamed Constants.ProjectReference
                 |&| XElem.notNamed Constants.PackageReference
+                |&| XElem.notNamed Constants.DotNetCliToolReference
                 )
             )
         let proj = FsProject.fromXDoc xdoc

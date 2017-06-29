@@ -333,6 +333,29 @@ type PackageReference =
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
 *)
 
+/// Represents a reference to dotnet CLI tool
+type DotNetCliToolReference =
+    {   Include : string
+        Version : string
+    }
+    static member fromXElem (xelem:XElement) =
+        let name =  xelem.Name.LocalName
+        if name <> Constants.DotNetCliToolReference then
+            failwithf "XElement provided was not a `DotNetCliToolReference` was `%s` instead" name
+        else
+        {   Include       = XElem.getAttributeValue  Constants.Include xelem
+            Version       = XElem.getAttributeValue Constants.Version xelem
+        }
+
+    member self.ToXElem () =
+        XElem.create Constants.DotNetCliToolReference []
+        |> XElem.setAttribute Constants.Include self.Include
+        |> XElem.setAttribute Constants.Version self.Version
+
+(*
+    <DotNetCliToolReference Include="dotnet-fable" Version="1.1.4" />
+*)
+
 /// use to match against the name of an xelement to see if it represents a source file
 let isSrcFile = function
     | Constants.Compile
@@ -966,28 +989,35 @@ type ConfigSettings =
 // TODO - Check for duplicate files
 
 type FsProject =
-    {   Sdk                 : string option
-        ToolsVersion        : string option
-        DefaultTargets      : string option
-        Settings            : ProjectSettings
-        BuildConfigs        : ConfigSettings list
-        ProjectReferences   : ProjectReference ResizeArray
-        PackageReference    : PackageReference ResizeArray
-        References          : Reference ResizeArray
-        SourceFiles         : SourceTree
+    {   Sdk                     : string option
+        ToolsVersion            : string option
+        DefaultTargets          : string option
+        Settings                : ProjectSettings
+        BuildConfigs            : ConfigSettings list
+        ProjectReferences       : ProjectReference ResizeArray
+        PackageReference        : PackageReference ResizeArray
+        DotNetCliToolReferences : DotNetCliToolReference ResizeArray
+        References              : Reference ResizeArray
+        SourceFiles             : SourceTree
     }
 
     member self.ToXElem () =
+        let refs =
+            [
+                (self.PackageReference |> ResizeArray.map toXElem)
+                (self.DotNetCliToolReferences |> ResizeArray.map toXElem)
+                (self.References |> ResizeArray.map toXElem)
+            ] |> Seq.collect id |> Seq.toList
+
         XElem.create Constants.Project []
-        |> XElem.setAttribute Constants.ToolsVersion self.ToolsVersion
-        |> XElem.setAttribute Constants.DefaultTargets self.DefaultTargets
+        |> fun n -> if self.ToolsVersion.IsSome then XElem.setAttribute Constants.ToolsVersion self.ToolsVersion.Value n else n
+        |> fun n -> if self.DefaultTargets.IsSome then XElem.setAttribute Constants.DefaultTargets self.DefaultTargets.Value n else n
         |> fun n -> if self.Sdk.IsSome then XElem.setAttribute Constants.Sdk self.Sdk.Value n else n
         |> XElem.addElement  ^ toXElem self.Settings
         |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
-        |> fun n -> if self.References.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem) else n
         |> fun n -> if self.ProjectReferences.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem) else n
         |> XElem.addElement  ^ toXElem self.SourceFiles
-        |> fun n -> if self.PackageReference.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.PackageReference |> ResizeArray.map toXElem) else n
+        |> fun n -> if refs.Length > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup refs else n
 
     member self.ToXDoc() = toXElem self |> XDocument
 
@@ -1028,6 +1058,7 @@ type FsProject =
                 |?| XElem.isNamed Constants.ItemGroup
                 |?| XElem.isNamed Constants.ProjectReference
                 |?| XElem.isNamed Constants.PackageReference
+                |?| XElem.isNamed Constants.DotNetCliToolReference
                 ) )
 
         let projectSetting, buildconfigs =
@@ -1052,6 +1083,10 @@ type FsProject =
             XElem.descendantsNamed Constants.PackageReference xdoc
             |> Seq.map PackageReference.fromXElem
 
+        let toolsReferences =
+            XElem.descendantsNamed Constants.DotNetCliToolReference xdoc
+            |> Seq.map DotNetCliToolReference.fromXElem
+
         let filterItems name =
             itemGroups |> Seq.collect ^ XElem.descendantsNamed name
 
@@ -1069,15 +1104,16 @@ type FsProject =
             //|> Seq.filter (fun n-> n.Paket |> Option.exists id |> not)
             |> Seq.toList |> SourceTree
 
-        {   ToolsVersion      = XElem.tryGetAttributeValue Constants.ToolsVersion xdoc
-            DefaultTargets    = XElem.tryGetAttributeValue Constants.DefaultTargets xdoc
-            Sdk               = XElem.tryGetAttributeValue Constants.Sdk xdoc
-            References        = references |> ResizeArray
-            Settings          = projectSetting
-            SourceFiles       = srcTree
-            PackageReference  = pacakgeReferences |> ResizeArray
-            ProjectReferences = projectReferences |> ResizeArray
-            BuildConfigs      = buildconfigs
+        {   ToolsVersion            = XElem.tryGetAttributeValue Constants.ToolsVersion xdoc
+            DefaultTargets          = XElem.tryGetAttributeValue Constants.DefaultTargets xdoc
+            Sdk                     = XElem.tryGetAttributeValue Constants.Sdk xdoc
+            Settings                = projectSetting
+            BuildConfigs            = buildconfigs
+            SourceFiles             = srcTree
+            References              = references |> ResizeArray
+            PackageReference        = pacakgeReferences |> ResizeArray
+            ProjectReferences       = projectReferences |> ResizeArray
+            DotNetCliToolReferences = toolsReferences |> ResizeArray
         }
 
 

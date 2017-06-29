@@ -2,10 +2,11 @@
 module Forge.Constants
 
 // Common Constants
-let [<Literal>] Name             = "Name"
-let [<Literal>] None             = "None"
-let [<Literal>] Reference        = "Reference"
-let [<Literal>] PackageReference = "PackageReference"
+let [<Literal>] Name                   = "Name"
+let [<Literal>] None                   = "None"
+let [<Literal>] Reference              = "Reference"
+let [<Literal>] PackageReference       = "PackageReference"
+let [<Literal>] DotNetCliToolReference = "DotNetCliToolReference "
 
 
 // Platform Constants
