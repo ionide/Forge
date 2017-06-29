@@ -2,9 +2,11 @@
 module Forge.Constants
 
 // Common Constants
-let [<Literal>] Name        = "Name"
-let [<Literal>] None        = "None"
-let [<Literal>] Reference   = "Reference"
+let [<Literal>] Name             = "Name"
+let [<Literal>] None             = "None"
+let [<Literal>] Reference        = "Reference"
+let [<Literal>] PackageReference = "PackageReference"
+
 
 // Platform Constants
 
@@ -42,6 +44,8 @@ let [<Literal>] Module    = "Module"
 
 let [<Literal>] DefaultTargets  = "DefaultTargets"
 let [<Literal>] ToolsVersion    = "ToolsVersion"
+let [<Literal>] Sdk             = "Sdk"
+
 let [<Literal>] Include         = "Include"
 let [<Literal>] Condition       = "Condition"
 
@@ -63,6 +67,8 @@ let [<Literal>] SchemaVersion                = "SchemaVersion"
 let [<Literal>] ProjectGuid                  = "ProjectGuid"
 let [<Literal>] ProjectType                  = "ProjectType"
 let [<Literal>] OutputType                   = "OutputType"
+let [<Literal>] TargetFramework              = "TargetFramework"
+let [<Literal>] TargetFrameworks             = "TargetFrameworks"
 let [<Literal>] TargetFrameworkVersion       = "TargetFrameworkVersion"
 let [<Literal>] TargetFrameworkProfile       = "TargetFrameworkProfile"
 let [<Literal>] AutoGenerateBindingRedirects = "AutoGenerateBindingRedirects"
@@ -89,6 +95,9 @@ let [<Literal>] SpecificVersion         = "SpecificVersion"
 let [<Literal>] Link                    = "Link"
 let [<Literal>] Paket                   = "Paket"
 let [<Literal>] FSharpTargetsPath       = "FSharpTargetsPath"
+let [<Literal>] Version                 = "Version"
+let [<Literal>] PrivateAssets           = "PrivateAssets"
+
 
 let [<Literal>] XmlDecl                 = @"<?xml version='1.0' encoding='utf-8'?>"
 let [<Literal>] Xmlns                   = "http://schemas.microsoft.com/developer/msbuild/2003"

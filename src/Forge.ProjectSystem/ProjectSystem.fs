@@ -307,6 +307,32 @@ type ProjectReference =
     </ProjectReference>
 *)
 
+/// Represents a reference to NuGet package
+type PackageReference =
+    {   Include : string
+        Version : string
+        PrivateAssets : string option
+    }
+    static member fromXElem (xelem:XElement) =
+        let name =  xelem.Name.LocalName
+        if name <> Constants.PackageReference then
+            failwithf "XElement provided was not a `PackageReference` was `%s` instead" name
+        else
+        {   Include       = XElem.getAttributeValue  Constants.Include xelem
+            Version       = XElem.getAttributeValue Constants.Version xelem
+            PrivateAssets = XElem.tryGetAttributeValue Constants.PrivateAssets xelem
+        }
+
+    member self.ToXElem () =
+        XElem.create Constants.PackageReference []
+        |> XElem.setAttribute Constants.Include self.Include
+        |> XElem.setAttribute Constants.Version self.Version
+        |> mapOpt self.PrivateAssets ^ XElem.setAttribute Constants.Version
+
+(*
+    <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
+*)
+
 /// use to match against the name of an xelement to see if it represents a source file
 let isSrcFile = function
     | Constants.Compile
@@ -618,7 +644,7 @@ type SourceTree (files:SourceFile list) =
         // TODO - check path & name for validity
         // TODO - if there's a .fs & .fsi pair rename both files
         if   not ^ hasTarget path then ()
-        elif not ^ checkFile newName "is not a valid file name" then () 
+        elif not ^ checkFile newName "is not a valid file name" then ()
         else
             let path = normalizeFileName path
             let dir  = getDirectory path
@@ -771,6 +797,8 @@ type ProjectSettings =
         ProjectGuid                  : Property<Guid>
         ProjectType                  : Property<Guid list>
         OutputType                   : Property<OutputType>
+        TargetFramework              : Property<string>
+        TargetFrameworks             : Property<string list>
         TargetFrameworkVersion       : Property<string>
         TargetFrameworkProfile       : Property<string>
         AutoGenerateBindingRedirects : Property<bool>
@@ -814,6 +842,8 @@ type ProjectSettings =
             ProjectGuid                  = elemmap Constants.ProjectGuid Guid.Parse
             ProjectType                  = elemmap Constants.ProjectType splitGuids
             OutputType                   = elemmap Constants.OutputType OutputType.Parse
+            TargetFramework              = elem    Constants.TargetFramework
+            TargetFrameworks             = elemmap Constants.TargetFrameworks (fun s -> s.Split ';' |> Array.toList)
             TargetFrameworkVersion       = elem    Constants.TargetFrameworkVersion
             TargetFrameworkProfile       = elem    Constants.TargetFrameworkProfile
             AutoGenerateBindingRedirects = elemmap Constants.AutoGenerateBindingRedirects Boolean.Parse
@@ -832,6 +862,8 @@ type ProjectSettings =
             |> mapOpt (toXElem self.ProjectGuid) XElem.addElement
             |> mapOpt (toXElem self.ProjectType) XElem.addElement
             |> mapOpt (toXElem self.OutputType) XElem.addElement
+            |> mapOpt (toXElem self.TargetFramework) XElem.addElement
+            |> mapOpt (toXElem self.TargetFrameworks) XElem.addElement
             |> mapOpt (toXElem self.TargetFrameworkVersion) XElem.addElement
             |> mapOpt (toXElem self.TargetFrameworkProfile) XElem.addElement
             |> mapOpt (toXElem self.AutoGenerateBindingRedirects) XElem.addElement
@@ -934,48 +966,39 @@ type ConfigSettings =
 // TODO - Check for duplicate files
 
 type FsProject =
-    {   ToolsVersion        : string
-        DefaultTargets      : string list
+    {   Sdk                 : string option
+        ToolsVersion        : string option
+        DefaultTargets      : string option
         Settings            : ProjectSettings
         BuildConfigs        : ConfigSettings list
         ProjectReferences   : ProjectReference ResizeArray
+        PackageReference    : PackageReference ResizeArray
         References          : Reference ResizeArray
         SourceFiles         : SourceTree
     }
 
-    member private __.xmlns = XNamespace.Get Constants.Xmlns
-
     member self.ToXElem () =
-        let projxml =
-            XElem.create Constants.Project []
-            |> XElem.setAttribute Constants.ToolsVersion self.ToolsVersion
-            |> XElem.setAttribute Constants.DefaultTargets (self.DefaultTargets |> String.concat " ")
-            |> XElem.addElement  ^ toXElem self.Settings
-            |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
-            |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem)
-            |> fun n -> if self.ProjectReferences.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem) else n
-            |> XElem.addElement  ^ toXElem self.SourceFiles
-
-
-        // add msbuild namespace to XElement representing the project
-        projxml.DescendantsAndSelf()
-        |> Seq.iter(fun x -> x.Name <- self.xmlns + x.Name.LocalName)
-
-        projxml
-
+        XElem.create Constants.Project []
+        |> XElem.setAttribute Constants.ToolsVersion self.ToolsVersion
+        |> XElem.setAttribute Constants.DefaultTargets self.DefaultTargets
+        |> fun n -> if self.Sdk.IsSome then XElem.setAttribute Constants.Sdk self.Sdk.Value n else n
+        |> XElem.addElement  ^ toXElem self.Settings
+        |> XElem.addElements ^ (self.BuildConfigs |> List.map toXElem)
+        |> fun n -> if self.References.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.References |> ResizeArray.map toXElem) else n
+        |> fun n -> if self.ProjectReferences.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.ProjectReferences |> ResizeArray.map toXElem) else n
+        |> XElem.addElement  ^ toXElem self.SourceFiles
+        |> fun n -> if self.PackageReference.Count > 0 then n |> XElem.addElement  ^ XElem.create Constants.ItemGroup (self.PackageReference |> ResizeArray.map toXElem) else n
 
     member self.ToXDoc() = toXElem self |> XDocument
 
-
     member self.ToXmlString() =
         let doc = self.ToXDoc()
-        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
-
+        doc.ToString()
 
     member self.ToXmlString (extraElems:XElement seq) =
         let doc = self.ToXDoc()
         doc.Root.LastNode.AddAfterSelf extraElems
-        String.Concat(XDeclaration("1.0", "utf-8", "yes").ToString(),"\n",doc.ToString())
+        doc.ToString()
 
     member self.RenameProject name =
         let s = self.Settings
@@ -1004,6 +1027,7 @@ type FsProject =
                 |?| XElem.isNamed Constants.PropertyGroup
                 |?| XElem.isNamed Constants.ItemGroup
                 |?| XElem.isNamed Constants.ProjectReference
+                |?| XElem.isNamed Constants.PackageReference
                 ) )
 
         let projectSetting, buildconfigs =
@@ -1024,6 +1048,10 @@ type FsProject =
             XElem.descendantsNamed Constants.ProjectReference xdoc
             |> Seq.map ProjectReference.fromXElem
 
+        let pacakgeReferences =
+            XElem.descendantsNamed Constants.PackageReference xdoc
+            |> Seq.map PackageReference.fromXElem
+
         let filterItems name =
             itemGroups |> Seq.collect ^ XElem.descendantsNamed name
 
@@ -1041,11 +1069,13 @@ type FsProject =
             //|> Seq.filter (fun n-> n.Paket |> Option.exists id |> not)
             |> Seq.toList |> SourceTree
 
-        {   ToolsVersion      = XElem.getAttributeValue Constants.ToolsVersion xdoc
-            DefaultTargets    = [XElem.getAttributeValue Constants.DefaultTargets xdoc ]
+        {   ToolsVersion      = XElem.tryGetAttributeValue Constants.ToolsVersion xdoc
+            DefaultTargets    = XElem.tryGetAttributeValue Constants.DefaultTargets xdoc
+            Sdk               = XElem.tryGetAttributeValue Constants.Sdk xdoc
             References        = references |> ResizeArray
             Settings          = projectSetting
             SourceFiles       = srcTree
+            PackageReference  = pacakgeReferences |> ResizeArray
             ProjectReferences = projectReferences |> ResizeArray
             BuildConfigs      = buildconfigs
         }

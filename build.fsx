@@ -226,4 +226,4 @@ Target "PaketBuild" DoNothing
   ==> "PaketBuild"
 
 
-RunTargetOrDefault "Default"
+RunTargetOrDefault "CopyRunners"
