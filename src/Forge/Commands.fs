@@ -596,9 +596,8 @@ let addProject cont (results : ParseResults<AddProjectArgs>) =
         let! path = results.TryGetResult <@ AddProjectArgs.Name @>
         let! project = results.TryGetResult <@ AddProjectArgs.Project @>
         let name = Path.GetFileName path
-        let newProject = Furnace.loadFsProject path
         Furnace.loadFsProject project
-        |> Furnace.addProjectReference(path, Some name, None, newProject.ProjectData.Settings.ProjectGuid.Data, None)
+        |> Furnace.addProjectReference(path, Some name, None, None, None)
         |> ignore
         return cont
     }
