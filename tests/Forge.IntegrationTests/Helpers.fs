@@ -8,7 +8,7 @@ open NUnit.Framework
 let (</>) = Forge.Prelude.(</>)
 
 let initTest dir args =
-    let path = TestContext.CurrentContext.TestDirectory </> ".." </> "bin" </> "Forge.exe"
+    let path = TestContext.CurrentContext.TestDirectory </> ".." </> "Forge.exe"
     let dir = TestContext.CurrentContext.TestDirectory </> dir
     Forge.FileHelper.cleanDir dir
     args |> List.iter (fun a -> run path (a + " --no-prompt") dir)

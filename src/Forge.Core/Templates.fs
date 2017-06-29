@@ -110,7 +110,7 @@ let CompareProjectsTo templateProject projects =
 let Refresh () =
     printfn "Getting templates..."
     cleanDir templatesLocation
-    cloneSingleBranch (exeLocation </> "..") "https://github.com/fsharp-editing/Forge.git" "templates" "templates"
+    cloneSingleBranch exeLocation "https://github.com/fsharp-editing/Forge.git" "templates" "templates"
 
 let EnsureTemplatesExist () =
     if not ^ Directory.Exists templatesLocation then Refresh ()
@@ -152,7 +152,7 @@ module Project =
 
         let templates = GetList()
 
-        let pathCheck path = 
+        let pathCheck path =
             let path' = directory </> path
             try Path.GetFullPath path' |> ignore; isValidPath path' && not (String.IsNullOrWhiteSpace path)
             with _ -> false
@@ -160,17 +160,17 @@ module Project =
         let projectName' =
             match projectName with
             | Some p -> p
-            | None -> 
-                promptCheck 
-                    "Enter project name:" 
-                    pathCheck 
+            | None ->
+                promptCheck
+                    "Enter project name:"
+                    pathCheck
                     (sprintf "\"%s\" is not a valid project name.")
         let projectDir' =
             match projectDir with
             | Some p -> p
-            | None -> 
-                promptCheck 
-                    "Enter project directory (relative to working directory):" 
+            | None ->
+                promptCheck
+                    "Enter project directory (relative to working directory):"
                     pathCheck
                     (sprintf "\"%s\" is not a valid directory name.")
         let templateName' =
@@ -206,7 +206,7 @@ module Project =
             if fake then
                 Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
-                let buildSh = projectDir' </> "build.sh"
+                let buildSh = directory </> "build.sh"
                 let ctn = File.ReadAllText buildSh
                 let ctn = ctn.Replace("\r\n", "\n")
                 File.WriteAllText(buildSh, ctn)
@@ -284,5 +284,5 @@ module Scaffold =
         EnsureTemplatesExist ()
         printfn "Cloning project scaffold..."
         let whiteSpaceProtectedDir = ("\"" + directory + "\"")
-        cloneSingleBranch (exeLocation </> "..") "https://github.com/fsprojects/ProjectScaffold.git" "master" whiteSpaceProtectedDir
+        cloneSingleBranch exeLocation "https://github.com/fsprojects/ProjectScaffold.git" "master" whiteSpaceProtectedDir
         ()

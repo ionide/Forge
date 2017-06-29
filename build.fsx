@@ -56,7 +56,7 @@ let release = LoadReleaseNotes "RELEASE_NOTES.md"
 
 let tempDir = "temp"
 let testBuildDir = "temp/test"
-let buildDir = "temp/bin"
+let buildDir = "temp"
 
 // Helper active pattern for project types
 let (|Fsproj|Csproj|Vbproj|) (projFileName:string) =
@@ -108,26 +108,20 @@ Target "Build" (fun _ ->
     |> MSBuildRelease buildDir "Rebuild"
     |> ignore
 
-    !! (buildDir </> "*.dll")
-    ++ (buildDir </> "*.pdb")
+    !! (buildDir </> "*.pdb")
     ++ (buildDir </> "*.xml")
-    -- (buildDir </> "Mono.Posix.dll")
-    -- (buildDir </> "Nett.dll")
-    -- (buildDir </> "FParsec.dll")
-    -- (buildDir </> "FParsecCS.dll")
-    -- (buildDir </> "ICSharpCode.SharpZipLib.dll")
     |> DeleteFiles
+
+    CreateDir (buildDir </> "Bin")
+
+    !! (buildDir </> "*.dll")
+    |> Seq.iter (MoveFile (buildDir </> "Bin"))
 )
 
 Target "BuildProjectSystem" (fun _ ->
     !! "src/Forge.ProjectSystem/Forge.ProjectSystem.fsproj"
     |> MSBuildRelease "temp/bin_projectSystem" "Rebuild"
     |> ignore
-
-)
-
-Target "CopyRunners" (fun _ ->
-    CopyFiles "temp" ["runners/forge.cmd"; "runners/forge.sh"]
 )
 
 // --------------------------------------------------------------------------------------
@@ -150,15 +144,9 @@ Target "RunTests" (fun _ ->
 // Release Scripts
 
 Target "ZipRelease" (fun _ ->
-    !! (tempDir  </> "forge.sh")
-    ++ (tempDir  </> "forge.cmd")
-    ++ (buildDir </> "*.exe")
+    !! (buildDir </> "*.exe")
     ++ (buildDir </> "*.config")
-    ++ (buildDir </> "Mono.Posix.dll")
-    ++ (buildDir </> "Nett.dll")
-    ++ (buildDir </> "FParsec.dll")
-    ++ (buildDir </> "FParsecCS.dll")
-    ++ (buildDir </> "ICSharpCode.SharpZipLib.dll")
+    ++ (buildDir </> "Bin" </> "*.dll")
     -- (buildDir </> "Forge.Core.dll.config")
     -- (buildDir </> "*templates*")
     -- (buildDir </> "*Tests*")
@@ -212,7 +200,6 @@ Target "PaketBuild" DoNothing
 "Clean"
   ==> "AssemblyInfo"
   ==> "Build"
-  ==> "CopyRunners"
   ==> "BuildTests"
   ==> "RunTests"
   ==> "Default"
@@ -226,4 +213,4 @@ Target "PaketBuild" DoNothing
   ==> "PaketBuild"
 
 
-RunTargetOrDefault "CopyRunners"
+RunTargetOrDefault "Build"

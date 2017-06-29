@@ -89,7 +89,7 @@ let exeLocation =
 
 let templatesLocation =
     match Environment.GetEnvironmentVariable "FORGE_TEMPLATE_DIR" with
-    | null -> exeLocation </> ".." </> "templates"
+    | null -> exeLocation </> "templates"
     | dir -> dir
 
 let directory         = System.Environment.CurrentDirectory
