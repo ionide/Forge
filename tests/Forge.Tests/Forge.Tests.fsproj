@@ -53,7 +53,7 @@
     <Compile Include="common.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="Main.fs" />
-    <None Include="App.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>
