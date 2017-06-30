@@ -110,7 +110,7 @@ let CompareProjectsTo templateProject projects =
 let Refresh () =
     printfn "Getting templates..."
     cleanDir templatesLocation
-    cloneSingleBranch exeLocation "https://github.com/fsharp-editing/Forge.git" "templates" "templates"
+    cloneSingleBranch exeLocation "https://github.com/fsharp-editing/Forge-templates.git" "master" "templates"
 
 let EnsureTemplatesExist () =
     if not ^ Directory.Exists templatesLocation then Refresh ()
