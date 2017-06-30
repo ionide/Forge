@@ -5,7 +5,7 @@ NUGET
     FAKE (4.61.3)
     FParsec (1.0.2)
     FSharp.Compiler.Service (2.0.0.6)
-    FSharp.Core (4.2.1)
+    FSharp.Core (4.2.1) - redirects: force
     FSharp.Formatting (2.14.4)
       FSharp.Compiler.Service (2.0.0.6)
       FSharpVSPowerTools.Core (>= 2.3 < 2.4)
@@ -35,5 +35,5 @@ NUGET
     SourceLink.Fake (1.1)
 GITHUB
   remote: fsharp/FAKE
-    modules/Octokit/Octokit.fsx (574f6259c4abec2ae45b8c888aa1bdc9b5d4e842)
+    modules/Octokit/Octokit.fsx (b5933798c1944051bf358a460fcdc8ffbd678dfc)
       Octokit (>= 0.20)
