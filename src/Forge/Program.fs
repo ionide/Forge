@@ -92,6 +92,6 @@ let main argv =
         | _ ->
             match singlePass argv with
             | Continue -> consoleLoop ()
-            | Result.Exit -> 1
+            | Result.Exit -> 0
     else
         0
