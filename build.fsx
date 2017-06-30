@@ -37,8 +37,8 @@ let tags = ""
 let projectFile  = "src/Forge/Forge.fsproj"
 let testProjectFiles = "tests/**/*Tests.fsproj"
 
-// Pattern specifying assemblies to be tested using NUnit
-let testAssemblies = "temp/test/*Tests*.dll"
+// Pattern specifying assemblies to be tested using Expecto
+let testAssemblies = "temp/test/*Tests*.exe"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -134,11 +134,7 @@ Target "BuildTests" (fun _ ->
 
 Target "RunTests" (fun _ ->
     !! testAssemblies
-    |> NUnit3 (fun p ->
-        { p with
-            ShadowCopy = true
-            TimeOut = TimeSpan.FromMinutes 20.
-            OutputDir = "TestResults.xml" })
+    |> Expecto.Expecto id
 )
 // --------------------------------------------------------------------------------------
 // Release Scripts
