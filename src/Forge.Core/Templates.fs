@@ -147,7 +147,7 @@ module Project =
         DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
 
 
-    let New projectName projectDir templateName _ fake =
+    let New projectName projectDir templateName paket fake =
         EnsureTemplatesExist ()
 
         let templates = GetList()
@@ -197,14 +197,15 @@ module Project =
             sed "<%= paketPath %>" (relative directory) projectFolder
             sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
 
-            Paket.Init directory
+            if paket then
+                Paket.Init directory
 
-            Directory.GetFiles projectFolder
-            |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
-            |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
-            Paket.Run ["install";]
+                Directory.GetFiles projectFolder
+                |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
+                |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
+                Paket.Run ["install";]
             if fake then
-                Paket.Run ["add"; "nuget"; "FAKE"]
+                if paket then Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy directory
                 let buildSh = directory </> "build.sh"
                 let ctn = File.ReadAllText buildSh
