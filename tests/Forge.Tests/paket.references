@@ -1,4 +1,2 @@
-NUnit
-NUnit.Runners
-FsUnit
 FSharp.Core
+Expecto
