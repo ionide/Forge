@@ -9,6 +9,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>fbaf8c7b-4eda-493a-a7fe-4db25d15736f</ProjectGuid>
     <OutputType>Library</OutputType>
+    <MonoLibraryPath>/run/current-system/sw/lib/mono/4.5/</MonoLibraryPath>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
@@ -68,6 +69,9 @@
     <Otherwise>
       <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
         <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      </PropertyGroup>
+      <PropertyGroup Condition="Exists('$(MonoLibraryPath)/Microsoft.FSharp.Targets')">
+          <FSharpTargetsPath>$(MonoLibraryPath)/Microsoft.FSharp.Targets</FSharpTargetsPath>
       </PropertyGroup>
     </Otherwise>
   </Choose>
