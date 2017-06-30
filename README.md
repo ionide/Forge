@@ -88,5 +88,5 @@ The library is available under [unlicense](https://github.com/fsharp-editing/For
 ## Maintainer(s)
 
 - [@ReidNEvans](https://twitter.com/reidNEvans)
-- [Krzysztof-Cieslak] (https://github.com/Krzysztof-Cieslak)
+- [Krzysztof-Cieslak](https://github.com/Krzysztof-Cieslak)
 - [cloudRoutine](https://github.com/cloudRoutine/)
