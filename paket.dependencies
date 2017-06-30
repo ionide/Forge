@@ -1,7 +1,8 @@
-framework: net45
+framework: net461
 source https://nuget.org/api/v2
 
 nuget Argu
+nuget Expecto
 nuget FSharp.Core redirects: force
 nuget FSharp.Formatting
 nuget FsUnit

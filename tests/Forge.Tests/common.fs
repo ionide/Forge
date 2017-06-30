@@ -1,7 +1,6 @@
-module Forge.Tests.Common
+module Common
 
-open NUnit.Framework
-open NUnit.Framework.Constraints
+open Expecto
 
 
 
@@ -10,13 +9,18 @@ let cleanup (text : string) =
     | true  -> text
     | false -> text.Replace("\n", "\r\n")
 
-let shouldbetext expected actual =
-    let cleanupExpected = cleanup expected
-    let cleanupActual = cleanup actual
+module Expect =
+    let shouldbetext expected actual =
+        let cleanupExpected = cleanup expected
+        let cleanupActual = cleanup actual
 
-    Assert.AreEqual(cleanupExpected, cleanupActual)
+        Expect.equal cleanupActual cleanupExpected  "should be same after cleanup"
 
-let equivalent (x: seq<_>) = CollectionEquivalentConstraint x
+    let equivalent expected actual  =
+        Expect.containsAll actual expected "should contain all"
+
+    let hasLength length xs  =
+        Expect.equal (xs |> Seq.length) length "should have given length"
 
 let astInput =
     """<?xml version="1.0" encoding="utf-8"?>
