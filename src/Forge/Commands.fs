@@ -628,7 +628,7 @@ let removeFile cont (results : ParseResults<RemoveFileArgs>) =
         match project' with
         | None -> traceWarning "Project not found"
         | Some project ->
-            let name' = relative (directory </> name) ((directory </> project |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
+            let name' = relative (getCwd() </> name) ((getCwd() </> project |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
             Furnace.loadFsProject project
             |> Furnace.removeSourceFile name'
             |> ignore

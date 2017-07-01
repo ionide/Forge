@@ -144,7 +144,7 @@ module Project =
                         File.WriteAllText(x, contents))
 
     let getProjects() =
-        DirectoryInfo(directory) |> filesInDirMatching "*.fsproj"
+        DirectoryInfo(getCwd()) |> filesInDirMatching "*.fsproj"
 
 
     let New projectName projectDir templateName paket fake =
@@ -153,7 +153,7 @@ module Project =
         let templates = GetList()
 
         let pathCheck path =
-            let path' = directory </> path
+            let path' = getCwd() </> path
             try Path.GetFullPath path' |> ignore; isValidPath path' && not (String.IsNullOrWhiteSpace path)
             with _ -> false
 
@@ -177,7 +177,7 @@ module Project =
             match templateName with
             | Some p -> p
             | None -> (templates |> promptSelect "Choose a template:")
-        let projectFolder = directory </> projectDir' </> projectName'
+        let projectFolder = getCwd() </> projectDir' </> projectName'
         let templateDir = templatesLocation </> templateName'
         let gitignorePath = (templatesLocation </> ".vcsignore" </> ".gitignore")
 
@@ -189,16 +189,16 @@ module Project =
             printfn "Generating project..."
             copyDir projectFolder templateDir (fun _ -> true)
             applicationNameToProjectName projectFolder projectName'
-            if Directory.GetFiles directory |> Seq.exists (fun n -> n.EndsWith ".gitignore") |> not then
-              File.Copy(gitignorePath, (directory </> ".gitignore"), false)
+            if Directory.GetFiles (getCwd()) |> Seq.exists (fun n -> n.EndsWith ".gitignore") |> not then
+              File.Copy(gitignorePath, (getCwd() </> ".gitignore"), false)
 
             sed "<%= namespace %>" (fun _ -> projectName') projectFolder
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
-            sed "<%= paketPath %>" (relative directory) projectFolder
-            sed "<%= packagesPath %>" (relative packagesDirectory) projectFolder
+            sed "<%= paketPath %>" (relative ^ getCwd()) projectFolder
+            sed "<%= packagesPath %>" (relative ^ getPackagesDirectory()) projectFolder
 
             if paket then
-                Paket.Init directory
+                Paket.Init ^ getCwd()
 
                 Directory.GetFiles projectFolder
                 |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
@@ -206,8 +206,8 @@ module Project =
                 Paket.Run ["install";]
             if fake then
                 if paket then Paket.Run ["add"; "nuget"; "FAKE"]
-                Fake.Copy directory
-                let buildSh = directory </> "build.sh"
+                Fake.Copy ^ getCwd()
+                let buildSh = getCwd() </> "build.sh"
                 let ctn = File.ReadAllText buildSh
                 let ctn = ctn.Replace("\r\n", "\n")
                 File.WriteAllText(buildSh, ctn)
@@ -247,7 +247,7 @@ module File =
         let (_, value, ext) = templates |> Seq.find (fun (_,v,_) -> v = template')
         let oldFile = value + "." + ext
         let newFile = fileName + "." + ext
-        let newFile' =  (directory </> newFile)
+        let newFile' =  (getCwd() </> newFile)
         let project' =
             match project with
             | Some p ->
@@ -270,20 +270,20 @@ module File =
 
         sed "<%= namespace %>" (fun _ -> fileName.Split('\\', '/', '.') |> Seq.last ) newFile'
         sed "<%= guid %>" (fun _ -> System.Guid.NewGuid().ToString()) newFile'
-        sed "<%= paketPath %>" (relative directory) newFile'
-        sed "<%= packagesPath %>" (relative packagesDirectory) newFile'
+        sed "<%= paketPath %>" (relative ^ getCwd()) newFile'
+        sed "<%= packagesPath %>" (relative ^ getPackagesDirectory()) newFile'
 
 module Solution =
     let New name =
         EnsureTemplatesExist ()
         let template = templatesLocation </> ".sln" </> "ApplicationName.sln"
-        let newName = directory </> (name + ".sln")
+        let newName = getCwd() </> (name + ".sln")
         File.Copy(template, newName, false)
 
 module Scaffold =
     let New () =
         EnsureTemplatesExist ()
         printfn "Cloning project scaffold..."
-        let whiteSpaceProtectedDir = ("\"" + directory + "\"")
+        let whiteSpaceProtectedDir = ("\"" + getCwd() + "\"")
         cloneSingleBranch exeLocation "https://github.com/fsprojects/ProjectScaffold.git" "master" whiteSpaceProtectedDir
         ()

@@ -92,8 +92,8 @@ let templatesLocation =
     | null -> exeLocation </> "templates"
     | dir -> dir
 
-let directory         = System.Environment.CurrentDirectory
-let packagesDirectory = directory </> "packages"
+let getCwd ()      = System.Environment.CurrentDirectory
+let getPackagesDirectory () = getCwd() </> "packages"
 
 let paketLocation     = exeLocation </> "Tools" </> "Paket"
 let fakeLocation      = exeLocation </> "Tools" </> "FAKE"
@@ -103,8 +103,8 @@ let filesLocation = templatesLocation </> ".files"
 let templateFile = templatesLocation </> "templates.json"
 
 let relative (path1 : string) (path2 : string) =
-    let path1 = if Path.IsPathRooted path1 then path1 else directory </> path1
-    let path2 = if Path.IsPathRooted path2 then path2 else directory </> path2
+    let path1 = if Path.IsPathRooted path1 then path1 else getCwd() </> path1
+    let path2 = if Path.IsPathRooted path2 then path2 else getCwd() </> path2
 
     let p1, p2 = Uri path1, Uri path2
     Uri.UnescapeDataString(

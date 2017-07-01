@@ -254,8 +254,8 @@ module Furnace =
             renameFile path newName
 
             let dir = getParentDir path
-            let name' = relative (directory </> path) ((directory </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
-            let newName' = relative (directory </> newName) ((directory </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
+            let name' = relative (getCwd() </> path) ((getCwd() </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
+            let newName' = relative (getCwd() </> newName) ((getCwd() </> dir |> Path.GetDirectoryName) + Path.DirectorySeparatorChar.ToString()  )
             updateProj (FsProject.renameFile name' newName')  state
 
 
@@ -301,7 +301,7 @@ module Furnace =
             match Globbing.search dir "*.fsproj" |> List.tryHead with
             | Some f -> Some f
             | None ->
-                if dir = directory then None
+                if dir = getCwd() then None
                 else dir |> System.IO.Directory.GetParent |> fun n -> n.FullName |> tryFindProject
         with
         | _ -> None

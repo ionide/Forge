@@ -5,7 +5,7 @@ open System.IO
 let location = templatesLocation </> ".paket"
 
 let getPaketLocation () =
-    let local = directory </> ".paket"
+    let local = getCwd() </> ".paket"
     if Directory.Exists local then local else paketLocation
 
 let getPaket () =
@@ -27,7 +27,7 @@ let Run args =
     let f = getPaket ()
     if not ^ File.Exists f then Update ()
     let args' = args |> String.concat " "
-    run f args' directory
+    run f args' ^ getCwd()
 
 let Init folder =
     if Directory.GetFiles folder |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
