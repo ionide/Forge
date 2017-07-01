@@ -2,67 +2,68 @@
 module Helpers
 
 open Forge.ProcessHelper
-open NUnit.Framework.Constraints
-open NUnit.Framework
+open Expecto
 
 let (</>) = Forge.Prelude.(</>)
 
+let cwd = System.AppDomain.CurrentDomain.BaseDirectory
+
 let initTest dir args =
-    let path = TestContext.CurrentContext.TestDirectory </> ".." </> "Forge.exe"
-    let dir = TestContext.CurrentContext.TestDirectory </> dir
+    let path = cwd </> ".." </> "Forge.exe"
+    let dir = cwd </> dir
     Forge.FileHelper.cleanDir dir
     args |> List.iter (fun a -> run path (a + " --no-prompt") dir)
 
 let getPath file =
-    TestContext.CurrentContext.TestDirectory </> file
+    cwd </> file
 
 let loadProject dir =
-    let dir = TestContext.CurrentContext.TestDirectory </> dir
+    let dir = cwd </> dir
     Forge.ProjectManager.Furnace.loadFsProject dir
 
 
-let makeAbsolute dir = TestContext.CurrentContext.TestDirectory </> dir
+let makeAbsolute dir = cwd </> dir
 
-module Assertions =
+module Expect =
     let reference (ref : string) (proj : Forge.ProjectManager.ActiveState) =
         let res =
             proj.ProjectData.References
             |> Seq.map (fun r -> r.Include)
 
-        Assert.That(res, ContainsConstraint(ref))
+        Expect.contains res ref "should contain reference"
 
     let referenceProject (ref : string) (proj : Forge.ProjectManager.ActiveState) =
         let res =
             proj.ProjectData.ProjectReferences
             |> Seq.map (fun r -> r.Include)
 
-        Assert.That(res, ContainsConstraint(ref))
+        Expect.contains res ref "should contain project reference"
+
 
     let hasFile (file : string) (proj : Forge.ProjectManager.ActiveState) =
         let res = proj.ProjectData.SourceFiles.Files
 
-        Assert.That(res, ContainsConstraint(file))
+        Expect.contains res file "should contain file"
 
     let hasName (name : string) (proj : Forge.ProjectManager.ActiveState) =
         let res = proj.ProjectData.Settings.Name.Data.Value
 
-        Assert.That(res, EqualConstraint(name))
+        Expect.equal res name "should have name"
 
     let notReference (ref : string) (proj : Forge.ProjectManager.ActiveState) =
         let res =
             proj.ProjectData.References
             |> Seq.map (fun r -> r.Include)
 
-        Assert.That(res, NotConstraint <| ContainsConstraint(ref))
+        Expect.equal (res |> Seq.tryFind ((=) ref)) None "shouln't contain reference"
 
     let notReferenceProject (ref : string) (proj : Forge.ProjectManager.ActiveState) =
         let res =
             proj.ProjectData.ProjectReferences
             |> Seq.map (fun r -> r.Include)
-
-        Assert.That(res, NotConstraint <| ContainsConstraint(ref))
+        Expect.equal (res |> Seq.tryFind ((=) ref)) None "shouln't contain project reference"
 
     let hasNotFile (file : string) (proj : Forge.ProjectManager.ActiveState) =
         let res = proj.ProjectData.SourceFiles.Files
 
-        Assert.That(res, NotConstraint <| ContainsConstraint(file))
+        Expect.equal (res |> Seq.tryFind ((=) file)) None "shouln't contain file"
