@@ -1,3 +1,11 @@
+### 2.0.0-Andromeda - 2017-07-01
+* **This is not backward compatible change**
+* Update ProjectSystem to support SDK based project files
+* Update templates to use SDK based project files
+* Move templates to https://github.com/fsharp-editing/forge-templates
+* Update generated FAKE script
+* Infrastracture changes
+
 ### 1.4.2 - 2017-06-03
 * Add support for `FORGE_TEMPLATE_DIR` environment variable
 * Fix error when adding a file to a project with no files
