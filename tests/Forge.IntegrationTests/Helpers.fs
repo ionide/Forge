@@ -13,11 +13,10 @@ let initTest dir args =
     let path = cwd </> ".." </> "Forge.exe"
     let dir = cwd </> dir
     Forge.FileHelper.cleanDir dir
+    System.Environment.CurrentDirectory <- dir
     args |> List.iter (fun a ->
-        if isMono then
-            run "mono" (path + " " + a + " --no-prompt") dir
-        else
-            run path (a + " --no-prompt") dir)
+        let a = a + " --no-prompt"
+        Forge.App.main (a.Split ' ') |> ignore)
 
 let getPath file =
     cwd </> file

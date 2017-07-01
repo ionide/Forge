@@ -46,6 +46,10 @@
       <Name>Forge.ProjectSystem.fsproj</Name>
       <Project>{9029be0f-a72c-4281-9fd1-aa15f5722306}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Forge\Forge.fsproj">
+      <Name>Forge.fsproj</Name>
+      <Project>{147b0e3c-c669-4666-8fbc-7f77cac2ff36}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers.fs" />
