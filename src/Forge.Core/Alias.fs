@@ -30,7 +30,7 @@ let private parse path =
         Map.empty
 
 let private loadLocal () =
-    let path = directory </> "forge.toml"
+    let path = getCwd() </> "forge.toml"
     parse path
 
 let private loadGlobal () =

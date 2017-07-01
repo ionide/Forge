@@ -12,7 +12,7 @@ let Copy folder =
         if not ^ File.Exists fn then File.Copy (x, fn) )
 
 let getFAKE () =
-    match Directory.EnumerateFiles(directory, "FAKE.exe", SearchOption.AllDirectories) |> Seq.tryHead with
+    match Directory.EnumerateFiles(getCwd(), "FAKE.exe", SearchOption.AllDirectories) |> Seq.tryHead with
     | Some f -> f
     | None -> fakeToolLocation </> "FAKE.exe"
 
@@ -30,5 +30,5 @@ let Run args =
     let f = getFAKE ()
     if not ^ File.Exists f then Update ()
     let args' = args |> String.concat " "
-    run f args' directory
+    run f args' ^ getCwd()
 
