@@ -2,6 +2,7 @@
 module Helpers
 
 open Forge.ProcessHelper
+open Forge.Environment
 open Expecto
 
 let (</>) = Forge.Prelude.(</>)
@@ -12,7 +13,11 @@ let initTest dir args =
     let path = cwd </> ".." </> "Forge.exe"
     let dir = cwd </> dir
     Forge.FileHelper.cleanDir dir
-    args |> List.iter (fun a -> run path (a + " --no-prompt") dir)
+    args |> List.iter (fun a ->
+        if isMono then
+            run "mono" (path + " " + a + " --no-prompt") dir
+        else
+            run path (a + " --no-prompt") dir)
 
 let getPath file =
     cwd </> file
