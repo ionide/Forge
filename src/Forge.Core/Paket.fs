@@ -34,4 +34,7 @@ let Init folder =
         copy folder
         Update ()
         Run ["init"]
+        let deps = folder </> "paket.dependencies"
+        File.AppendAllText(deps, "\nframework: >= net461\n")
+
 
