@@ -2,8 +2,8 @@
 
 open System
 open System.Windows
-open FSharp.ViewModule
-open FSharp.ViewModule.Validation
+open ViewModule
+open ViewModule.Validation
 open FsXaml
 
 type MainView = XAML<"MainWindow.xaml">
