@@ -29,8 +29,8 @@ let findMissingFiles templateProject projects =
     let templateFilesSet = Set.ofSeq templateFiles
 
     projects
-    |> Seq.map (fun fileName -> FsProject.load fileName, fileName)
-    |> Seq.map (fun (ps,fn) ->
+    |> Seq.map (fun fn ->
+            let ps = FsProject.load fn
             let missingFiles = Set.difference templateFilesSet (Set.ofSeq ps.SourceFiles.Files)
 
             let duplicateFiles =
@@ -121,8 +121,6 @@ let GetList () =
         |> Seq.map Path.GetFileName
         |> Seq.filter (fun x -> not ^ x.StartsWith ".")
     else Seq.empty
-
-//type Definitions = JsonProvider<""" {"Templates": [ { "name": "Console Application", "value": "console" }], "Files": [{ "name": "F# Module", "value": "fs", "extension": "fs" }]}""">
 
 
 module Project =
