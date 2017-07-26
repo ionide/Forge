@@ -145,7 +145,7 @@ module Project =
         DirectoryInfo(getCwd()) |> filesInDirMatching "*.fsproj"
 
 
-    let New projectName projectDir templateName paket fake =
+    let New projectName projectDir templateName paket fake vscode =
         EnsureTemplatesExist ()
 
         let templates = GetList()
@@ -176,6 +176,8 @@ module Project =
             | Some p -> p
             | None -> (templates |> promptSelect "Choose a template:")
         let projectFolder = getCwd() </> projectDir' </> projectName'
+        let vscodeDir = templatesLocation </> ".vscode"
+        let vscodeDir' = getCwd() </> ".vscode"
         let templateDir = templatesLocation </> templateName'
         let gitignorePath = (templatesLocation </> ".vcsignore" </> ".gitignore")
 
@@ -189,6 +191,8 @@ module Project =
             applicationNameToProjectName projectFolder projectName'
             if Directory.GetFiles (getCwd()) |> Seq.exists (fun n -> n.EndsWith ".gitignore") |> not then
               File.Copy(gitignorePath, (getCwd() </> ".gitignore"), false)
+            if vscode then
+                copyDir vscodeDir' vscodeDir (fun _ -> true)
 
             sed "<%= namespace %>" (fun _ -> projectName') projectFolder
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
@@ -212,6 +216,8 @@ module Project =
                 if isMono then
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
+
+
             printfn "Done!"
 
 module File =
