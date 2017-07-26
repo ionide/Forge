@@ -92,6 +92,7 @@ type NewProjectArgs =
     | [<CLIAlt "-t">] Template of string
     | No_Paket
     | No_Fake
+    | VSCode
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -101,6 +102,8 @@ type NewProjectArgs =
             | Template _ -> "Template name"
             | No_Paket -> "Don't use Paket for dependency managment"
             | No_Fake -> "Don't use FAKE for build"
+            | VSCode -> "Include VSCode build and debug files"
+
 
 
 
@@ -501,7 +504,9 @@ let newProject cont (results : ParseResults<_>) =
     let templateName = results.TryGetResult <@ NewProjectArgs.Template @>
     let paket = not ^ results.Contains <@ NewProjectArgs.No_Paket @>
     let fake = not ^ results.Contains <@ NewProjectArgs.No_Fake @>
-    Templates.Project.New projectName projectDir templateName paket fake
+    let vscode = results.Contains <@ NewProjectArgs.VSCode @>
+
+    Templates.Project.New projectName projectDir templateName paket fake vscode
     Some cont
 
 
