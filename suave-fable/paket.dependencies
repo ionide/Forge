@@ -1,0 +1,31 @@
+version 5.92.0-beta001
+source https://nuget.org/api/v2
+
+nuget FSharp.Core redirects: force
+nuget Fable.JsonConverter
+nuget Suave
+nuget Microsoft.Extensions.Logging.Console
+nuget System.Net.NetworkInformation
+nuget Newtonsoft.Json
+nuget jose-jwt
+
+nuget Fable.Core prerelease
+nuget Fable.Elmish.Browser
+nuget Fable.Elmish.Debugger
+nuget Fable.Elmish.React
+
+clitool dotnet-fable prerelease
+clitool Microsoft.DotNet.Watcher.Tools
+
+group Test
+  source https://nuget.org/api/v2
+  framework >= net45, >= netcoreapp20
+  nuget FSharp.Core redirects: force
+  nuget Canopy
+  nuget Expecto
+  nuget phantomjs
+
+group Build
+  source https://nuget.org/api/v2
+
+  nuget FAKE

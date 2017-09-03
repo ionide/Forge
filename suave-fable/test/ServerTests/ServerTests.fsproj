@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Tests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <Target Name="TestAndRun">
+    <Exec Command="dotnet run" WorkingDirectory=".\" />
+    <Exec Command="dotnet run" WorkingDirectory="..\..\src\Server\" />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Server\Server.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
