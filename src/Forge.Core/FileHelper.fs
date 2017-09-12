@@ -279,7 +279,7 @@ let createDir path =
 ///  - `target` - The target directory.
 ///  - `source` - The source directory.
 ///  - `filterFile` - A file filter predicate.
-let copyDir target source filterFile =
+let copyDir target source filterFile overwrite =
     createDir target
     Directory.GetFiles(source, "*.*", SearchOption.AllDirectories)
     |> Seq.filter filterFile
@@ -288,7 +288,7 @@ let copyDir target source filterFile =
         let newFile = target @@ fi
         printfn "%s => %s" file newFile
         directoryName newFile |> ensureDirectory
-        File.Copy (file, newFile, true)
+        File.Copy (file, newFile, overwrite)
     ) |> ignore
 
 /// Cleans a directory by removing all files and sub-directories.

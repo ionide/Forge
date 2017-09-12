@@ -179,6 +179,7 @@ module Project =
         let vscodeDir = templatesLocation </> ".vscode"
         let vscodeDir' = getCwd() </> ".vscode"
         let templateDir = templatesLocation </> templateName'
+        let contentDir = templateDir </> "_content"
         let gitignorePath = (templatesLocation </> ".vcsignore" </> ".gitignore")
 
         if pathCheck projectFolder |> not then
@@ -187,17 +188,24 @@ module Project =
             printfn "Wrong template name"
         else
             printfn "Generating project..."
-            copyDir projectFolder templateDir (fun _ -> true)
-            applicationNameToProjectName projectFolder projectName'
-            if Directory.GetFiles (getCwd()) |> Seq.exists (fun n -> n.EndsWith ".gitignore") |> not then
-              File.Copy(gitignorePath, (getCwd() </> ".gitignore"), false)
-            if vscode then
-                copyDir vscodeDir' vscodeDir (fun _ -> true)
 
+
+            copyDir projectFolder templateDir (fun f -> f.Contains "_content" |> not) false //Copy project files
+            applicationNameToProjectName projectFolder projectName'
             sed "<%= namespace %>" (fun _ -> projectName') projectFolder
             sed "<%= guid %>" (fun _ -> Guid.NewGuid().ToString()) projectFolder
             sed "<%= paketPath %>" (relative ^ getCwd()) projectFolder
             sed "<%= packagesPath %>" (relative ^ getPackagesDirectory()) projectFolder
+
+            if Directory.Exists contentDir then
+                copyDir (getCwd()) contentDir (fun _ -> true) false
+                sed "<%= projectPath %>" (fun s -> "." </>  (relative (projectFolder </> (projectName' + ".fsproj")) s)) (getCwd ())
+
+            if Directory.GetFiles (getCwd()) |> Seq.exists (fun n -> n.EndsWith ".gitignore") |> not then
+                File.Copy(gitignorePath, (getCwd() </> ".gitignore"), false)
+
+            if vscode then
+                copyDir vscodeDir' vscodeDir (fun _ -> true) false
 
             if paket then
                 Paket.Init ^ getCwd()
@@ -206,6 +214,7 @@ module Project =
                 |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
                 |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
                 Paket.Run ["install";]
+
             if fake then
                 if paket then Paket.Run ["add"; "nuget"; "FAKE"]
                 Fake.Copy ^ getCwd()
@@ -216,7 +225,6 @@ module Project =
                 if isMono then
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
-
 
             printfn "Done!"
 
