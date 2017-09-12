@@ -48,6 +48,7 @@ type Command =
     | [<CLIArg "paket">] Paket
     | [<CLIArg "fake">] Fake
     | [<CLIArg "refresh">] Refresh
+    | Version
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -62,6 +63,7 @@ type Command =
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
             | Refresh -> "Refreshes the template cache"
+            | Version -> "Prints Forge version."
 
 
 
@@ -902,6 +904,9 @@ let runForge (args : string []) =
                 | Command.Fake -> fun a -> Fake.Run a; Some ()
                 | Command.Paket -> fun a -> Paket.Run a; Some ()
                 | Refresh -> fun _ -> Templates.Refresh (); Some ()
+                | Version -> fun _ ->
+                    printfn "%s" AssemblyVersionInformation.AssemblyVersion
+                    Some ()
             with
             | ex ->
                 eprintfn "Unhandled error:\n%s" ex.Message
