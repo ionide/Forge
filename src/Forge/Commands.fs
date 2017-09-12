@@ -48,7 +48,6 @@ type Command =
     | [<CLIArg "paket">] Paket
     | [<CLIArg "fake">] Fake
     | [<CLIArg "refresh">] Refresh
-    | [<CLIArg "exit">][<CLIAlt("quit","-q")>] Exit
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -63,7 +62,6 @@ type Command =
             | Paket -> "Runs Paket"
             | Fake -> "Runs FAKE"
             | Refresh -> "Refreshes the template cache"
-            | Exit -> "Exits interactive mode"
 
 
 
@@ -482,6 +480,9 @@ let parseCommand<'T when 'T :> IArgParserTemplate> args =
 let execCommand fn args =
     args |> parseCommand |> Option.bind fn
 
+let execCommand' fn args =
+    args |> parseCommand |> Option.map fn
+
 let subCommandArgs args =
     args |> parseCommand<_>
     |> Option.bind (fun res ->
@@ -498,7 +499,7 @@ let subCommandArgs args =
 //-----------------------------------------------------------------
 
 
-let newProject cont (results : ParseResults<_>) =
+let newProject (results : ParseResults<_>) =
     let projectName = results.TryGetResult <@ NewProjectArgs.Name @>
     let projectDir  = results.TryGetResult <@ NewProjectArgs.Folder @>
     let templateName = results.TryGetResult <@ NewProjectArgs.Template @>
@@ -507,43 +508,41 @@ let newProject cont (results : ParseResults<_>) =
     let vscode = results.Contains <@ NewProjectArgs.VSCode @>
 
     Templates.Project.New projectName projectDir templateName paket fake vscode
-    Some cont
 
 
-let newFile cont (results : ParseResults<_>) =
+let newFile (results : ParseResults<_>) =
     let fn = results.GetResult <@ NewFileArgs.Name @>
     let template = results.TryGetResult <@ NewFileArgs.Template @>
     let ba = results.TryGetResult <@ NewFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
     let project = results.TryGetResult <@ NewFileArgs.Project @>
     Templates.File.New fn template project ba
 
-    Some cont
 
-let newSolution cont (results : ParseResults<_>) =
+let newSolution (results : ParseResults<_>) =
     let name = results.GetResult <@ NewSolutionArgs.Name @>
     Templates.Solution.New name
-    Some cont
 
-let newScaffold cont (results : ParseResults<NewScaffoldArgs>) =
+let newScaffold (results : ParseResults<NewScaffoldArgs>) =
     Templates.Scaffold.New ()
-    Some cont
 
-let processNew cont args =
+let processNew args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | NewCommand.Project  -> execCommand (newProject cont) subArgs
-        | NewCommand.File     -> execCommand (newFile cont) subArgs
-        | NewCommand.Solution -> execCommand (newSolution cont) subArgs
-        | NewCommand.Scaffold -> execCommand (newScaffold cont) subArgs
-    | _ -> Some cont
+        | NewCommand.Project  -> execCommand' newProject subArgs
+        | NewCommand.File     -> execCommand' newFile subArgs
+        | NewCommand.Solution -> execCommand' newSolution subArgs
+        | NewCommand.Scaffold -> execCommand' newScaffold subArgs
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 
 //-----------------------------------------------------------------
 // Add Command Handlers
 //-----------------------------------------------------------------
 
-let addFile cont (results : ParseResults<AddFileArgs>) =
+let addFile (results : ParseResults<AddFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ AddFileArgs.Name @>
         let project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
@@ -580,23 +579,19 @@ let addFile cont (results : ParseResults<AddFileArgs>) =
                 activeState
                 |> Furnace.addSourceFile (n, Some dir , build, link, None, None)
                 |> ignore
-
-
-        return cont
     }
 
 
-let addReference cont (results : ParseResults<AddReferenceArgs>) =
+let addReference (results : ParseResults<AddReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ AddReferenceArgs.Name @>
         let! project = results.TryGetResult <@ AddReferenceArgs.Project @>
         Furnace.loadFsProject project
         |> Furnace.addReference (name, None, None, None, None, None)
         |> ignore
-        return cont
     }
 
-let addProject cont (results : ParseResults<AddProjectArgs>) =
+let addProject (results : ParseResults<AddProjectArgs>) =
     maybe {
         let! path = results.TryGetResult <@ AddProjectArgs.Name @>
         let! project = results.TryGetResult <@ AddProjectArgs.Project @>
@@ -604,25 +599,26 @@ let addProject cont (results : ParseResults<AddProjectArgs>) =
         Furnace.loadFsProject project
         |> Furnace.addProjectReference(path, Some name, None, None, None)
         |> ignore
-        return cont
     }
 
 
-let processAdd cont args =
+let processAdd args =
     match subCommandArgs args  with
     | Some (cmd, subArgs ) ->
         match cmd with
-        | AddCommands.Reference -> execCommand (addReference cont) subArgs
-        | AddCommands.File -> execCommand (addFile cont) subArgs
-        | AddCommands.Project -> execCommand (addProject cont) subArgs
-    | _ -> Some cont
+        | AddCommands.Reference -> execCommand addReference subArgs
+        | AddCommands.File -> execCommand addFile subArgs
+        | AddCommands.Project -> execCommand addProject subArgs
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 
 //-----------------------------------------------------------------
 // Remove Command Handlers
 //-----------------------------------------------------------------
 
-let removeFile cont (results : ParseResults<RemoveFileArgs>) =
+let removeFile (results : ParseResults<RemoveFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFileArgs.Name @>
         let project = results.TryGetResult <@ RemoveFileArgs.Project @>
@@ -637,21 +633,19 @@ let removeFile cont (results : ParseResults<RemoveFileArgs>) =
             Furnace.loadFsProject project
             |> Furnace.removeSourceFile name'
             |> ignore
-        return cont
     }
 
 
-let removeReference cont (results : ParseResults<RemoveReferenceArgs>) =
+let removeReference (results : ParseResults<RemoveReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveReferenceArgs.Project @>
         Furnace.loadFsProject project
         |> Furnace.removeReference name
         |> ignore
-        return cont
     }
 
-let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
+let removeFolder (results: ParseResults<RemoveFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveFolderArgs.Name @>
         let project = results.TryGetResult <@ RemoveFolderArgs.Project @>
@@ -665,10 +659,9 @@ let removeFolder cont (results: ParseResults<RemoveFolderArgs>) =
             Furnace.loadFsProject project
             |> Furnace.removeDirectory name
             |> ignore
-        return cont
     }
 
-let removeProject cont (results : ParseResults<RemoveProjectReferenceArgs>) =
+let removeProject (results : ParseResults<RemoveProjectReferenceArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RemoveProjectReferenceArgs.Name @>
         let! project = results.TryGetResult <@ RemoveProjectReferenceArgs.Project @>
@@ -676,26 +669,27 @@ let removeProject cont (results : ParseResults<RemoveProjectReferenceArgs>) =
         Furnace.loadFsProject project
         |> Furnace.removeProjectReference name
         |> ignore
-        return cont
     }
 
 
-let processRemove cont args =
+let processRemove args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | RemoveCommands.Reference -> execCommand (removeReference cont) subArgs
-        | RemoveCommands.File -> execCommand (removeFile cont) subArgs // TODO - change to reflect mutual exclusion of removing solution files and project files
-        | RemoveCommands.Folder -> execCommand (removeFolder cont) subArgs
-        | RemoveCommands.Project -> execCommand (removeProject cont) subArgs
-    | _ -> Some cont
+        | RemoveCommands.Reference -> execCommand removeReference subArgs
+        | RemoveCommands.File -> execCommand removeFile subArgs // TODO - change to reflect mutual exclusion of removing solution files and project files
+        | RemoveCommands.Folder -> execCommand removeFolder subArgs
+        | RemoveCommands.Project -> execCommand removeProject subArgs
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 
 //-----------------------------------------------------------------
 // Rename Command Handlers
 //-----------------------------------------------------------------
 
-let renameFile cont (results : ParseResults<RenameFileArgs>) =
+let renameFile (results : ParseResults<RenameFileArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFileArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFileArgs.Rename @>
@@ -710,20 +704,19 @@ let renameFile cont (results : ParseResults<RenameFileArgs>) =
             Furnace.loadFsProject project
             |> Furnace.renameSourceFile (name, newName)
             |> ignore
-        return cont
     }
 
 
-let renameProject cont (results : ParseResults<RenameProjectArgs>) =
+let renameProject (results : ParseResults<RenameProjectArgs>) =
     maybe {
-     let! name = results.TryGetResult <@ RenameProjectArgs.Name @>
-     let! newName = results.TryGetResult <@ RenameProjectArgs.Rename @>
+        let! name = results.TryGetResult <@ RenameProjectArgs.Name @>
+        let! newName = results.TryGetResult <@ RenameProjectArgs.Rename @>
 
-     return cont
+        return ()
     }
 
 
-let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
+let renameFolder (results : ParseResults<RenameFolderArgs>) =
     maybe {
         let! name = results.TryGetResult <@ RenameFolderArgs.Name @>
         let! newName = results.TryGetResult <@ RenameFolderArgs.Rename @>
@@ -738,96 +731,92 @@ let renameFolder cont (results : ParseResults<RenameFolderArgs>) =
             Furnace.loadFsProject project
             |> Furnace.renameDirectory (name, newName)
             |> ignore
-
-        return cont
     }
 
 
-let processRename cont args =
+let processRename args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | RenameCommands.Project -> execCommand (renameProject cont) subArgs
-        | RenameCommands.File    -> execCommand (renameFile cont) subArgs
-        | RenameCommands.Folder  -> execCommand (renameFolder cont) subArgs
-    | _ -> Some cont
+        | RenameCommands.Project -> execCommand renameProject subArgs
+        | RenameCommands.File    -> execCommand renameFile subArgs
+        | RenameCommands.Folder  -> execCommand renameFolder subArgs
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 //-----------------------------------------------------------------
 // List Command Handlers
 //-----------------------------------------------------------------
 
 
-let listFiles cont (results : ParseResults<ListFilesArgs>) =
+let listFiles (results : ParseResults<ListFilesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListFilesArgs.Project @>
         let filter = results.TryGetResult <@ ListFilesArgs.Filter @>
         Furnace.loadFsProject proj
         |> (Furnace.listSourceFiles filter)
         |> ignore
-        return cont
     }
 
 
-let listReferences cont (results : ParseResults<ListReferencesArgs>) =
+let listReferences (results : ParseResults<ListReferencesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListReferencesArgs.Project @>
         let filter = results.TryGetResult <@ ListReferencesArgs.Filter @>
         Furnace.loadFsProject proj
         |> (Furnace.listReferences filter)
         |> ignore
-        return cont
     }
 
-let listProjectReferences cont (results : ParseResults<ListProjectReferencesArgs>) =
+let listProjectReferences (results : ParseResults<ListProjectReferencesArgs>) =
     maybe {
         let! proj = results.TryGetResult <@ ListProjectReferencesArgs.Project @>
         let filter = results.TryGetResult <@ ListProjectReferencesArgs.Filter @>
         Furnace.loadFsProject proj
         |> (Furnace.listProjectReferences filter)
         |> ignore
-        return cont
     }
 
 
-let listProject cont (results : ParseResults<ListProjectsArgs>) =
+let listProject (results : ParseResults<ListProjectsArgs>) =
     maybe {
         let! solution = results.TryGetResult <@ ListProjectsArgs.Solution @>
         let filter = results.TryGetResult <@ ListProjectsArgs.Filter @>
         traceWarning "not implemented yet" //TODO
-        return cont
     }
 
-let listGac cont (results : ParseResults<ListGacArgs>) =
+let listGac (results : ParseResults<ListGacArgs>) =
     maybe {
         GacSearch.searchGac ()
         |> Seq.iter(fun a -> trace a.FullName)
         |> ignore
-
-        return cont
     }
 
 let listTemplates () =
     Forge.Templates.GetList()
     |> Seq.iter trace
 
-let processList cont args =
+let processList args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | ListCommands.Project   -> execCommand (listProject cont) subArgs
-        | ListCommands.File      -> execCommand (listFiles cont) subArgs
-        | ListCommands.Reference -> execCommand (listReferences cont) subArgs
-        | ListCommands.GAC       -> execCommand (listGac cont) subArgs
-        | ListCommands.ProjectReferences -> execCommand (listProjectReferences cont) subArgs
-        | ListCommands.Templates -> listTemplates(); Some cont
-        | ListCommands.Filter _ -> Some cont
-    | _ -> Some cont
+        | ListCommands.Project   -> execCommand listProject subArgs
+        | ListCommands.File      -> execCommand listFiles subArgs
+        | ListCommands.Reference -> execCommand listReferences subArgs
+        | ListCommands.GAC       -> execCommand listGac subArgs
+        | ListCommands.ProjectReferences -> execCommand listProjectReferences subArgs
+        | ListCommands.Templates -> listTemplates(); Some ()
+        | ListCommands.Filter _ -> Some ()
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 //-----------------------------------------------------------------
 // Move Command Handlers
 //-----------------------------------------------------------------
 
-let moveFile cont (results : ParseResults<_>) =
+let moveFile (results : ParseResults<_>) =
     maybe {
         let proj = results.TryGetResult <@ MoveFileArgs.Project @>
         let! name = results.TryGetResult <@ MoveFileArgs.Name @>
@@ -854,16 +843,16 @@ let moveFile cont (results : ParseResults<_>) =
                 activeState |> Furnace.moveDown n |> ignore
             | None, None ->
                 traceWarning "Up or Down must be specified"
-
-        return cont
     }
 
-let processMove cont args =
+let processMove args =
     match subCommandArgs args  with
     | Some (cmd, subArgs ) ->
         match cmd with
-        | MoveCommands.File -> execCommand (moveFile cont) subArgs
-    | _ -> Some cont
+        | MoveCommands.File -> execCommand moveFile subArgs
+    | _ ->
+        traceWarning "Unknown command"
+        None
 
 
 
@@ -872,11 +861,11 @@ let processMove cont args =
 // Update Command Handlers
 //-----------------------------------------------------------------
 
-let processUpdate cont args =
-    args |> execCommand (fun results ->
+let processUpdate args =
+    args |> execCommand' (fun results ->
         if results.Contains <@ UpdateArgs.Paket @> then Paket.Update()
         if results.Contains <@ UpdateArgs.Fake @>  then Fake.Update ()
-        Some cont
+
     )
 
 
@@ -893,7 +882,7 @@ let applyAlias (args : string []) =
 
 
 
-let strikeForge (args : string []) (cont:Result) =
+let runForge (args : string []) =
     let args = applyAlias args
     let result = parseCommand<Command> [| args.[0] |]
     let check (res:ParseResults<_>) =
@@ -903,28 +892,24 @@ let strikeForge (args : string []) (cont:Result) =
                 let subArgs = args.[1 ..]
                 subArgs |>
                 match cmd with
-                | Command.New -> processNew cont
-                | Add -> processAdd cont
-                | Remove -> processRemove cont
-                | Command.Rename -> processRename cont
-                | List -> processList cont
-                | Move -> processMove cont
-                | Update -> processUpdate cont
-                | Command.Fake -> fun a -> Fake.Run a; Some cont
-                | Command.Paket -> fun a -> Paket.Run a; Some cont
-                | Refresh -> fun _ -> Templates.Refresh (); Some cont
-                | Exit -> fun _ -> Some Result.Exit
+                | Command.New -> processNew
+                | Add -> processAdd
+                | Remove -> processRemove
+                | Command.Rename -> processRename
+                | List -> processList
+                | Move -> processMove
+                | Update -> processUpdate
+                | Command.Fake -> fun a -> Fake.Run a; Some ()
+                | Command.Paket -> fun a -> Paket.Run a; Some ()
+                | Refresh -> fun _ -> Templates.Refresh (); Some ()
             with
             | ex ->
                 eprintfn "Unhandled error:\n%s" ex.Message
-                Some cont
-        | _ -> Some cont
-    defaultArg (Option.bind check result) cont
+                None
+        | _ ->
+            traceWarning "Unknown command"
+            None
+    match result |> Option.bind check with
+    | None -> -1
+    | Some _ -> 0
 
-
-let interactive args =
-    strikeForge args Continue
-
-
-let singlePass args =
-    strikeForge args Result.Exit

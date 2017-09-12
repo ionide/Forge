@@ -5,7 +5,7 @@ open Argu
 open Forge.Commands
 
 // Console Configuration
-Console.Title <- "FORGE"
+Console.Title <- "Forge"
 Console.OutputEncoding <- System.Text.Encoding.UTF8
 
 let defaultForeground = Console.ForegroundColor
@@ -53,18 +53,6 @@ let highlightln fcol bcol (msg:string) =
     Console.BackgroundColor <- defaultBackground
 
 
-let rec consoleLoop () =
-    write   green Environment.CurrentDirectory
-    writeln darkRed " [-FORGE-] "
-    Console.Write "λ "
-
-    match Console.ReadLine() with
-    | null  -> Result.Exit
-    | input -> input.Split ' '  |> interactive
-    |> function
-    | Continue    -> consoleLoop ()
-    | Result.Exit -> 1
-
 let (|ShouldPrompt|_|) (argv : string []) =
     let dirs = System.IO.Directory.EnumerateDirectories Environment.CurrentDirectory
     let files = System.IO.Directory.EnumerateFiles Environment.CurrentDirectory
@@ -85,13 +73,6 @@ let main argv =
             Console.ReadLine ()
         | _ -> ""
     if k = "Y" || k = "" then
-        match argv with
-        | [||] ->
-            writeln cyan "\nInitializing Forge... use -h or --help to see commands\n"
-            consoleLoop ()
-        | _ ->
-            match singlePass argv with
-            | Continue -> consoleLoop ()
-            | Result.Exit -> 0
+        runForge argv
     else
         0

@@ -6,6 +6,7 @@
 * Update generated FAKE script
 * Infrastructure changes
 * Include .vscode folder
+* Remove interactive mode
 
 ### 1.4.2 - 2017-06-03
 * Add support for `FORGE_TEMPLATE_DIR` environment variable
