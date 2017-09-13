@@ -1,13 +1,14 @@
-### 2.0.0-Boötes - 2017-07-30
+### 2.0.0 - 2017-09-13
 * **This is not backward compatible change**
 * Update ProjectSystem to support SDK based project files
 * Update templates to use SDK based project files
 * Move templates to https://github.com/fsharp-editing/forge-templates
 * Update generated FAKE script
 * Infrastructure changes
-* Include .vscode folder
+* Include `.vscode` folder
 * Remove interactive mode
 * Add support for solution level content in templates (`_content`)
+* Multiple small fixes
 
 ### 1.4.2 - 2017-06-03
 * Add support for `FORGE_TEMPLATE_DIR` environment variable
