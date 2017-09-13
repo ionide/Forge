@@ -212,11 +212,10 @@ module Project =
 
                 Directory.GetFiles projectFolder
                 |> Seq.tryFind (fun n -> n.EndsWith "paket.references")
-                |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; "nuget"; ref; "--no-install"]) )
-                Paket.Run ["install";]
+                |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; ref; "--no-resolve"]) )
 
             if fake then
-                if paket then Paket.Run ["add"; "nuget"; "FAKE"]
+                if paket then Paket.Run ["add"; "FAKE"; "--no-resolve"]
                 Fake.Copy ^ getCwd()
                 let buildSh = getCwd() </> "build.sh"
                 let ctn = File.ReadAllText buildSh
@@ -225,6 +224,9 @@ module Project =
                 if isMono then
                     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
                     Syscall.chmod(buildSh, perms) |> ignore
+
+            if paket then Paket.Run ["install"]
+
 
             printfn "Done!"
 
