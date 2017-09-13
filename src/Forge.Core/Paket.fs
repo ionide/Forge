@@ -30,8 +30,14 @@ let Run args =
     run f args' ^ getCwd()
 
 let Init folder =
+    let paketFolder = folder </> ".paket"
+    if Directory.Exists paketFolder then
+        if File.Exists (paketFolder </> "paket.exe") |> not then copy folder
+
+    else
+       copy folder
+
     if Directory.GetFiles folder |> Seq.exists (fun n -> n.EndsWith "paket.dependencies") |> not then
-        copy folder
         Update ()
         Run ["init"]
         let deps = folder </> "paket.dependencies"
