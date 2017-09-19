@@ -454,6 +454,9 @@ type UpdateArgs =
 //-----------------------------------------------------------------
 // Command Handlers
 //-----------------------------------------------------------------
+let printHelp<'T when 'T :> IArgParserTemplate> () =
+    let parser = ArgumentParser.Create<'T>(programName = "forge.exe", errorHandler = ProcessExiter())
+    parser.PrintUsage "   Available parameters:" |> System.Console.WriteLine
 
 
 let parseCommand<'T when 'T :> IArgParserTemplate> args =
@@ -885,36 +888,40 @@ let applyAlias (args : string []) =
 
 
 let runForge (args : string []) =
-    let args = applyAlias args
-    let result = parseCommand<Command> [| args.[0] |]
-    let check (res:ParseResults<_>) =
-        match res.GetAllResults() with
-        | [cmd] ->
-            try
-                let subArgs = args.[1 ..]
-                subArgs |>
-                match cmd with
-                | Command.New -> processNew
-                | Add -> processAdd
-                | Remove -> processRemove
-                | Command.Rename -> processRename
-                | List -> processList
-                | Move -> processMove
-                | Update -> processUpdate
-                | Command.Fake -> fun a -> Fake.Run a; Some ()
-                | Command.Paket -> fun a -> Paket.Run a; Some ()
-                | Refresh -> fun _ -> Templates.Refresh (); Some ()
-                | Version -> fun _ ->
-                    printfn "%s" AssemblyVersionInformation.AssemblyVersion
-                    Some ()
-            with
-            | ex ->
-                eprintfn "Unhandled error:\n%s" ex.Message
+    if args.Length = 0 then
+        printHelp<Command> ()
+        -1
+    else
+        let args = applyAlias args
+        let result = parseCommand<Command> [| args.[0] |]
+        let check (res:ParseResults<_>) =
+            match res.GetAllResults() with
+            | [cmd] ->
+                try
+                    let subArgs = args.[1 ..]
+                    subArgs |>
+                    match cmd with
+                    | Command.New -> processNew
+                    | Add -> processAdd
+                    | Remove -> processRemove
+                    | Command.Rename -> processRename
+                    | List -> processList
+                    | Move -> processMove
+                    | Update -> processUpdate
+                    | Command.Fake -> fun a -> Fake.Run a; Some ()
+                    | Command.Paket -> fun a -> Paket.Run a; Some ()
+                    | Refresh -> fun _ -> Templates.Refresh (); Some ()
+                    | Version -> fun _ ->
+                        printfn "%s" AssemblyVersionInformation.AssemblyVersion
+                        Some ()
+                with
+                | ex ->
+                    eprintfn "Unhandled error:\n%s" ex.Message
+                    None
+            | _ ->
+                traceWarning "Unknown command"
                 None
-        | _ ->
-            traceWarning "Unknown command"
-            None
-    match result |> Option.bind check with
-    | None -> -1
-    | Some _ -> 0
+        match result |> Option.bind check with
+        | None -> -1
+        | Some _ -> 0
 
