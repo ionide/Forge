@@ -148,6 +148,26 @@ let tests =
         |> initTest dir
         let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
         project |> Expect.hasFile "Test.fs"
+
+      testCase "Add File - with project, absolute path, above" <| fun _ ->
+        let dir = "file_add_file_project_absolute_path_above" |> makeAbsolute
+        let p =   dir </> "src" </> "Sample" </> "Test.fs"
+        let projectPath = dir </> "src" </> "Sample" </> "Sample.fsproj"
+        [ "new project -n Sample --dir src -t console --no-paket"
+          sprintf "add file -p %s -n %s --above %s " projectPath p "Sample.fs" ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
+
+      testCase "Add File - with project, absolute path, below" <| fun _ ->
+        let dir = "file_add_file_project_absolute_path_below" |> makeAbsolute
+        let p =   dir </> "src" </> "Sample" </> "Test.fs"
+        let projectPath = dir </> "src" </> "Sample" </> "Sample.fsproj"
+        [ "new project -n Sample --dir src -t console --no-paket"
+          sprintf "add file -p %s -n %s --below %s " projectPath p "Sample.fs" ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
     ]
     testList "Remove file" [
       testCase "Remove File" <| fun _ ->

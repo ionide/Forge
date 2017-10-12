@@ -560,8 +560,7 @@ type SourceTree (files:SourceFile list) =
     let hasTarget (target:string) =
         let temp = normalizeFileName target
         if isDirectory temp then tree.ContainsKey temp
-        elif data.ContainsKey temp then true else
-        false
+        else data.ContainsKey temp
 
     let moveFile shift target =
         if not ^ hasTarget target then () else
@@ -580,30 +579,30 @@ type SourceTree (files:SourceFile list) =
     member __.MoveDown (target:string) = moveFile 1 target
 
     member self.AddAbove (target:string) (srcFile:SourceFile) =
-        if not ^ hasTarget target then () else
-        let parent = getParentDir target
+        let dir = getParentDir target
         let fileName = removeParentDir srcFile.Include
-        let srcFile = {srcFile with Include = parent + fileName}
-        if tree.ContainsKey parent then
-            let arr = tree.[parent]
+        let keyPath  = normalizeFileName (dir + fileName)
+        let srcFile = { srcFile with Include = keyPath }
+        if  not ^ data.ContainsKey keyPath then
+            let arr = tree.["/"]
             let idx = ResizeArray.indexOf (removeParentDir target) arr
-            tree.[parent] <- ResizeArray.insert idx fileName arr
-            data.[parent+fileName] <- srcFile
+            tree.["/"] <- ResizeArray.insert idx fileName arr
+            data.[fileName] <- srcFile
 
 
     member self.AddBelow (target:string) (srcFile:SourceFile) =
-        if not ^ hasTarget target then () else
-        let parent = getParentDir target
+        let dir = getParentDir target
         let fileName = removeParentDir srcFile.Include
-        let srcFile = {srcFile with Include = parent + fileName}
-        if tree.ContainsKey parent then
-            let arr = tree.[parent]
+        let keyPath  = normalizeFileName (dir + fileName)
+        let srcFile = { srcFile with Include = keyPath }
+        if  not ^ data.ContainsKey keyPath then
+            let arr = tree.["/"]
             let idx = ResizeArray.indexOf (removeParentDir target) arr
             if idx = arr.Count then
-                tree.[parent] <- ResizeArray.add fileName arr
+                tree.["/"] <- ResizeArray.add fileName arr
             else
-                tree.[parent] <- ResizeArray.insert (idx+1) fileName arr
-            data.[parent+fileName] <- srcFile
+                tree.["/"] <- ResizeArray.insert (idx+1) fileName arr
+            data.[fileName] <- srcFile
 
 
     member __.AddSourceFile (dir:string) (srcFile:SourceFile) =

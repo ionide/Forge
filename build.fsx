@@ -134,7 +134,7 @@ Target "BuildTests" (fun _ ->
 
 Target "RunTests" (fun _ ->
     !! testAssemblies
-    |> Expecto.Expecto id
+    |> Expecto.Expecto (fun n -> {n with FailOnFocusedTests = false} )
 )
 // --------------------------------------------------------------------------------------
 // Release Scripts
