@@ -16,8 +16,8 @@
 * [x] Parse - remove non-existing reference
 * [x] Parse - move up
 * [x] Parse - move down
-* [ ] Parse - add above (?)
-* [ ] Parse - add below (?)
+* [x] Parse - add above (?)
+* [x] Parse - add below (?)
 * [ ] Parse - add dir
 * [ ] Parse - remove dir
 * [x] Parse - rename file

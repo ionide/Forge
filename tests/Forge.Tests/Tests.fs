@@ -157,6 +157,22 @@ let tests =
         let files = pf'.SourceFiles.AllFiles()
         Expect.equal (files |> Seq.head) "App.config" "should be same"
         files |> Expect.hasLength 3
+
+      testCase "parse - add above" <| fun _ ->
+        let pf = FsProject.parse astInput
+        let f = {SourceFile.Include = "above.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let pf' = FsProject.addAbove "FixProject.fs" f pf
+        let files = pf'.SourceFiles.AllFiles()
+        Expect.equal (files |> Seq.head) "above.fs" "should be same"
+        pf'.SourceFiles.AllFiles() |> Expect.hasLength 4
+
+      testCase "parse - add below" <| fun _ ->
+        let pf = FsProject.parse astInput
+        let f = {SourceFile.Include = "below.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let pf' = FsProject.addBelow "FixProject.fs" f pf
+        let files = pf'.SourceFiles.AllFiles()
+        Expect.equal (files |> Seq.item 1) "below.fs" "should be same"
+        pf'.SourceFiles.AllFiles() |> Expect.hasLength 4
     ]
 
     testList "SolutionSystem" [
