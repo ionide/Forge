@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
@@ -42,7 +42,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ED8079DD
 		tests\TestCoverage.md = tests\TestCoverage.md
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.Tests", "tests\Forge.Tests\Forge.Tests.fsproj", "{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.Tests", "tests\Forge.Tests\Forge.Tests.fsproj", "{C70DE0BF-B419-4E44-A143-5253FF838024}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "runners", "runners", "{0153573D-2FC1-4AFF-8D40-992ACF229E2F}"
 	ProjectSection(SolutionItems) = preProject
@@ -54,7 +54,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.Core", "src\Forge.Cor
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge", "src\Forge\Forge.fsproj", "{147B0E3C-C669-4666-8FBC-7F77CAC2FF36}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.IntegrationTests", "tests\Forge.IntegrationTests\Forge.IntegrationTests.fsproj", "{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.IntegrationTests", "tests\Forge.IntegrationTests\Forge.IntegrationTests.fsproj", "{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Forge.ProjectSystem", "src\Forge.ProjectSystem\Forge.ProjectSystem.fsproj", "{9029BE0F-A72C-4281-9FD1-AA15F5722306}"
 EndProject
@@ -64,10 +64,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C70DE0BF-B419-4E44-A143-5253FF838024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C70DE0BF-B419-4E44-A143-5253FF838024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C70DE0BF-B419-4E44-A143-5253FF838024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C70DE0BF-B419-4E44-A143-5253FF838024}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D28CE980-2040-4B62-ACA6-F07EB6B31920}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D28CE980-2040-4B62-ACA6-F07EB6B31920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D28CE980-2040-4B62-ACA6-F07EB6B31920}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -76,10 +76,10 @@ Global
 		{147B0E3C-C669-4666-8FBC-7F77CAC2FF36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{147B0E3C-C669-4666-8FBC-7F77CAC2FF36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{147B0E3C-C669-4666-8FBC-7F77CAC2FF36}.Release|Any CPU.Build.0 = Release|Any CPU
-		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9029BE0F-A72C-4281-9FD1-AA15F5722306}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -91,7 +91,10 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{83F16175-43B1-4C90-A1EE-8E351C33435D} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
 		{8E6D5255-776D-4B61-85F9-73C37AA1FB9A} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
-		{FBAF8C7B-4EDA-493A-A7FE-4DB25D15736F} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
-		{43323D7C-A0B8-4451-ADD1-DAD8A062CB86} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
+		{C70DE0BF-B419-4E44-A143-5253FF838024} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
+		{8D8FE23B-F271-4B87-AAD2-EA3E684E30C8} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2575D13A-B49B-446C-994A-3DFDC75A88BE}
 	EndGlobalSection
 EndGlobal
