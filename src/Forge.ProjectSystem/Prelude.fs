@@ -114,12 +114,17 @@ let prompt text =
     Console.Write "> "
     Console.ReadLine () |> String.stripControls
 
+let selectIndexOrString list s =
+    try
+        Seq.item (Int32.Parse(s) - 1) list
+    with _ -> s
+
 let promptSelect text list =
     printfn text
-    list |> Seq.iter (printfn " - %s")
+    list |> Seq.iteri (fun i x -> printfn "%3i - %s" (i + 1) x)
     printfn ""
     Console.Write "> "
-    Console.ReadLine () |> String.stripControls
+    Console.ReadLine () |> String.stripControls |> selectIndexOrString list
 
 let promptSelect2 text list =
      printfn text
