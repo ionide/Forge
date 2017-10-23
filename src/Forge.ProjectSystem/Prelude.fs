@@ -127,11 +127,11 @@ let promptSelect text list =
     Console.ReadLine () |> String.stripControls |> selectIndexOrString list
 
 let promptSelect2 text list =
-     printfn text
-     list |> Array.iter (fun (n, v) -> printfn " - %s (%s)" n v)
-     printfn ""
-     Console.Write("> ")
-     Console.ReadLine () |> String.stripControls
+    printfn text
+    list |> Array.iteri (fun i (n, v) -> printfn "%3i - %s (%s)" (i + 1) n v)
+    printfn ""
+    Console.Write("> ")
+    Console.ReadLine () |> String.stripControls |> selectIndexOrString (Array.map (fun (_, v) -> v) list)
 
 let promptCheck text checkF wrongInputMessage =
     let rec ask() =
