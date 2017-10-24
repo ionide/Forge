@@ -250,7 +250,7 @@ module File =
         File.WriteAllText(file, contents)
 
 
-    let New fileName template project buildAction =
+    let New fileName template project buildAction copy =
         EnsureTemplatesExist ()
 
         let templates = getTemplates ()
@@ -277,7 +277,7 @@ module File =
         match project' with
         | Some f ->
             ProjectManager.Furnace.loadFsProject f
-            |> ProjectManager.Furnace.addSourceFile (newFile, None, buildAction, None, None, None)
+            |> ProjectManager.Furnace.addSourceFile (newFile, None, buildAction, None, copy, None)
             |> ignore
         | None ->
             traceWarning "Project file not found, use `add file --project<string>` to add file to project"
