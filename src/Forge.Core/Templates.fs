@@ -185,9 +185,9 @@ module Project =
         if pathCheck projectFolder |> not then
             printfn "\"%s\" is not a valid project folder." projectFolder
         elif templates |> Seq.contains templateName' |> not then
-            printfn "Wrong template name"
+            printfn "Incorrect template number or name"
         else
-            printfn "Generating project..."
+            printfn "Generating %s project..." templateName' 
 
 
             copyDir projectFolder templateDir (fun f -> f.Contains "_content" |> not) false //Copy project files
