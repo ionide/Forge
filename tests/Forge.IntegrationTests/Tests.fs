@@ -32,6 +32,15 @@ let tests =
         |> initTest dir
         let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
         project |> Expect.hasFile "Test.fs"
+
+      testCase "Create new file with copy-to-output" <| fun _ ->
+        let dir = "new_file - copy"
+        ["new project -n Sample --dir src -t console --no-paket"
+         "new file -n src/Sample/Test --project src/Sample/Sample.fsproj --template fs --copy-to-output never"
+        ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
     ]
     testList "References" [
       testCase "Add Reference" <| fun _ ->
@@ -165,6 +174,16 @@ let tests =
         let projectPath = dir </> "src" </> "Sample" </> "Sample.fsproj"
         [ "new project -n Sample --dir src -t console --no-paket"
           sprintf "add file -p %s -n %s --below %s " projectPath p "Sample.fs" ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
+
+      testCase "Add File - with project, absolute path, copy-to-output" <| fun _ ->
+        let dir = "file_add_file_project_absolute_path_copy" |> makeAbsolute
+        let p =   dir </> "src" </> "Sample" </> "Test.fs"
+        let projectPath = dir </> "src" </> "Sample" </> "Sample.fsproj"
+        [ "new project -n Sample --dir src -t console --no-paket"
+          sprintf "add file -p %s -n %s --copy-to-output always" projectPath p ]
         |> initTest dir
         let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
         project |> Expect.hasFile "Test.fs"
