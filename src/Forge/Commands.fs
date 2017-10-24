@@ -8,6 +8,7 @@ open Forge
 open Forge.Prelude
 open Forge.ProjectSystem
 open Forge.ProjectManager
+open Forge.Fake
 
 /// Custom Command Line Argument
 type CLIArg = CustomCommandLineAttribute
@@ -113,6 +114,7 @@ type NewFileArgs =
     | [<CLIAlt "-p">] Project of string
     | [<CLIAlt "-s">] Solution of string
     | [<CLIArg "--build-action">] [<CLIAlt "-b">] BuildAction of string
+    | [<CLIArg "--copy-to-output">] [<CLIAlt "-c">] CopyToOutputDirectory of string
 
     interface IArgParserTemplate with
         member this.Usage =
@@ -122,6 +124,7 @@ type NewFileArgs =
             | Project _ -> "Project to which file will be added"
             | Solution _ -> "Solution to which file will be added"
             | BuildAction _ -> "File build action"
+            | CopyToOutputDirectory _ -> "When to copy file to output directory"
 
 
 type NewSolutionArgs =
@@ -161,6 +164,7 @@ type AddFileArgs =
     | [<CLIAlt "-n">] Name of string
     | [<CLIAlt "dir">][<CLIAlt "--dir">] Folder of string
     | [<CLIArg "--build-action">] [<CLIAlt "-ba">] BuildAction of string
+    | [<CLIArg "--copy-to-output">] [<CLIAlt "-c">] CopyToOutputDirectory of string
     | [<CLIArg "--above">] [<CLIAlt "-a">] Above of string
     | [<CLIArg "--below">] [<CLIAlt "-b">] Below of string
     | Link
@@ -173,6 +177,7 @@ type AddFileArgs =
             | Solution _ -> "Add the file to this solution"
             | Folder _   -> "Add the file to this folder"
             | BuildAction _ -> "File build action"
+            | CopyToOutputDirectory _ -> "When to copy file to output directory"
             | Link -> "Adds as link"
             | Above _ -> "Adds above given file"
             | Below _ -> "Adds below given file"
@@ -519,8 +524,9 @@ let newFile (results : ParseResults<_>) =
     let fn = results.GetResult <@ NewFileArgs.Name @>
     let template = results.TryGetResult <@ NewFileArgs.Template @>
     let ba = results.TryGetResult <@ NewFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
+    let copy = results.TryGetResult <@ NewFileArgs.CopyToOutputDirectory @> |> Option.bind CopyToOutputDirectory.TryParse
     let project = results.TryGetResult <@ NewFileArgs.Project @>
-    Templates.File.New fn template project ba
+    Templates.File.New fn template project ba copy
 
 
 let newSolution (results : ParseResults<_>) =
@@ -553,6 +559,7 @@ let addFile (results : ParseResults<AddFileArgs>) =
         let project = results.TryGetResult <@ AddFileArgs.Project @> //TODO this can't stay like this, adding to projects and solutions need to be mutally exclusive
         let solution = results.TryGetResult <@ AddFileArgs.Solution @> //TODO
         let build = results.TryGetResult <@ AddFileArgs.BuildAction @> |> Option.bind BuildAction.TryParse
+        let copy = results.TryGetResult <@ AddFileArgs.CopyToOutputDirectory @> |> Option.bind CopyToOutputDirectory.TryParse
         let link = results.TryGetResult <@ AddFileArgs.Link @> |> Option.map (fun _ -> name)
         let below = results.TryGetResult <@ AddFileArgs.Below @>
         let above = results.TryGetResult <@ AddFileArgs.Above @>
@@ -574,15 +581,15 @@ let addFile (results : ParseResults<AddFileArgs>) =
             match below, above with
             | Some b, _ ->
                 activeState
-                |> Furnace.addBelow (b, name', build, link, None, None)
+                |> Furnace.addBelow (b, name', build, link, copy, None)
                 |> ignore
             | None, Some a ->
                 activeState
-                |> Furnace.addAbove (a, name', build, link, None, None)
+                |> Furnace.addAbove (a, name', build, link, copy, None)
                 |> ignore
             | None, None ->
                 activeState
-                |> Furnace.addSourceFile (n, Some dir , build, link, None, None)
+                |> Furnace.addSourceFile (n, Some dir , build, link, copy, None)
                 |> ignore
     }
 
