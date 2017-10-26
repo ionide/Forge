@@ -1,3 +1,10 @@
+### 2.1.0 - 2017-10-26
+* Handle call without and command
+* Fix add above/below
+* Resolve BadImageFormatException on Mono
+* Numbered templates
+* Added argument for CopyToOutputDirectory setting
+
 ### 2.0.0 - 2017-09-13
 * **This is not backward compatible change**
 * Update ProjectSystem to support SDK based project files
