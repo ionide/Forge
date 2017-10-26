@@ -57,6 +57,7 @@ let release = LoadReleaseNotes "RELEASE_NOTES.md"
 let tempDir = "temp"
 let testBuildDir = "temp/test"
 let buildDir = "temp"
+let forgeSh = "forge.sh"
 
 // Helper active pattern for project types
 let (|Fsproj|Csproj|Vbproj|) (projFileName:string) =
@@ -116,6 +117,8 @@ Target "Build" (fun _ ->
 
     !! (buildDir </> "*.dll")
     |> Seq.iter (MoveFile (buildDir </> "Bin"))
+
+    CopyFile buildDir forgeSh
 )
 
 Target "BuildProjectSystem" (fun _ ->
@@ -142,6 +145,7 @@ Target "RunTests" (fun _ ->
 Target "ZipRelease" (fun _ ->
     !! (buildDir </> "*.exe")
     ++ (buildDir </> "*.config")
+    ++ (buildDir </> "*.sh")
     ++ (buildDir </> "Bin" </> "*.dll")
     -- (buildDir </> "Forge.Core.dll.config")
     -- (buildDir </> "*templates*")

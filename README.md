@@ -72,7 +72,7 @@ Reload the `.bashrc` with `source` or `.`:
 . ~/.bashrc
 ```
 
-Create a symlink that points to the executable.
+Create a symlink that points to the script, which runs executable.
 
 ```bash
 ln -s `pwd`/temp/forge.sh $INSTALL_DIR/forge
