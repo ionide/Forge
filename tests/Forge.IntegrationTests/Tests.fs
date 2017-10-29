@@ -287,5 +287,25 @@ let tests =
         |> initTest dir
         let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
         project |> Expect.hasFile "Renamed.fs"
+
+      testCase "Rename file nonexistent folder" <| fun _ ->
+        let dir = "rename_file_nonexistent_folder"
+        ["new project -n Sample --dir src -t console --no-paket"
+         "new file -n src/Sample/Test --project src/Sample/Sample.fsproj --template fs"
+         "rename file -n src/Sample/Test.fs -r src/Sample/Test/Renamed.fs"
+        ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
+
+      testCase "Rename file existing file" <| fun _ ->
+        let dir = "rename_file_existing_file"
+        ["new project -n Sample --dir src -t console --no-paket"
+         "new file -n src/Sample/Test --project src/Sample/Sample.fsproj --template fs"
+         "rename file -n src/Sample/Test.fs -r src/Sample/Sample.fs"
+        ]
+        |> initTest dir
+        let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
+        project |> Expect.hasFile "Test.fs"
     ]
   ]
