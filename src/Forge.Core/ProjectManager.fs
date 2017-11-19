@@ -290,6 +290,21 @@ module Furnace =
         |> List.iter trace
         state
 
+    let listProjects (folder: string option) (filter: string option) =
+        let filterFn =
+            match filter with
+            | Some s -> (fun fileName -> (String.editDistance fileName s) < 5)
+            | None   -> (fun _ -> true)
+        let dir =
+            match folder with
+            | Some s -> s 
+            | None   -> getCwd() + Path.DirectorySeparatorChar.ToString()
+        Globbing.search dir "**/*proj"
+        |> List.filter (fun s -> System.IO.Path.GetFileNameWithoutExtension(s) |> filterFn)
+        |> List.map (fun s -> relative s dir)
+        |> List.iter trace
+
+
     let rec tryFindProject dir =
         try
             let dir =

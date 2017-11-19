@@ -18,6 +18,18 @@ let initTest dir args =
         let a = a + " --no-prompt"
         Forge.App.main (a.Split ' ') |> ignore)
 
+let runForgeWithOutput args =
+    let sw = new System.IO.StringWriter()
+    System.Console.SetOut(sw)
+    args |> List.iter (fun a ->
+        let a = a + " --no-prompt"
+        Forge.App.main (a.Split ' ') |> ignore)
+    let so = new System.IO.StreamWriter(System.Console.OpenStandardOutput())
+    so.AutoFlush <- true
+    System.Console.SetOut(so)
+    sw.ToString()
+
+
 let getPath file =
     cwd </> file
 

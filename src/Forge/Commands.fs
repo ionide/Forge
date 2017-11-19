@@ -403,7 +403,7 @@ type ListProjectsArgs =
         member this.Usage =
             match this with
             | Solution _ -> "List the projects in this solution"
-            | Folder _ -> "List the projects in this directory"
+            | Folder _ -> "List the projects in this and any subfolders"
             | Filter _ -> "Filter list via fuzzy search for this string"
 
 type ListGacArgs =
@@ -790,12 +790,15 @@ let listProjectReferences (results : ParseResults<ListProjectReferencesArgs>) =
         |> ignore
     }
 
-
-let listProject (results : ParseResults<ListProjectsArgs>) =
+let listProjects (results : ParseResults<ListProjectsArgs>) =
     maybe {
-        let! solution = results.TryGetResult <@ ListProjectsArgs.Solution @>
+        let solution = results.TryGetResult <@ ListProjectsArgs.Solution @>  // TODO: solution and folder should be mutually exclusive
         let filter = results.TryGetResult <@ ListProjectsArgs.Filter @>
-        traceWarning "not implemented yet" //TODO
+        let folder = results.TryGetResult <@ ListProjectsArgs.Folder @>
+        if solution <> None then
+            traceWarning "Listing projects from solution not yet implemented."
+        else
+            Furnace.listProjects folder filter
     }
 
 let listGac (results : ParseResults<ListGacArgs>) =
@@ -813,7 +816,7 @@ let processList args =
     match subCommandArgs args with
     | Some (cmd, subArgs) ->
         match cmd with
-        | ListCommands.Project   -> execCommand listProject subArgs
+        | ListCommands.Project   -> execCommand listProjects subArgs
         | ListCommands.File      -> execCommand listFiles subArgs
         | ListCommands.Reference -> execCommand listReferences subArgs
         | ListCommands.GAC       -> execCommand listGac subArgs
