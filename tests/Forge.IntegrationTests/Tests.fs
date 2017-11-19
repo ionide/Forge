@@ -1,6 +1,8 @@
 module Tests
 
 open Expecto
+open Forge.Environment
+open Forge
 
 [<Tests>]
 let tests =
@@ -307,5 +309,28 @@ let tests =
         |> initTest dir
         let project = dir </> "src" </> "Sample" </> "Sample.fsproj" |> loadProject
         project |> Expect.hasFile "Test.fs"
+    ]
+    testList "List output" [
+        testCase "List files in fsproj" <| fun _ ->
+            let s = "Sample.fs" + System.Environment.NewLine + "App.config" + System.Environment.NewLine
+            let dir = "list_files"
+            ["new project -n Sample --dir src -t console --no-paket"]
+            |> initTest dir
+            ["list files -p src/Sample/Sample.fsproj"]
+            |> runForgeWithOutput
+            |> Expecto.Flip.Expect.equal "should be equal" s
+
+        testCase "List projects in folder" <| fun _ ->
+            let s1 = "src" </> "Sample" </> "Sample.fsproj"
+            let s2 = "src" </> "Sample2" </> "Sample2.fsproj"
+            let s = s1 + System.Environment.NewLine + s2 + System.Environment.NewLine
+            let dir = "list_projects"
+            ["new project -n Sample --dir src -t console --no-paket"
+             "new project -n Sample2 --dir src -t console --no-paket"
+            ]
+            |> initTest dir
+            ["list projects --folder src"]
+            |> runForgeWithOutput 
+            |> Expecto.Flip.Expect.equal "should be equal" s
     ]
   ]
