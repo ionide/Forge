@@ -144,6 +144,22 @@ let tests =
         Expect.equal s.RootNamespace.Data (Some "TestRename") "should be same"
         Expect.equal s.DocumentationFile.Data (Some "bin\Debug\TestRename.XML") "should be same"
 
+      testCase "parse - rename file" <| fun _ ->
+        let pf = FsProject.parse astInput
+        let pf' = pf |> FsProject.renameFile "FixProject.fs" "renamed_file.fs"
+        let files = pf'.SourceFiles.AllFiles()
+        Expect.equal (files |> Seq.head) "renamed_file.fs" "should be same"
+        files |> Expect.hasLength 3
+
+      testCase "parse - rename file invalid name" <| fun _ ->
+        if System.IO.Path.GetInvalidFileNameChars().Length > 0 then
+            let invalid = System.IO.Path.GetInvalidFileNameChars().[0].ToString()
+            let pf = FsProject.parse astInput
+            let pf' = pf |> FsProject.renameFile "FixProject.fs" ("invalid" + invalid + ".fs")
+            let files = pf'.SourceFiles.AllFiles()
+            Expect.equal (files |> Seq.head) "FixProject.fs" "should be same"
+            files |> Expect.hasLength 3
+
       testCase "parse - move up" <| fun _ ->
         let pf = FsProject.parse astInput
         let pf' = pf |> FsProject.moveUp "a_file.fs"
