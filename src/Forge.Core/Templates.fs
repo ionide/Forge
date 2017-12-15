@@ -215,7 +215,7 @@ module Project =
                 |> Option.iter (File.ReadAllLines >> Seq.iter (fun ref -> Paket.Run ["add"; ref; "--no-resolve"]) )
 
             if fake then
-                if paket then Paket.Run ["add"; "FAKE"; "--no-resolve"]
+                if paket then Paket.Run ["add"; "FAKE"; "--no-resolve"; "--group Build"]
                 Fake.Copy ^ getCwd()
                 let buildSh = getCwd() </> "build.sh"
                 let ctn = File.ReadAllText buildSh
