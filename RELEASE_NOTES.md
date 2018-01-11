@@ -1,3 +1,8 @@
+### 2.2.0 - 2018-01-11
+* Add FAKE into build group instead Main group
+* Add list projects by folder command
+* Add checking validity of renamed files
+
 ### 2.1.0 - 2017-10-26
 * Handle call without and command
 * Fix add above/below
