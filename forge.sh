@@ -2,4 +2,4 @@
 # User just ran a symbolic link which points to real Forge.exe
 # $0 is an absolute path of this symboliklink
 # $* stands for all arguments passed to the command
-"$(dirname $(readlink $0))/Forge.exe" $*
+mono "$(dirname $(readlink $0))/Forge.exe" $*
