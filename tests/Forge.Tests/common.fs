@@ -114,3 +114,12 @@ let projectWithLinkedFiles = """<?xml version="1.0" encoding="utf-8"?>
         </ItemGroup>
     </Project>
     """
+
+let netCoreProjectMultiTargetsNoFiles = """
+    <Project Sdk="Microsoft.NET.Sdk">
+      <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFrameworks>net461;netstandard2.0;netcoreapp2.0</TargetFrameworks>
+      </PropertyGroup>
+    </Project>
+    """ 

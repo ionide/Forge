@@ -87,6 +87,18 @@ let tests =
         Expect.equal s.AssemblyName.Data (Some "Test") "should be same"
         Expect.equal s.DocumentationFile.Data (Some "bin\Debug\Test.XML") "should be same"
 
+      testCase "parse - gets all multi target frameworks" <| fun _ ->
+        let projectFile = FsProject.parse netCoreProjectMultiTargetsNoFiles
+        let s = projectFile.Settings
+        Expect.equal s.TargetFrameworks.Data (Some ["net461"; "netstandard2.0"; "netcoreapp2.0"]) "should be same"
+
+      testCase "parse - ToXElem sets all multi target frameworks" <| fun _ ->
+        let projectFile = FsProject.parse netCoreProjectMultiTargetsNoFiles
+        let s = projectFile.Settings
+        let settingsXml = projectFile.Settings.ToXElem()
+        let targetFrameworks = settingsXml.Element (Xml.Linq.XName.Get "TargetFrameworks")
+        Expect.equal targetFrameworks.Value "net461;netstandard2.0;netcoreapp2.0" "should be same"
+
       testCase "parse - add new file" <| fun _ ->
         let pf = FsProject.parse astInput
         let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
