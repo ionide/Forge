@@ -45,7 +45,7 @@ module String =
     let equalsIgnoreCase (str1:string) (str2:string) =
         String.Compare(str1,str2,StringComparison.OrdinalIgnoreCase) = 0
     /// Converts a sequence of strings to a string with delimiters
-    let inline separated delimiter (items : string seq) = String.Join(delimiter, Array.ofSeq items)
+    let inline separated (delimiter: string) (items : string seq) = String.Join(delimiter, Array.ofSeq items)
 
     /// Returns if the string is null or empty
     let inline isNullOrEmpty value = String.IsNullOrEmpty value
@@ -60,10 +60,10 @@ module String =
     let inline toLines text = separated Environment.NewLine text
 
     /// Checks whether the given text starts with the given prefix
-    let startsWith prefix (text : string) = text.StartsWith prefix
+    let startsWith (prefix: string) (text : string) = text.StartsWith prefix
 
     /// Checks whether the given text ends with the given suffix
-    let endsWith suffix (text : string) = text.EndsWith suffix
+    let endsWith (suffix: string) (text : string) = text.EndsWith suffix
 
     /// Determines whether the last character of the given <see cref="string" />
     /// matches Path.DirectorySeparatorChar.
@@ -202,7 +202,7 @@ type MaybeBuilder () =
     member inline __.ReturnFrom value: 'T option = value
 
     [<DebuggerStepThrough>]
-    member inline __.Zero (): unit option = Some()   
+    member inline __.Zero (): unit option = Some()
 
     [<DebuggerStepThrough>]
     member __.Delay (f: unit -> 'T option): 'T option = f ()
@@ -248,12 +248,12 @@ let maybe = MaybeBuilder()
 let (|InvariantEqual|_|) (str:string) arg =
   if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
   then Some () else None
-  
-  
+
+
 // Seq extension
 //====================================
 
-module Seq = 
+module Seq =
     let duplicates xs =
         (Map.empty, xs)
         ||> Seq.scan (fun xs x ->
@@ -266,5 +266,3 @@ module Seq =
             match Map.tryFind x xs with
             | Some false -> Some x
             | None | Some true -> None)
-
-         
