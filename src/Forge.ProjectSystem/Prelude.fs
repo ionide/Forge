@@ -148,11 +148,11 @@ let inline mapOpt (opt:'a option) mapfn (x:'b) =
     | None -> x
     | Some a -> mapfn a x
 
-let parseGuid text =
+let parseGuid (text: string) =
     let mutable g = Unchecked.defaultof<Guid>
     if Guid.TryParse(text,&g) then Some g else None
 
-let parseBool text =
+let parseBool (text: string) =
     let mutable b = Unchecked.defaultof<bool>
     if Boolean.TryParse(text,&b) then Some b else None
 
