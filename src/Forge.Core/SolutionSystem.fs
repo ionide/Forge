@@ -24,18 +24,18 @@ let sectionIndent = String.replicate 4 " "
 let itemIndent = String.replicate 8 " "
 
 
-type PreProjectAttribute    () = inherit Attribute() 
-type PostProjectAttribute   () = inherit Attribute() 
-type PreSolutionAttribute   () = inherit Attribute() 
-type PostSolutionAttribute  () = inherit Attribute() 
+type PreProjectAttribute    () = inherit Attribute()
+type PostProjectAttribute   () = inherit Attribute()
+type PreSolutionAttribute   () = inherit Attribute()
+type PostSolutionAttribute  () = inherit Attribute()
 
-type SolutionItem = 
+type SolutionItem =
     { Name:string; Path:string }
     member self.ToSln() =
         sprintf "%s = %s" self.Name self.Path
 
 
-type SolutionFolder = 
+type SolutionFolder =
     {   ProjectTypeGuid     : Guid  // {2150E333-8FDC-42A3-9474-1A3956D46DE8}
         Name                : string
         Path                : string
@@ -45,21 +45,21 @@ type SolutionFolder =
     }
 
     member self.ToSln() =
-        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper() 
+        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper()
         let idGuid = self.Guid.ToString().ToUpper()
-        let header = 
-            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n" 
+        let header =
+            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n"
                 typeGuid self.Name self.Path idGuid
 
         if self.SolutionItems = [] then header + "EndProject\n" else
         let sb = StringBuilder()
 
-        self.SolutionItems |> List.iter (fun item -> 
+        self.SolutionItems |> List.iter (fun item ->
             itemIndent +  item.ToSln() |> sb.AppendLine |> ignore)
         let sectionHeader = "ProjectSection(SolutionItems) = preProject\n"
         sb  .Insert(0,sectionIndent + sectionHeader)
             .AppendLine(sectionIndent + "EndProjectSection")
-            .Insert(0,header) 
+            .Insert(0,header)
             .AppendLine("EndProject")
         |> string
 
@@ -74,31 +74,31 @@ type SolutionProject =
     }
 
     member self.ToSln() =
-        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper() 
+        let typeGuid = self.ProjectTypeGuid.ToString().ToUpper()
         let idGuid = self.Guid.ToString().ToUpper()
 
         let dependencyString (guid:Guid) =
             let guidstr = guid.ToString().ToUpper()
             sprintf "{%s} = {%s}\n" guidstr guidstr
 
-        let header = 
-            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n" 
+        let header =
+            sprintf "Project(\"{%s}\") = \"%s\", \"%s\", \"{%s}\"\n"
                 typeGuid self.Name self.Path idGuid
 
         if self.Dependecies = [] then header + "EndProject\n" else
         let sb = StringBuilder()
 
-        self.Dependecies |> List.iter (fun guid -> 
+        self.Dependecies |> List.iter (fun guid ->
             sectionIndent + dependencyString guid |> sb.Append |> ignore)
         let sectionHeader = "ProjectSection(ProjectDependencies) = postProject\n"
         sb  .Insert(0,sectionIndent + sectionHeader)
             .AppendLine(sectionIndent + "EndProjectSection")
-            .Insert(0,header) 
+            .Insert(0,header)
             .AppendLine("EndProject")
         |> string
 
 
-type SolutionConfig = 
+type SolutionConfig =
     { Name:string; Platform:PlatformType }
 
     member self.ToSln() =
@@ -108,7 +108,7 @@ type SolutionConfig =
         sprintf "%s|%s = %s|%s\n" self.Name platfomStr self.Name platfomStr
 
 
-type BuildProperty = 
+type BuildProperty =
     | ActiveCfg | Build0
     static member Parse text = text |> function
         | InvariantEqual "ActiveCfg" -> ActiveCfg
@@ -137,13 +137,13 @@ type SolutionProjectConfig =
             guidStr self.ConfigName platfomStr buildStr self.ConfigName buildStr
 
 
-type SolutionProperty = 
+type SolutionProperty =
     { Name:string; Value:string }
     member self.ToSln() =
         sprintf "%s = %s\n" self.Name self.Value
 
 
-type NestedProject = 
+type NestedProject =
     { Project : Guid; Parent : Guid }
     member self.ToSln() =
         let projectGuid = self.Project.ToString().ToUpper()
@@ -151,7 +151,7 @@ type NestedProject =
         sprintf "{%s} = {%s}\n" projectGuid parentGuid
 
 
-type Solution = 
+type Solution =
     {   Header : string
         Folders : SolutionFolder list
         Projects : SolutionProject List
@@ -161,7 +161,7 @@ type Solution =
         [<PreSolution>]  NestedProjects : NestedProject list
     }
 
-    static member Empty = 
+    static member Empty =
         {   Header  = ""
             Folders = []
             Projects = []
@@ -171,22 +171,22 @@ type Solution =
             NestedProjects = []
         }
 
-    static member Default = 
-        {   Header  = 
+    static member Default =
+        {   Header  =
                "Microsoft Visual Studio Solution File, Format Version 12.00\n\
                 # Visual Studio 14\n\
                 VisualStudioVersion = 14.0.24720.0\n\
                 MinimumVisualStudioVersion = 10.0.40219.1"
-        
+
             Folders = []
-            Projects = [] 
-            SolutionConfigurationPlatforms = 
+            Projects = []
+            SolutionConfigurationPlatforms =
                 [
                     { Name = "Debug"; Platform = AnyCPU }
                     { Name = "Release"; Platform = AnyCPU }
                 ]
             ProjectConfigurationPlatforms = []
-            SolutionProperties = 
+            SolutionProperties =
                 [
                     { Name = "HideSolutionNode"; Value = "FALSE" }
                 ]
@@ -220,7 +220,7 @@ type Solution =
 
 
 //  Functionality to Add
-//  
+//
 //  - Add new folder
 //  - add item to folder
 //  - add new project
@@ -232,7 +232,7 @@ type Solution =
 //  - remove folder from solution, recursive removal
 //  - show dependency tree / build order
 //  - set project build order
-//  - check for cyclic dependencies 
+//  - check for cyclic dependencies
 //  - add/remove solution build configuration
 //  - unload/reload project
 //  - getinfo on solution item
@@ -247,7 +247,7 @@ type Solution =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 [<RequireQualifiedAccess>]
 module SolutionFolder =
-    
+
     let create name =
         {   ProjectTypeGuid = FolderGuid
             Name  = name
@@ -261,7 +261,7 @@ module SolutionFolder =
 
 
     let addItem name (folder:SolutionFolder) =
-        if folder.SolutionItems |> List.exists 
+        if folder.SolutionItems |> List.exists
             (fun si -> String.equalsIgnoreCase si.Name name) then
             failwithf "The Solution Folder '%s' already contains an item named '%s'" folder.Name name
         else
@@ -269,9 +269,9 @@ module SolutionFolder =
             SolutionItems = {SolutionItem.Name = name; Path=name}::folder.SolutionItems}
 
     let removeItem name (folder:SolutionFolder) =
-        let items = 
+        let items =
             folder.SolutionItems |> List.filter
-                (fun si -> String.equalsIgnoreCase si.Name name) 
+                (fun si -> String.equalsIgnoreCase si.Name name)
         { folder with SolutionItems = items }
 
     // TODO - rename item
@@ -283,7 +283,7 @@ module SolutionFolder =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 [<RequireQualifiedAccess>]
 module Solution =
-    
+
     let toSlnString (sln:Solution) = sln.ToSln()
 
     /// Adds a new folder to the solution
@@ -296,31 +296,31 @@ module Solution =
         else
         let folder = SolutionFolder.create name
         { sln with Folders = folder::sln.Folders }
-        
-  
+
+
     let removeFolder (target:string) (sln:Solution) =
-        if not (sln.Folders |> List.exists (fun fl -> 
-            String.equalsIgnoreCase fl.Name target)) then 
+        if not (sln.Folders |> List.exists (fun fl ->
+            String.equalsIgnoreCase fl.Name target)) then
             failwithf "Can't remove - The Solution doesn't contain a folder named '%s'" target
-        else 
-        let folder = 
-            sln.Folders |> List.find (fun fl -> 
+        else
+        let folder =
+            sln.Folders |> List.find (fun fl ->
                 String.equalsIgnoreCase fl.Name target)
         let nestedProjects =
             sln.NestedProjects |> List.filter (fun np ->
                 np.Parent <> folder.Guid && np.Project <> folder.Guid)
-        let slnFolders = 
-            sln.Folders |> List.filter (fun sf -> sf.Name <> folder.Name) 
+        let slnFolders =
+            sln.Folders |> List.filter (fun sf -> sf.Name <> folder.Name)
         { sln with
             Folders = slnFolders
-            NestedProjects = nestedProjects    
+            NestedProjects = nestedProjects
         }
 
 
     let addProject (path:string) (project:FsProject) (sln:Solution) =
-        let slnProj = 
-            {   
-                // TODO - this will need to make use of the projectTypes listed in the reference file to add 
+        let slnProj =
+            {
+                // TODO - this will need to make use of the projectTypes listed in the reference file to add
                 // the correct project-type if none is listed
                 ProjectTypeGuid = project.Settings.ProjectType.Data.Value |> List.head
                 // TODO - this should create a new guid if one is not found
@@ -338,7 +338,7 @@ module Solution =
 
 [<AutoOpen>]
 module Parsers =
-    
+
     type UserState = unit
     type Parser<'t> = Parser<'t, UserState>
 
@@ -364,20 +364,20 @@ module Parsers =
     let pGlobal : Parser<_> = pstring "Global"
     let pEndGlobal : Parser<_> = pstring "EndGlobal" .>> notFollowedBy pSection
     let pProjectSection : Parser<_> = pstring "ProjectSection"
-    let pEndProjectSection : Parser<_> = pstring "EndProjectSection" 
+    let pEndProjectSection : Parser<_> = pstring "EndProjectSection"
     let pGlobalSection : Parser<_> = pstring "GlobalSection"
     let pEndGlobalSection : Parser<_> = pstring "EndGlobalSection"
 
 
     /// Parsers a Guid inside of { }
-    let pGuid: Parser<Guid> = 
+    let pGuid: Parser<Guid> =
         between ``{`` ``}`` ^ manySatisfy isGuid >>= fun x ->
             try preturn ^ Guid.Parse x with ex -> fail "expected valid Guid"
 
 
     let pSolutionConfigLine =
         spaces >>. manyCharsTill anyChar ``|`` .>>. (manyCharsTill anyChar  pEq)  .>> skipRestOfLine true
-        |>> fun (name, plat) -> 
+        |>> fun (name, plat) ->
         {   SolutionConfig.Name = name
             Platform = plat.Trim() |> PlatformType.Parse }
 
@@ -448,7 +448,7 @@ module Parsers =
             | "SolutionConfigurationPlatforms"  -> insertSolutionConfigs sln
             | "SolutionProperties"              -> insertProperties      sln
             | "NestedProjects"                  -> insertNestedProjects  sln
-            | s -> fail <| sprintf 
+            | s -> fail <| sprintf
                     "Inside Global Property ::\ncould not parse unexpected string -'%s'" s
         between (spaces >>. pGlobalSection) (spaces >>. pEndGlobalSection) switch
 
@@ -458,9 +458,9 @@ module Parsers =
             let state = stream.State
             let reply: _ Reply = foldfn acc ^ stream
             if reply.Status = Ok then loop reply.Result stream else
-            stream.BacktrackTo state 
+            stream.BacktrackTo state
             let checkEnd: _ Reply = endpsr stream
-            if checkEnd.Status = Ok then 
+            if checkEnd.Status = Ok then
                 stream.BacktrackTo state; Reply acc
             else Reply (Error, checkEnd.Error)
         loop seed
@@ -482,7 +482,7 @@ module Parsers =
 
     let foldSections sln :Parser<_> = foldParser sectionSwitch (spaces >>. pEndGlobal) sln
 
-    
+
     let parseGlobal (sln:Solution) : Parser<_> =
         between (spaces >>. pGlobal) (spaces >>. pEndGlobal) ^ foldSections sln
 
@@ -490,7 +490,7 @@ module Parsers =
     let pSolutionItem = pPair |>> fun (n,v) -> { SolutionItem.Name = n ; Path = v }
 
     /// Parses the solution items in the ProjectSection SolutionItems
-    let pFolderItems =  
+    let pFolderItems =
         between (pProjectSection .>> skipRestOfLine true) pEndProjectSection ^
             manyTill (spaces >>. pSolutionItem  .>> spaces) ^ lookAhead pEndProjectSection
         <|>% []
@@ -504,8 +504,8 @@ module Parsers =
 
     let quoted: Parser<_> = between ``"`` ``"`` ^ manyCharsTill anyChar ^ lookAhead ``"``
 
-    let projectHeading =  
-        ``(`` >>. quoteGuid .>> ``)`` >>= fun typeGuid -> 
+    let projectHeading =
+        ``(`` >>. quoteGuid .>> ``)`` >>= fun typeGuid ->
         skipEqs >>. (quoted .>> skipCom) >>= fun name ->
         quoted .>> skipCom >>= fun path ->
         quoteGuid .>> spaces |>> fun idGuid ->
@@ -519,7 +519,7 @@ module Parsers =
             if typeGuid = FolderGuid then
                 pFolderItems |>> fun items ->
                     let solutionFolder =
-                        {   ProjectTypeGuid = typeGuid                    
+                        {   ProjectTypeGuid = typeGuid
                             Name = name
                             Path = path
                             Guid = idGuid
@@ -535,14 +535,14 @@ module Parsers =
                             Guid = idGuid
                             Dependecies = deps
                         }
-                    { sln with Projects = project::sln.Projects} 
+                    { sln with Projects = project::sln.Projects}
         between (spaces >>. pProject) (spaces >>. pEndProject) switch
 
     let pSolutionHeader = manyCharsTill anyChar ^ lookAhead ^ (pProject <|> pGlobal)
-       
+
 
 let parseSolution (sln:Solution) : Parser<_> =
     let entry sln = spaces >>. choice [parseGlobal sln; parseProject sln ]
     let parseEntries = spaces >>. foldParser entry (spaces >>. eof) sln
-    pSolutionHeader >>= fun hdr -> parseEntries |>> fun sln -> 
+    pSolutionHeader >>= fun hdr -> parseEntries |>> fun sln ->
         { sln with Header = hdr }

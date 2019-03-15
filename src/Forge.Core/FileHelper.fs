@@ -93,13 +93,13 @@ let tryFindFileOnPath (file : string) : string option =
 /// Returns the AppSettings for the key - Splitted on ;
 /// [omit]
 let appSettings (key : string) (fallbackValue : string) =
-    let value =
-        let setting =
-            try
-                System.Configuration.ConfigurationManager.AppSettings.[key]
-            with exn -> ""
-        if not ^ String.isNullOrWhiteSpace setting then setting
-        else fallbackValue
+    let value = fallbackValue
+        // let setting =
+        //     try
+        //         System.Configuration.ConfigurationManager.AppSettings.[key]
+        //     with exn -> ""
+        // if not ^ String.isNullOrWhiteSpace setting then setting
+        // else fallbackValue
     value.Split ([| ';' |], StringSplitOptions.RemoveEmptyEntries)
 
 

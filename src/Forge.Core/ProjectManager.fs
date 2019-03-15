@@ -6,7 +6,6 @@ open System.IO
 open System.Xml
 open System.Xml.Linq
 open Forge
-open Forge.ProjectValidation
 open Forge.ProjectSystem
 open Forge.ProjectSystem.PathHelpers
 
@@ -306,7 +305,7 @@ module Furnace =
             | None   -> (fun _ -> true)
         let dir =
             match folder with
-            | Some s -> s 
+            | Some s -> s
             | None   -> getCwd() + Path.DirectorySeparatorChar.ToString()
         Globbing.search dir "**/*proj"
         |> List.filter (fun s -> System.IO.Path.GetFileNameWithoutExtension(s) |> filterFn)
