@@ -14,7 +14,7 @@ let mutable verbose = hasBuildParam "verbose"
 
 let private openTags = new ThreadLocal<string list>(fun _ -> [])
 
-/// Logs the specified string        
+/// Logs the specified string
 let log message = postMessage ^ LogMessage (message, true)
 
 /// Logs the specified message
@@ -24,7 +24,7 @@ let logfn fmt = Printf.ksprintf log fmt
 let logf fmt = Printf.ksprintf (fun text -> postMessage ^ LogMessage (text, false)) fmt
 
 /// Logs the specified string if the verbose mode is activated.
-let logVerbosefn fmt = 
+let logVerbosefn fmt =
     Printf.ksprintf (if verbose then log else ignore) fmt
 
 /// Writes a trace to the command line (in green)
@@ -37,16 +37,16 @@ let tracefn fmt = Printf.ksprintf trace fmt
 let tracef fmt = Printf.ksprintf (fun text -> postMessage ^ TraceMessage (text, false)) fmt
 
 /// Writes a trace to the command line (in green) if the verbose mode is activated.
-let traceVerbose s = 
+let traceVerbose s =
     if verbose then trace s
 
-/// Writes a trace to stderr (in yellow)  
+/// Writes a trace to stderr (in yellow)
 let traceImportant text = postMessage ^ ImportantMessage text
 
 /// Writes a trace to the command line (in yellow)
 let traceFAKE fmt = Printf.ksprintf (fun text -> postMessage ^ ImportantMessage text) fmt
 
-/// Writes a trace to the command line  (in dark cyan)  
+/// Writes a trace to the command line  (in dark cyan)
 let traceWarning text = postMessage ^ WarningMessage (text, true)
 
 /// Traces an error (in red)
@@ -72,13 +72,13 @@ let exceptionAndInnersToString (ex:Exception) =
             |> Array.iter (fun p ->
                 // Do not log information for the InnerException or StackTrace.
                 // This information is captured later in the process.
-                if  p.Name <> "InnerException" 
-                 && p.Name <> "StackTrace" 
-                 && p.Name <> "Message" 
+                if  p.Name <> "InnerException"
+                 && p.Name <> "StackTrace"
+                 && p.Name <> "Message"
                  && p.Name <> "Data" then
                     try
                         let value = p.GetValue(e, null)
-                        if value <> null then 
+                        if value <> null then
                             bprintf sb "%s%s: %s" nl p.Name (value.ToString())
                     with
                     | e2 -> bprintf sb "%s%s: %s" nl p.Name e2.Message
@@ -95,9 +95,9 @@ let exceptionAndInnersToString (ex:Exception) =
 let traceException (ex:Exception) = exceptionAndInnersToString ex |> traceError
 
 /// Traces the EnvironmentVariables
-let TraceEnvironmentVariables() = 
-    [ EnvironTarget.Machine; EnvironTarget.Process; EnvironTarget.User ] 
-    |> Seq.iter (fun mode -> 
+let TraceEnvironmentVariables() =
+    [ EnvironTarget.Machine; EnvironTarget.Process; EnvironTarget.User ]
+    |> Seq.iter (fun mode ->
            tracefn "Environment-Settings (%A):" mode
            environVars mode |> Seq.iter (tracefn "  %A"))
 
@@ -106,7 +106,7 @@ let TraceEnvironmentVariables() =
 let traceLine () = trace "---------------------------------------------------------------------"
 
 /// Traces a header
-let traceHeader name = 
+let traceHeader name =
     trace ""
     traceLine ()
     trace name
@@ -122,7 +122,7 @@ let traceEndBuild() = postMessage FinishedMessage
 let openTag tag = openTags.Value <- tag :: openTags.Value
 
 /// Removes an opening tag from the internal tag stack
-let closeTag tag = 
+let closeTag tag =
     match openTags.Value with
     | x :: rest when x = tag -> openTags.Value <- rest
     | _ -> failwithf "Invalid tag structure. Trying to close %s tag but stack is %A" tag openTags
@@ -131,42 +131,31 @@ let closeTag tag =
 let closeAllOpenTags () = Seq.iter closeTag openTags.Value
 
 /// Traces the begin of a target
-let traceStartTarget name description dependencyString = 
+let traceStartTarget name description dependencyString =
     openTag "target"
     OpenTag ("target", name) |> postMessage
     tracefn "Starting Target: %s %s" name dependencyString
     if description <> null then tracefn "  %s" description
    // ReportProgressStart <| sprintf "Target: %s" name
 
-/// Traces the end of a target   
-let traceEndTarget name = 
+/// Traces the end of a target
+let traceEndTarget name =
     tracefn "Finished Target: %s" name
     closeTag "target"
    // ReportProgressFinish <| sprintf "Target: %s" name
 
 /// Traces the begin of a task
-let traceStartTask task _ = 
+let traceStartTask task _ =
     openTag "task"
     OpenTag ("task", task) |> postMessage
    // ReportProgressStart <| sprintf "Task: %s %s" task description
 
 /// Traces the end of a task
-let traceEndTask _ _ = 
+let traceEndTask _ _ =
     closeTag "task"
    // ReportProgressFinish <| sprintf "Task: %s %s" task description
 
 let console = new ConsoleTraceListener(false, colorMap) :> ITraceListener
-
-open System.Diagnostics
-
-/// Traces the message to the console
-let logToConsole (msg, eventLogEntry : EventLogEntryType) = 
-    match eventLogEntry with
-    | EventLogEntryType.Error -> ErrorMessage msg
-    | EventLogEntryType.Information -> TraceMessage (msg, true)
-    | EventLogEntryType.Warning -> ImportantMessage msg
-    | _ -> LogMessage (msg, true)
-    |> console.Write
 
 /// Logs the given files with the message.
 let Log message files = files |> Seq.iter (log << sprintf "%s%s" message)

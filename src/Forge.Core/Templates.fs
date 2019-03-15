@@ -4,7 +4,7 @@ open Forge.Git
 open Forge.ProjectSystem
 open System.IO
 open System
-open Mono.Unix.Native
+// open Mono.Unix.Native
 open FSharp.Data
 
 /// Result type for project comparisons.
@@ -187,7 +187,7 @@ module Project =
         elif templates |> Seq.contains templateName' |> not then
             printfn "Incorrect template number or name"
         else
-            printfn "Generating %s project..." templateName' 
+            printfn "Generating %s project..." templateName'
 
 
             copyDir projectFolder templateDir (fun f -> f.Contains "_content" |> not) false //Copy project files
@@ -221,9 +221,9 @@ module Project =
                 let ctn = File.ReadAllText buildSh
                 let ctn = ctn.Replace("\r\n", "\n")
                 File.WriteAllText(buildSh, ctn)
-                if isMono then
-                    let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
-                    Syscall.chmod(buildSh, perms) |> ignore
+                // if isMono then
+                //     let perms = FilePermissions.S_IRWXU ||| FilePermissions.S_IRGRP ||| FilePermissions.S_IROTH // 0x744
+                //     Syscall.chmod(buildSh, perms) |> ignore
 
             if paket then Paket.Run ["install"]
 
