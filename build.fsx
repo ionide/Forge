@@ -222,4 +222,4 @@ Target.create "Release" DoNothing
   ==> "Push"
   ==> "Release"
 
-Target.runOrDefault "Default"
+Target.runOrDefault "Pack"
