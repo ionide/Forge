@@ -37,8 +37,7 @@ let dotnetcliVersion = DotNet.getSDKVersionFromGlobalJson()
 System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = ReleaseNotes.parse (System.IO.File.ReadAllLines "RELEASE_NOTES.md")
 
-let tempDir = "./temp"
-let testBuildDir = "./temp/test"
+let packageDir = __SOURCE_DIRECTORY__ </> "out"
 let buildDir = __SOURCE_DIRECTORY__ </> "temp"
 let forgeSh = "./forge.sh"
 
@@ -67,7 +66,7 @@ let DoNothing = ignore
 // --------------------------------------------------------------------------------------
 
 Target.create "Clean" (fun _ ->
-    Shell.cleanDirs [buildDir]
+    Shell.cleanDirs [buildDir; packageDir]
 )
 
 Target.create "AssemblyInfo" (fun _ ->
@@ -112,13 +111,7 @@ Target.create "Build" (fun _ ->
 )
 
 Target.create "Publish" (fun _ ->
-    DotNet.publish (fun p -> {p with OutputPath = Some (buildDir </> "Bin")}) "src/Forge"
-
-    !! (buildDir </> "Bin" </> "*.pdb")
-    ++ (buildDir </>  "Bin" </>"*.xml")
-    |> File.deleteAll
-
-    Shell.copyFile buildDir forgeSh
+    DotNet.publish (fun p -> {p with OutputPath = Some buildDir}) "src/Forge"
 
 )
 
@@ -132,15 +125,34 @@ Target.create "Test" (fun _ ->
 // --------------------------------------------------------------------------------------
 
 Target.create "Pack" (fun _ ->
+
+    //Pack Forge.Core
     Paket.pack (fun p ->
         { p with
             BuildConfig = "Release";
-            OutputPath = buildDir;
+            OutputPath = packageDir;
             Version = release.NugetVersion
             ReleaseNotes = String.concat "\n" release.Notes
             MinimumFromLockFile = false
+            ToolPath = ".paket/paket.exe"
         }
     )
+
+    //Pack Forge global tool
+    Environment.setEnvironVar "PackageVersion" release.NugetVersion
+    Environment.setEnvironVar "Version" release.NugetVersion
+    Environment.setEnvironVar "Authors" "Krzysztof Cieslak"
+    Environment.setEnvironVar "Description" summary
+    Environment.setEnvironVar "PackageReleaseNotes" (release.Notes |> String.toLines)
+    Environment.setEnvironVar "PackageTags" "build;fake;f#"
+    Environment.setEnvironVar "PackageProjectUrl" "https://github.com/ionide/Forge"
+    Environment.setEnvironVar "PackageLicenseUrl" "https://raw.githubusercontent.com/ionide/Forge/master/LICENSE.txt"
+
+    DotNet.pack (fun p ->
+        { p with
+            OutputPath = Some packageDir
+            Configuration = DotNet.BuildConfiguration.Release
+        }) "src/Forge"
 )
 
 Target.create "ReleaseGitHub" (fun _ ->
@@ -170,7 +182,7 @@ Target.create "ReleaseGitHub" (fun _ ->
 
         // Git.createClient user pw
         GitHub.createClient user pw
-    let files = !! (buildDir </> "*.nupkg")
+    let files = !! (packageDir </> "*.nupkg")
 
     // release on github
     let cl =

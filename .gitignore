@@ -198,3 +198,4 @@ docs/content/release-notes.md
 .fake
 .vscode
 .ionide
+out/
