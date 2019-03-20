@@ -1,4 +1,3 @@
-open System
 // --------------------------------------------------------------------------------------
 // FAKE build script
 // --------------------------------------------------------------------------------------
@@ -23,7 +22,6 @@ open Fake.Api
 // --------------------------------------------------------------------------------------
 
 let project = "Forge"
-
 let summary = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
 let gitOwner = "ionide"
@@ -35,11 +33,15 @@ let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/"
 // Build variables
 // --------------------------------------------------------------------------------------
 
-let buildDir  = "./build/"
 let dotnetcliVersion = DotNet.getSDKVersionFromGlobalJson()
-
 System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = ReleaseNotes.parse (System.IO.File.ReadAllLines "RELEASE_NOTES.md")
+
+let tempDir = "./temp"
+let testBuildDir = "./temp/test"
+let buildDir = __SOURCE_DIRECTORY__ </> "temp"
+let forgeSh = "./forge.sh"
+
 
 // --------------------------------------------------------------------------------------
 // Helpers
@@ -107,6 +109,17 @@ Target.create "Restore" (fun _ ->
 
 Target.create "Build" (fun _ ->
     DotNet.build id ""
+)
+
+Target.create "Publish" (fun _ ->
+    DotNet.publish (fun p -> {p with OutputPath = Some (buildDir </> "Bin")}) "src/Forge"
+
+    !! (buildDir </> "Bin" </> "*.pdb")
+    ++ (buildDir </>  "Bin" </>"*.xml")
+    |> File.deleteAll
+
+    Shell.copyFile buildDir forgeSh
+
 )
 
 Target.create "Test" (fun _ ->
@@ -187,6 +200,7 @@ Target.create "Release" DoNothing
   ==> "AssemblyInfo"
   ==> "Restore"
   ==> "Build"
+  ==> "Publish"
   ==> "Test"
   ==> "Default"
 
