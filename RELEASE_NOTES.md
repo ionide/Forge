@@ -1,3 +1,7 @@
+### 3.0.0-alpha001 - 2019-03-20
+* Port project to .Net Standard 2.0 and to .Net Core 2.1
+* Use `dotnet` global tool
+
 ### 2.2.0 - 2018-01-11
 * Add FAKE into build group instead Main group
 * Add list projects by folder command

@@ -14,7 +14,7 @@ requireLicenseAcceptance
 copyright
     Copyright 2015-2019
 tags
-
+    F#, fsharp, project system
 summary
     Forge is a build tool that provides tasks for creating, compiling, and testing F# projects
 description
