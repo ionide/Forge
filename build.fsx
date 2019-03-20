@@ -1,80 +1,80 @@
+open System
 // --------------------------------------------------------------------------------------
 // FAKE build script
 // --------------------------------------------------------------------------------------
+#r "paket: groupref build //"
+#load ".fake/build.fsx/intellisense.fsx"
+#if !FAKE
+  #r "netstandard"
+  #r "Facades/netstandard.dll"
+#endif
 
-#r @"packages/FAKE/tools/FakeLib.dll"
-#load "paket-files/fsharp/FAKE/modules/Octokit/Octokit.fsx"
-open Fake
-open Fake.Git
-open Fake.AssemblyInfoFile
-open Fake.ReleaseNotesHelper
-open Fake.UserInputHelper
-open Fake.ZipHelper
-open Fake.Testing
-open System
-open System.IO
-open Octokit
+open Fake.Core
+open Fake.DotNet
+open Fake.Tools
+open Fake.IO
+open Fake.IO.FileSystemOperators
+open Fake.IO.Globbing.Operators
+open Fake.Core.TargetOperators
+open Fake.Api
 
-// The name of the project
-// (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
+// --------------------------------------------------------------------------------------
+// Information about the project to be used at NuGet and in AssemblyInfo files
+// --------------------------------------------------------------------------------------
+
 let project = "Forge"
 
-// Short summary of the project
-// (used as description in AssemblyInfo and as a short summary for NuGet package)
 let summary = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
 
-// Longer description of the project
-// (used as a description for NuGet package; line breaks are automatically cleaned up)
-let description = "Forge is a build tool that provides tasks for creating, compiling, and testing F# projects"
-
-// List of author names (for NuGet package)
-let authors = [ "Reid Evans"; "Krzysztof Cieslak"; "Jared Hester" ]
-
-// Tags for your project (for NuGet package)
-let tags = ""
-
-// File system information
-let projectFile  = "src/Forge/Forge.fsproj"
-let testProjectFiles = "tests/**/*Tests.fsproj"
-
-// Pattern specifying assemblies to be tested using Expecto
-let testAssemblies = "temp/test/*Tests*.exe"
-
-// Git configuration (used for publishing documentation in gh-pages branch)
-// The profile where the project is posted
-let gitOwner = "fsharp-editing"
+let gitOwner = "ionide"
 let gitHome = "https://github.com/" + gitOwner
-
-// The name of the project on GitHub
 let gitName = "Forge"
+let gitRaw = Environment.environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
 
-// The url for the raw files hosted
-let gitRaw = environVarOrDefault "gitRaw" ("https://raw.github.com/" + gitOwner)
+// --------------------------------------------------------------------------------------
+// Build variables
+// --------------------------------------------------------------------------------------
 
-// Read additional information from the release notes document
-let release = LoadReleaseNotes "RELEASE_NOTES.md"
+let buildDir  = "./build/"
+let dotnetcliVersion = DotNet.getSDKVersionFromGlobalJson()
 
-let tempDir = "temp"
-let testBuildDir = "temp/test"
-let buildDir = "temp"
-let forgeSh = "forge.sh"
+System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+let release = ReleaseNotes.parse (System.IO.File.ReadAllLines "RELEASE_NOTES.md")
 
-// Helper active pattern for project types
-let (|Fsproj|Csproj|Vbproj|) (projFileName:string) =
-    match projFileName with
-    | f when f.EndsWith("fsproj") -> Fsproj
-    | f when f.EndsWith("csproj") -> Csproj
-    | f when f.EndsWith("vbproj") -> Vbproj
-    | _                           -> failwith (sprintf "Project file %s not supported. Unknown project type." projFileName)
+// --------------------------------------------------------------------------------------
+// Helpers
+// --------------------------------------------------------------------------------------
+let isNullOrWhiteSpace = System.String.IsNullOrWhiteSpace
+let exec cmd args dir =
+    if Process.execSimple( fun info ->
 
-// Generate assembly info files with the right version & up-to-date information
-Target "AssemblyInfo" (fun _ ->
+        { info with
+            FileName = cmd
+            WorkingDirectory =
+                if (isNullOrWhiteSpace dir) then info.WorkingDirectory
+                else dir
+            Arguments = args
+            }
+    ) System.TimeSpan.MaxValue <> 0 then
+        failwithf "Error while running '%s' with args: %s" cmd args
+let getBuildParam = Environment.environVar
+
+let DoNothing = ignore
+// --------------------------------------------------------------------------------------
+// Build Targets
+// --------------------------------------------------------------------------------------
+
+Target.create "Clean" (fun _ ->
+    Shell.cleanDirs [buildDir]
+)
+
+Target.create "AssemblyInfo" (fun _ ->
     let getAssemblyInfoAttributes projectName =
-        [ Attribute.Title (projectName)
-          Attribute.Product project
-          Attribute.Description summary
-          Attribute.Version release.AssemblyVersion
-          Attribute.FileVersion release.AssemblyVersion ]
+        [ AssemblyInfo.Title projectName
+          AssemblyInfo.Product project
+          AssemblyInfo.Description summary
+          AssemblyInfo.Version release.AssemblyVersion
+          AssemblyInfo.FileVersion release.AssemblyVersion ]
 
     let getProjectDetails projectPath =
         let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
@@ -84,133 +84,116 @@ Target "AssemblyInfo" (fun _ ->
           (getAssemblyInfoAttributes projectName)
         )
 
-    !! "src/**/*.??proj" -- "src/**/templates/**/*.*"
+    !! "src/**/*.??proj"
     |> Seq.map getProjectDetails
-    |> Seq.iter (fun (projFileName, projectName, folderName, attributes) ->
+    |> Seq.iter (fun (projFileName, _, folderName, attributes) ->
         match projFileName with
-        | Fsproj -> CreateFSharpAssemblyInfo (folderName @@ "AssemblyInfo.fs") attributes
-        | Csproj -> CreateCSharpAssemblyInfo ((folderName @@ "Properties") @@ "AssemblyInfo.cs") attributes
-        | Vbproj -> CreateVisualBasicAssemblyInfo ((folderName @@ "My Project") @@ "AssemblyInfo.vb") attributes
+        | proj when proj.EndsWith("fsproj") -> AssemblyInfoFile.createFSharp (folderName </> "AssemblyInfo.fs") attributes
+        | proj when proj.EndsWith("csproj") -> AssemblyInfoFile.createCSharp ((folderName </> "Properties") </> "AssemblyInfo.cs") attributes
+        | proj when proj.EndsWith("vbproj") -> AssemblyInfoFile.createVisualBasic ((folderName </> "My Project") </> "AssemblyInfo.vb") attributes
+        | _ -> ()
         )
 )
 
-// --------------------------------------------------------------------------------------
-// Clean build results
+Target.create "InstallDotNetCLI" (fun _ ->
+    let version = DotNet.CliVersion.Version dotnetcliVersion
+    let options = DotNet.Options.Create()
+    DotNet.install (fun opts -> { opts with Version = version }) options |> ignore
+    )
 
-Target "Clean" (fun _ ->
-    CleanDirs ["temp"; ]
+Target.create "Restore" (fun _ ->
+    DotNet.restore id ""
+)
+
+Target.create "Build" (fun _ ->
+    DotNet.build id ""
+)
+
+Target.create "Test" (fun _ ->
+    exec "dotnet"  @"run --project .\tests\Forge.Tests\Forge.Tests.fsproj" "."
+    //exec "dotnet"  @"run --project .\tests\Forge.IntegrationTests\Forge.IntegrationTests.fsproj" "."
 )
 
 // --------------------------------------------------------------------------------------
-// Build library & test project
-
-Target "Build" (fun _ ->
-    !! projectFile
-    |> MSBuildRelease buildDir "Rebuild"
-    |> ignore
-
-    !! (buildDir </> "*.pdb")
-    ++ (buildDir </> "*.xml")
-    |> DeleteFiles
-
-    CreateDir (buildDir </> "Bin")
-
-    !! (buildDir </> "*.dll")
-    |> Seq.iter (MoveFile (buildDir </> "Bin"))
-
-    CopyFile buildDir forgeSh
-)
-
-Target "BuildProjectSystem" (fun _ ->
-    !! "src/Forge.ProjectSystem/Forge.ProjectSystem.fsproj"
-    |> MSBuildRelease "temp/bin_projectSystem" "Rebuild"
-    |> ignore
-)
-
+// Release Targets
 // --------------------------------------------------------------------------------------
-// Run the unit tests using test runner
 
-Target "BuildTests" (fun _ ->
-    !! testProjectFiles
-    |> MSBuildRelease testBuildDir "Rebuild"
-    |> ignore)
-
-Target "RunTests" (fun _ ->
-    !! testAssemblies
-    |> Expecto.Expecto (fun n -> {n with FailOnFocusedTests = false} )
-)
-// --------------------------------------------------------------------------------------
-// Release Scripts
-
-Target "ZipRelease" (fun _ ->
-    !! (buildDir </> "*.exe")
-    ++ (buildDir </> "*.config")
-    ++ (buildDir </> "*.sh")
-    ++ (buildDir </> "Bin" </> "*.dll")
-    -- (buildDir </> "Forge.Core.dll.config")
-    -- (buildDir </> "*templates*")
-    -- (buildDir </> "*Tests*")
-    ++ (buildDir </> "Tools" </> "Paket" </> "paket.bootstrapper.exe")
-    |> Zip "temp" ("temp" </> "forge.zip")
-
+Target.create "Pack" (fun _ ->
+    Paket.pack (fun p ->
+        { p with
+            BuildConfig = "Release";
+            OutputPath = buildDir;
+            Version = release.NugetVersion
+            ReleaseNotes = String.concat "\n" release.Notes
+            MinimumFromLockFile = false
+        }
+    )
 )
 
-Target "Release" (fun _ ->
-    let user =
-        match getBuildParam "github-user" with
-        | s when not (String.IsNullOrWhiteSpace s) -> s
-        | _ -> getUserInput "Username: "
-    let pw =
-        match getBuildParam "github-pw" with
-        | s when not (String.IsNullOrWhiteSpace s) -> s
-        | _ -> getUserPassword "Password: "
+Target.create "ReleaseGitHub" (fun _ ->
     let remote =
         Git.CommandHelper.getGitResult "" "remote -v"
         |> Seq.filter (fun (s: string) -> s.EndsWith("(push)"))
         |> Seq.tryFind (fun (s: string) -> s.Contains(gitOwner + "/" + gitName))
         |> function None -> gitHome + "/" + gitName | Some (s: string) -> s.Split().[0]
 
-    StageAll ""
-    Git.Commit.Commit "" (sprintf "Bump version to %s" release.NugetVersion)
-    Branches.pushBranch "" remote (Information.getBranchName "")
+    Git.Staging.stageAll ""
+    Git.Commit.exec "" (sprintf "Bump version to %s" release.NugetVersion)
+    Git.Branches.pushBranch "" remote (Git.Information.getBranchName "")
 
-    Branches.tag "" release.NugetVersion
-    Branches.pushTag "" remote release.NugetVersion
+
+    Git.Branches.tag "" release.NugetVersion
+    Git.Branches.pushTag "" remote release.NugetVersion
+
+    let client =
+        let user =
+            match getBuildParam "github-user" with
+            | s when not (isNullOrWhiteSpace s) -> s
+            | _ -> UserInput.getUserInput "Username: "
+        let pw =
+            match getBuildParam "github-pw" with
+            | s when not (isNullOrWhiteSpace s) -> s
+            | _ -> UserInput.getUserPassword "Password: "
+
+        // Git.createClient user pw
+        GitHub.createClient user pw
+    let files = !! (buildDir </> "*.nupkg")
 
     // release on github
-    createClient user pw
-    |> createDraft gitOwner gitName release.NugetVersion (release.SemVer.PreRelease <> None) release.Notes
-    |> uploadFile "temp/forge.zip"
-    |> releaseDraft
+    let cl =
+        client
+        |> GitHub.draftNewRelease gitOwner gitName release.NugetVersion (release.SemVer.PreRelease <> None) release.Notes
+    (cl,files)
+    ||> Seq.fold (fun acc e -> acc |> GitHub.uploadFile e)
+    |> GitHub.publishDraft//releaseDraft
     |> Async.RunSynchronously
 )
 
+Target.create "Push" (fun _ ->
+    let key =
+        match getBuildParam "nuget-key" with
+        | s when not (isNullOrWhiteSpace s) -> s
+        | _ -> UserInput.getUserPassword "NuGet Key: "
+    Paket.push (fun p -> { p with WorkingDir = buildDir; ApiKey = key }))
 
 // --------------------------------------------------------------------------------------
-// Run all targets by default. Invoke 'build <Target>' to override
-
-Target "Default" DoNothing
-Target "PaketBuild" DoNothing
-
-
-"Clean"
-  ==> "AssemblyInfo"
-  ==> "BuildProjectSystem"
+// Build order
+// --------------------------------------------------------------------------------------
+Target.create "Default" DoNothing
+Target.create "Release" DoNothing
 
 "Clean"
+  ==> "InstallDotNetCLI"
   ==> "AssemblyInfo"
+  ==> "Restore"
   ==> "Build"
-  ==> "BuildTests"
-  ==> "RunTests"
+  ==> "Test"
   ==> "Default"
 
-"BuildTests"
-  ==> "ZipRelease"
+"Default"
+  ==> "Pack"
+  ==> "ReleaseGitHub"
+  ==> "Push"
   ==> "Release"
 
-"Build"
-  ==> "ZipRelease"
-  ==> "PaketBuild"
-
-
-RunTargetOrDefault "Build"
+Target.runOrDefault "Default"
