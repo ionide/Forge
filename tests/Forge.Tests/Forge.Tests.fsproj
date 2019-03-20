@@ -2,7 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
@@ -17,7 +16,6 @@
     <Compile Include="common.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="Main.fs" />
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
