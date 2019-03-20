@@ -32,7 +32,7 @@ let tests =
         let relativePath = relative "test/Test" "src/Sample/Sample.fsproj"
         "should be OK" |> Expect.equal relativePath (".." </> ".." </> "test" </> "Test")
 
-      testCase "relative - file target with shared ancestor as directory source" <| fun _ ->
+      testCase "relative - file target with shared ancestor as directory source 2" <| fun _ ->
         let relativePath = relative "src/Test/Test.fsproj" "src/Sample/"
         "should be OK" |> Expect.equal relativePath (".." </> "Test" </> "Test.fsproj")
 
@@ -209,7 +209,7 @@ let tests =
         let solution = Solution.Default |> Solution.addFolder folderName
         solution.Folders |> Expect.hasLength 1
 
-      testCase "addFolder - add folder to default solution" <| fun _ ->
+      testCase "addFolder - adding duplicated folder fails" <| fun _ ->
         let folderName = "newFolder"
         Expect.throws (fun () ->
           Solution.Default

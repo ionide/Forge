@@ -4,14 +4,24 @@ source https://nuget.org/api/v2
 nuget Argu
 nuget Expecto
 nuget FSharp.Core redirects: force
-nuget FSharp.Formatting
-nuget FsUnit
-nuget NUnit
-nuget NUnit.Runners
-nuget FAKE
 nuget SharpZipLib
-nuget SourceLink.Fake
 nuget FParsec
 nuget Nett
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+group Build
+  source https://www.nuget.org/api/v2
+
+  nuget Fake.Core.Target
+  nuget Fake.Core.Process
+  nuget Fake.DotNet.Cli
+  nuget Fake.Core.ReleaseNotes
+  nuget Fake.DotNet.AssemblyInfoFile
+  nuget Fake.DotNet.Paket
+  nuget Fake.Tools.Git
+  nuget Fake.Core.Environment
+  nuget Fake.Core.UserInput
+  nuget Fake.IO.FileSystem
+  nuget Fake.DotNet.MsBuild
+  nuget Fake.Api.GitHub

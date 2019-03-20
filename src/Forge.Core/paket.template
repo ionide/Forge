@@ -1,20 +1,20 @@
 type project
 owners
-    Reid Evans
-authors 
-    Reid Evans
+    Krzysztof Cieslak
+authors
+    Krzysztof Cieslak
 projectUrl
-    http://github.com/fsprojects/Forge
+    http://github.com/ionide/Forge
 iconUrl
-    https://raw.githubusercontent.com/fsprojects/Forge/master/docs/files/img/logo.png
+    https://raw.githubusercontent.com/ionide/Forge/master/docs/files/img/logo.png
 licenseUrl
-    http://github.com/fsprojects/Forge/blob/master/LICENSE.txt
+    http://github.com/ionide/Forge/blob/master/LICENSE.txt
 requireLicenseAcceptance
     false
 copyright
-    Copyright 2015
+    Copyright 2015-2019
 tags
-    
+
 summary
     Forge is a build tool that provides tasks for creating, compiling, and testing F# projects
 description
