@@ -8,6 +8,10 @@ jobs:
     displayName: Install FAKE
   - script: fake build
     displayName: Run Build
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: out
+      artifactName: Forge
 - job: Linux
   pool:
     vmImage: 'ubuntu-16.04'
@@ -16,3 +20,7 @@ jobs:
     displayName: Install FAKE
   - script: ./fake build
     displayName: Run Build
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: out
+      artifactName: Forge
