@@ -58,7 +58,8 @@ accurate comments, etc.).
 
 ### Prerequisites
 
-- [.NET Core 2.0][dotnet]
+- [.NET Core 2.0](https://dotnet.microsoft.com/download)
+- [FAKE 5](https://fake.build/)
 
 ### Building
 
@@ -81,8 +82,26 @@ fake build  # or build.cmd if your OS is Windows  (might need ./build Build here
 
 If `dotnet restore` gives the error `error MSB4126: The specified solution configuration "Debug|x64" is invalid`, there's a good chance you have the `Platform` environment variable set to "x64".  Unset the variable and try the restore command again.
 
-#### Running built version:
+You can also build project from VSCode with `Ctrl/Cmd + Shift + B`.
+
+#### Running Forge:
+
 ```bash
-cd temp
-./forge.sh
+dotnet run --project src/Forge
 ```
+
+#### Running Tests
+
+```
+fake build -t Test
+```
+
+Or
+
+```
+dotnet run --project tests/Forge.Tests
+```
+
+#### Debugging
+
+Debugging Forge or Forge.Tests is possible with VSCode - choose appropriate target in VSCode debug panel and press `F5`
