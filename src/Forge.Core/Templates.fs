@@ -62,7 +62,7 @@ let FixMissingFiles templateProject projects =
     |> Seq.iter (fun pc ->
             let addMissing project missingFile =
                 printfn "Adding %s to %s" missingFile pc.ProjectFileName
-                project |> FsProject.addSourceFile  "" {SourceFile.Include = missingFile; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+                project |> FsProject.addSourceFile  "" {SourceFile.Include = missingFile; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None; CustomAttributes = Seq.empty; CustomElements  = Seq.empty}
 
 
             let project = FsProject.load pc.ProjectFileName

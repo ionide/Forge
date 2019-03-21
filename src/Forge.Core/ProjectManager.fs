@@ -92,6 +92,8 @@ module Furnace =
                 SpecificVersion = specificVersion
                 CopyLocal       = copy
                 Paket           = None
+                CustomAttributes = Seq.empty
+                CustomElements  = Seq.empty
             }
             FsProject.addReference  reference project |> ignore
             updateProj (FsProject.addReference reference) state
@@ -120,6 +122,8 @@ module Furnace =
             Name = name
             CopyLocal = copyLocal
             Guid = guid
+            CustomAttributes = Seq.empty
+            CustomElements  = Seq.empty
         }
         FsProject.addProjectReference projRef state.ProjectData |> ignore
         updateProj (FsProject.addProjectReference projRef) state
@@ -157,6 +161,8 @@ module Furnace =
                 Link        = link
                 Copy        = copy
                 Paket       = None
+                CustomAttributes = Seq.empty
+                CustomElements  = Seq.empty
             }
         updateProj (FsProject.addAbove target srcFile)  state
 
@@ -171,6 +177,8 @@ module Furnace =
                 Link        = link
                 Copy        = copy
                 Paket       = None
+                CustomAttributes = Seq.empty
+                CustomElements  = Seq.empty
             }
         updateProj (FsProject.addBelow target srcFile)  state
 
@@ -185,6 +193,8 @@ module Furnace =
                 Link        = linkPath
                 Copy        = copy
                 Paket       = None
+                CustomAttributes = Seq.empty
+                CustomElements  = Seq.empty
             }
         updateProj (FsProject.addSourceFile dir srcFile)  state
 

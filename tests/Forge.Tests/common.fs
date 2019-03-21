@@ -122,4 +122,14 @@ let netCoreProjectMultiTargetsNoFiles = """
         <TargetFrameworks>net461;netstandard2.0;netcoreapp2.0</TargetFrameworks>
       </PropertyGroup>
     </Project>
-    """ 
+    """
+
+let projectWithCustomProperties = """
+    <Project Sdk="Microsoft.NET.Sdk">
+      <PropertyGroup>
+        <OutputType Test="ABC">Library</OutputType>
+        <TargetFrameworks>net461;netstandard2.0;netcoreapp2.0</TargetFrameworks>
+        <ServerGarbageCollection>false</ServerGarbageCollection>
+      </PropertyGroup>
+    </Project>
+    """

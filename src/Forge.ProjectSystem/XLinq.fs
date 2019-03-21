@@ -19,7 +19,7 @@ let inline private hasNamed name sqs = sqs |> Seq.exists ^ matchName name
 
 let inline private getNamed name sqs = sqs |> Seq.find ^ matchName name
 
-let  inline private tryGetNamed name sqs = 
+let  inline private tryGetNamed name sqs =
     (None, sqs) ||> Seq.fold (fun acc elm ->
         match acc with
         | Some _ -> acc
@@ -49,12 +49,12 @@ module XDoc =
 /// Functions for operating on XNodes
 module XNode =
 
-    /// Returns a seq of XElements that precede the XNode 
+    /// Returns a seq of XElements that precede the XNode
     let elementsBefore  (node:#XNode) = node.ElementsBeforeSelf()
 
     /// Returns a seq of XElements that follow the XNode
     let elementsAfter   (node:#XNode) = node.ElementsAfterSelf()
-  
+
     /// Returns a seq of XElements that follow the XNode with a local name matching `name`
     let elementsAfterNamed (node:#XNode) name =
         elementsAfter node |> nameFilter name
@@ -72,20 +72,20 @@ module XNode =
 
     /// Returns all ancestors of the XNode with a local name matching `name`
     let ancestorsNamed (name:string) (node:#XNode) =
-        ancestors node |> nameFilter name 
+        ancestors node |> nameFilter name
 
     /// Insert a sibling XNode before `node`
     let addBefore (insert:#XNode) (node:#XNode) =
         node.AddBeforeSelf insert
         node
-    
+
     /// Insert a sibling XNode after `node`
     let addAfter (insert:#XNode) (node:#XNode) =
         node.AddAfterSelf insert
         node
 
-        
-    let next (node:#XNode) = node.NextNode        
+
+    let next (node:#XNode) = node.NextNode
     let previous (node:#XNode) = node.PreviousNode
     let parent (node:#XNode) = node.Parent
 
@@ -98,13 +98,13 @@ module XNode =
 module XCont =
 
     let descendants (cont:#XContainer) = cont.Descendants()
-    
+
     let descendantNamed name (cont:#XContainer) =
         descendants cont |> tryGetNamed name
 
-    let descendantsNamed name (cont:#XContainer) = 
+    let descendantsNamed name (cont:#XContainer) =
         descendants cont |> nameFilter name
-    
+
     let elements (cont:#XContainer) = cont.Elements()
 
     let hasElement name (cont:#XContainer) =
@@ -133,27 +133,27 @@ module XAttr =
 /// Functions for operating on XElements
 module XElem =
 
-    let inline isNamed name (xelem:#XElement) = 
+    let inline isNamed name (xelem:#XElement) =
         matchName name xelem
 
-    let inline notNamed name (xelem:#XElement) = 
+    let inline notNamed name (xelem:#XElement) =
         not ^ matchName name xelem
 
-    let create (name:string) (content:seq<'a>) = 
+    let create (name:string) (content:seq<'a>) =
         XElement (XName.Get name, Seq.toArray content)
 
     let value (xelem:#XElement) = xelem.Value
 
     let nodes (xelem:#XElement) = xelem.Nodes()
-    
+
     let descendants (xelem:#XElement) = xelem.Descendants()
-    
+
     let descendantNamed name (xelem:#XElement) =
         descendants xelem |> tryGetNamed name
 
-    let descendantsNamed name (xelem:#XElement) = 
+    let descendantsNamed name (xelem:#XElement) =
         descendants xelem |> nameFilter name
-    
+
     let elements (xelem:#XElement) = xelem.Elements()
 
     let hasElement name (xelem:#XElement) =
@@ -174,14 +174,20 @@ module XElem =
     let getElements name (xelem:#XElement) =
         elements xelem |> nameFilter name
 
+    let getElementsOtherThan names (xelem:#XElement) =
+        elements xelem |> Seq.filter (fun n -> not (names |> Seq.contains n.Name.LocalName ))
+
     let attributes (xelem:#XElement) =
         xelem.Attributes()
-    
+
     let hasAttribute name (xelem:#XElement) =
         attributes xelem |> hasNamed name
 
     let getAttribute name (xelem:#XElement) =
         xelem.Attribute ^ XName.Get name
+
+    let getAttributesOtherThan names (xelem:#XElement) =
+        attributes xelem |> Seq.filter (fun n -> not (names |> Seq.contains n.Name.LocalName ))
 
     let getAttributeValue name (xelem:#XElement) =
         xelem.Attribute ^ XName.Get name |> XAttr.value
@@ -195,9 +201,13 @@ module XElem =
     let setAttribute name value (xelem:#XElement) =
         xelem.SetAttributeValue(XName.Get name, value)
         xelem
-    
+
     let addAttribute (xattr:#XAttribute) (xelem:#XElement) =
         xelem.Add xattr
+        xelem
+
+    let addAttributes (xattrs:#XAttribute seq) (xelem:#XElement) =
+        xattrs |> Seq.iter xelem.Add
         xelem
 
     let setElement name value (xelem:#XElement) =
@@ -206,6 +216,10 @@ module XElem =
 
     let addElement (child:XElement) (parent:XElement) =
         parent.Add child
+        parent
+
+    let addManyElements (children:#seq<XElement>) (parent:XElement) =
+        children |> Seq.iter parent.Add
         parent
 
     let addElements (children:#seq<XElement>) (parent:XElement) =
@@ -218,25 +232,25 @@ module XElem =
 
 
 
-    
+
 [<Extension>]
 type XLinqSeqExtensions =
-    [<Extension>] 
+    [<Extension>]
     static member Ancestors (source:seq<#XNode>) name = source.Ancestors ^ XName.Get name
 
-    [<Extension>] 
+    [<Extension>]
     static member AncestorsAndSelf (source:seq<XElement>)  name =  source.AncestorsAndSelf ^ XName.Get name
 
-    [<Extension>] 
+    [<Extension>]
     static member Attributes (source:seq<XElement>)  name =  source.Attributes ^ XName.Get name
 
-    [<Extension>] 
+    [<Extension>]
     static member Descendants (source:seq<#XContainer>) name = source.Descendants ^ XName.Get name
 
-    [<Extension>] 
+    [<Extension>]
     static member DescendantsAndSelf (source:seq<XElement>) name =  source.DescendantsAndSelf ^ XName.Get name
 
-    [<Extension>] 
+    [<Extension>]
     static member Elements (source:seq<#XContainer>) name =  source.Elements ^ XName.Get name
 
 

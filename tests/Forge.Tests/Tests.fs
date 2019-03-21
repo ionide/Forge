@@ -101,13 +101,13 @@ let tests =
 
       testCase "parse - add new file" <| fun _ ->
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let f = {SourceFile.Include = "Test.fsi"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None; CustomAttributes = Seq.empty; CustomElements  = Seq.empty}
         let pf' = FsProject.addSourceFile "/" f pf
         pf'.SourceFiles.AllFiles() |> Expect.hasLength 4
 
       testCase "parse - add duplicate file" <| fun _ ->
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let f = {SourceFile.Include = "FixProject.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None; CustomAttributes = Seq.empty; CustomElements  = Seq.empty}
         let pf' = FsProject.addSourceFile "/" f pf
         pf'.SourceFiles.AllFiles() |> Expect.hasLength 3
 
@@ -188,7 +188,7 @@ let tests =
 
       testCase "parse - add above" <| fun _ ->
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "above.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let f = {SourceFile.Include = "above.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None; CustomAttributes = Seq.empty; CustomElements  = Seq.empty}
         let pf' = FsProject.addAbove "FixProject.fs" f pf
         let files = pf'.SourceFiles.AllFiles()
         Expect.equal (files |> Seq.head) "above.fs" "should be same"
@@ -196,11 +196,19 @@ let tests =
 
       testCase "parse - add below" <| fun _ ->
         let pf = FsProject.parse astInput
-        let f = {SourceFile.Include = "below.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None}
+        let f = {SourceFile.Include = "below.fs"; Condition = None; OnBuild = BuildAction.Compile; Link = None; Copy = None; Paket = None; CustomAttributes = Seq.empty; CustomElements  = Seq.empty}
         let pf' = FsProject.addBelow "FixProject.fs" f pf
         let files = pf'.SourceFiles.AllFiles()
         Expect.equal (files |> Seq.item 1) "below.fs" "should be same"
         pf'.SourceFiles.AllFiles() |> Expect.hasLength 4
+
+
+      testCase "parse - custom elements and attributes" <| fun _ ->
+        let pf = FsProject.parse projectWithCustomProperties
+        pf.Settings.CustomProperties |> Expect.hasLength 1
+        Expect.exists pf.Settings.CustomProperties (fun n -> n.Name = "ServerGarbageCollection" && n.Data = Some "true") "should contain ServerGarbageCollection"
+        pf.Settings.OutputType.CustomAttributes |> Expect.hasLength 1
+        Expect.exists pf.Settings.OutputType.CustomAttributes (fun n -> n.Name.LocalName = "Test" && n.Value = "ABC") "should contain custom atrribute"
     ]
 
     testList "SolutionSystem" [

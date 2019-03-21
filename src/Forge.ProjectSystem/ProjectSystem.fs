@@ -225,6 +225,8 @@ type Reference =
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
         Paket : string option
+        CustomAttributes : XAttribute seq
+        CustomElements : XElement seq
     }
     static member Empty =
         {   Include         = ""
@@ -234,9 +236,12 @@ type Reference =
             SpecificVersion = None
             CopyLocal       = None
             Paket           = None
+            CustomAttributes = Seq.empty
+            CustomElements = Seq.empty
         }
 
     static member fromXElem (xelem:XElement) =
+        let mappedElems = [Constants.HintPath; Constants.Condition; Constants.Name; Constants.Private; Constants.SpecificVersion; Constants.Paket]
         let name =  xelem.Name.LocalName
         if name <> "Reference" then
             failwithf "XElement provided was not a `Reference` was `%s` instead" name
@@ -248,6 +253,8 @@ type Reference =
             CopyLocal       = XElem.tryGetElementValue Constants.Private         xelem |> Option.bind parseBool
             SpecificVersion = XElem.tryGetElementValue Constants.SpecificVersion xelem |> Option.bind parseBool
             Paket           = XElem.tryGetElementValue Constants.Paket           xelem
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Include]   xelem
+            CustomElements  = XElem.getElementsOtherThan mappedElems             xelem
         }
 
     member self.ToXElem () =
@@ -259,6 +266,8 @@ type Reference =
         |> mapOpt self.SpecificVersion  ^ fun b node -> XElem.addElem Constants.SpecificVersion (string b) node
         |> mapOpt self.CopyLocal        ^ fun b node -> XElem.addElem Constants.Private (string b) node
         |> mapOpt self.Paket            ^ XElem.addElem Constants.Paket
+        |> XElem.addAttributes self.CustomAttributes
+        |> XElem.addManyElements self.CustomElements
 
 /// Represents a reference to another project
 // https://msdn.microsoft.com/en-us/library/bb629388.aspx
@@ -275,9 +284,13 @@ type ProjectReference =
         /// Should the assemblies of this project be copied Locally
         // if CopyLocal is true shown as "<Private>false</Private>" in XML)
         CopyLocal : bool option
+
+        CustomAttributes : XAttribute seq
+        CustomElements : XElement seq
     }
     /// Constructs a ProjectReference from an XElement
     static member fromXElem (xelem:XElement) =
+        let mappedElems = [Constants.Condition; Constants.Name; Constants.Private; Constants.Project]
         let name =  xelem.Name.LocalName
         if name <> Constants.ProjectReference then
             failwithf "XElement provided was not a `ProjectReference` was `%s` instead" name
@@ -287,6 +300,8 @@ type ProjectReference =
             Name        = XElem.tryGetElementValue Constants.Name      xelem
             CopyLocal   = XElem.tryGetElementValue Constants.Private   xelem |> Option.bind parseBool
             Guid        = XElem.tryGetElementValue Constants.Project   xelem |> Option.bind parseGuid
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Include]   xelem
+            CustomElements  = XElem.getElementsOtherThan mappedElems             xelem
         }
 
     member self.ToXElem () =
@@ -298,6 +313,8 @@ type ProjectReference =
             XElem.addElem Constants.Project (sprintf "{%s}" ^ string guid) node
         |> mapOpt self.CopyLocal ^ fun b node ->
             XElem.addElem Constants.Private (string b) node
+        |> XElem.addAttributes self.CustomAttributes
+        |> XElem.addManyElements self.CustomElements
 
 (*
     <ProjectReference Include="..\some.fsproj">
@@ -312,6 +329,7 @@ type PackageReference =
     {   Include : string
         Version : string
         PrivateAssets : string option
+        CustomAttributes : XAttribute seq
     }
     static member fromXElem (xelem:XElement) =
         let name =  xelem.Name.LocalName
@@ -321,6 +339,7 @@ type PackageReference =
         {   Include       = XElem.getAttributeValue  Constants.Include xelem
             Version       = XElem.getAttributeValue Constants.Version xelem
             PrivateAssets = XElem.tryGetAttributeValue Constants.PrivateAssets xelem
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Include; Constants.Version; Constants.PrivateAssets] xelem
         }
 
     member self.ToXElem () =
@@ -328,6 +347,7 @@ type PackageReference =
         |> XElem.setAttribute Constants.Include self.Include
         |> XElem.setAttribute Constants.Version self.Version
         |> mapOpt self.PrivateAssets ^ XElem.setAttribute Constants.PrivateAssets
+        |> XElem.addAttributes self.CustomAttributes
 
 (*
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
@@ -337,6 +357,7 @@ type PackageReference =
 type DotNetCliToolReference =
     {   Include : string
         Version : string
+        CustomAttributes : XAttribute seq
     }
     static member fromXElem (xelem:XElement) =
         let name =  xelem.Name.LocalName
@@ -345,12 +366,14 @@ type DotNetCliToolReference =
         else
         {   Include       = XElem.getAttributeValue  Constants.Include xelem
             Version       = XElem.getAttributeValue Constants.Version xelem
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Include; Constants.Version;] xelem
         }
 
     member self.ToXElem () =
         XElem.create Constants.DotNetCliToolReference []
         |> XElem.setAttribute Constants.Include self.Include
         |> XElem.setAttribute Constants.Version self.Version
+        |> XElem.addAttributes self.CustomAttributes
 
 (*
     <DotNetCliToolReference Include="dotnet-fable" Version="1.1.4" />
@@ -373,9 +396,12 @@ type SourceFile =
         Link        : string option
         Copy        : CopyToOutputDirectory option
         Paket       : string option
+        CustomAttributes : XAttribute seq
+        CustomElements : XElement seq
     }
 
     static member fromXElem (xelem:XElement) =
+        let mappedElems = [Constants.Link; Constants.Condition; Constants.CopyToOutputDirectory; Constants.Paket]
         let buildtype =  xelem.Name.LocalName
         if not ^ isSrcFile buildtype then
             failwithf "XElement provided was not `Compile|Content|None|Resource|EmbeddedResource` was `%s` instead" buildtype
@@ -388,6 +414,8 @@ type SourceFile =
                 XElem.tryGetElement Constants.CopyToOutputDirectory xelem
                 |> Option.bind (XElem.value >> CopyToOutputDirectory.TryParse)
             Paket     = XElem.tryGetElementValue Constants.Paket xelem
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Include]   xelem
+            CustomElements  = XElem.getElementsOtherThan mappedElems             xelem
         }
 
     member self.ToXElem () =
@@ -401,6 +429,8 @@ type SourceFile =
             | Never          -> node
             | Always         -> XElem.addElem Constants.CopyToOutputDirectory (string Always) node
             | PreserveNewest -> XElem.addElem Constants.CopyToOutputDirectory (string PreserveNewest) node
+        |> XElem.addAttributes self.CustomAttributes
+        |> XElem.addManyElements self.CustomElements
 
 (* ^ will produce an xml node like
 
@@ -409,42 +439,6 @@ type SourceFile =
       <Link>Common/path.fs</Link>
     </Compile>
 *)
-
-
-type SourcePair =
-    {   Sig     : SourceFile
-        Module  : SourceFile
-    }
-
-    member self.ToXElem () = [
-        self.Sig.ToXElem ()
-        self.Module.ToXElem ()
-    ]
-
-
-type SourceElement =
-    | File      of fileName:string
-    | Pair      of sigfile:string * modfile:string
-    | Directory of dirName:string
-
-//type SourceElement =
-//    | File      of SourceFile
-//    | Pair      of SourcePair
-//    | Directory of SourceElement list
-
-//    member self.ToXElem () : XElement list =
-//        match self with
-//        | File  x       -> [x.ToXElem()]
-//        | Pair  x       -> x.ToXElem()
-//        | Directory (content=x)   ->
-//            let rec loop acc (srcls:SourceElement list) =
-//                match srcls with
-//                | [] -> acc
-//                | File s::tl -> loop (toXElem s ::acc) tl
-//                | Pair s::tl -> loop (toXElem s @ acc) tl
-//                | Directory (content=s)::tl -> loop ((loop [] s)@acc) tl
-//            loop [] x
-//
 
 [<AutoOpen>]
 module PathHelpers =
@@ -775,6 +769,8 @@ type Property<'a> =
         Condition : string option
         /// Value stored withing tag
         Data     : 'a option
+
+        CustomAttributes : XAttribute seq
     }
 
     static member fromXElem (xelem:XElement) =
@@ -783,6 +779,7 @@ type Property<'a> =
             Data      =
                 if String.IsNullOrWhiteSpace xelem.Value then None else
                 Some xelem.Value
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Condition]   xelem
         }
 
     static member fromXElem (xelem:XElement, mapString: string -> 'a) =
@@ -791,12 +788,14 @@ type Property<'a> =
             Data      =
                 if String.IsNullOrWhiteSpace xelem.Value then None else
                 Some <| mapString xelem.Value
+            CustomAttributes= XElem.getAttributesOtherThan [Constants.Condition]   xelem
         }
 
     member self.ToXElem () =
         if self.Data.IsSome then
             XElem.create self.Name [self.Data.Value]
             |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
+            |> XElem.addAttributes self.CustomAttributes
             |> Some
         else
             None
@@ -805,6 +804,7 @@ type Property<'a> =
         if self.Data.IsSome then
             XElem.create self.Name [mapData self.Data.Value]
             |> mapOpt self.Condition ^ XElem.setAttribute Constants.Condition
+            |> XElem.addAttributes self.CustomAttributes
             |> Some
         else
             None
@@ -814,6 +814,7 @@ let property name data =
     {   Name        = name
         Condition   = None
         Data        = Some data
+        CustomAttributes = Seq.empty
     }
 
 
@@ -834,6 +835,7 @@ type ProjectSettings =
         AutoGenerateBindingRedirects : Property<bool>
         TargetFSharpCoreVersion      : Property<string>
         DocumentationFile            : Property<string>
+        CustomProperties             : Property<string> seq
     }
 
     static member fromXElem (xelem:XElement) =
@@ -850,13 +852,16 @@ type ProjectSettings =
             failwithf "XElement provided was not `PropertyGroup` without a condition was `%s` instead" xelem.Name.LocalName
         else
 
+
+
         let elem name =
             match XElem.tryGetElement name xelem with
             | Some x -> Property<string>.fromXElem x
             | None   ->
                 {   Name      = name
                     Condition = None
-                    Data      = None    }
+                    Data      = None
+                    CustomAttributes = Seq.empty    }
 
         let elemmap name (mapfn:string -> 'a) =
             match XElem.tryGetElement name xelem with
@@ -864,8 +869,19 @@ type ProjectSettings =
             | None   ->
                 {   Name      = name
                     Condition = None
-                    Data      = None    }
+                    Data      = None
+                    CustomAttributes = Seq.empty    }
 
+        let customElems names =
+            XElem.getElementsOtherThan names xelem
+            |> Seq.map (Property<string>.fromXElem)
+
+        let mappedElems = [
+            Constants.Name; Constants.AssemblyName; Constants.RootNamespace; Constants.Configuration; Constants.Platform
+            Constants.SchemaVersion;Constants.ProjectGuid; Constants.ProjectType; Constants.OutputType; Constants.TargetFramework
+            Constants.TargetFrameworks; Constants.TargetFrameworkVersion; Constants.TargetFrameworkProfile;
+            Constants.AutoGenerateBindingRedirects; Constants.TargetFSharpCoreVersion; Constants.DocumentationFile
+        ]
         {   Name                         = elem    Constants.Name
             AssemblyName                 = elem    Constants.AssemblyName
             RootNamespace                = elem    Constants.RootNamespace
@@ -882,6 +898,7 @@ type ProjectSettings =
             AutoGenerateBindingRedirects = elemmap Constants.AutoGenerateBindingRedirects Boolean.Parse
             TargetFSharpCoreVersion      = elem    Constants.TargetFSharpCoreVersion
             DocumentationFile            = elem    Constants.DocumentationFile
+            CustomProperties             = customElems mappedElems
         }
         //|> mapOpt self.Link      ^ XElem.addElem Constants.Link
         member self.ToXElem () =
@@ -907,6 +924,7 @@ type ProjectSettings =
             |> mapOpt (toXElem self.AutoGenerateBindingRedirects) XElem.addElement
             |> mapOpt (toXElem self.TargetFSharpCoreVersion) XElem.addElement
             |> mapOpt (toXElem self.DocumentationFile) XElem.addElement
+            |> XElem.addManyElements (self.CustomProperties |> Seq.choose toXElem)
 
 
 
@@ -927,6 +945,7 @@ type ConfigSettings =
         Prefer32Bit          : Property<bool>
         OtherFlags           : Property<string list>
         FSharpTargetsPath    : Property<string>
+        CustomProperties     : Property<string> seq
     }
 
     static member Debug =
@@ -941,7 +960,8 @@ type ConfigSettings =
             PlatformTarget       = property Constants.PlatformTarget PlatformType.AnyCPU
             Prefer32Bit          = property Constants.Prefer32Bit false
             OtherFlags           = property Constants.OtherFlags []
-            FSharpTargetsPath    = {Name = Constants.FSharpTargetsPath; Condition = None; Data = None}
+            FSharpTargetsPath    = {Name = Constants.FSharpTargetsPath; Condition = None; Data = None; CustomAttributes = Seq.empty}
+            CustomProperties     = Seq.empty
         }
 
     static member fromXElem (xelem:XElement) =
@@ -961,7 +981,8 @@ type ConfigSettings =
             | None   ->
                 {   Name      = name
                     Condition = None
-                    Data      = None    }
+                    Data      = None
+                    CustomAttributes = Seq.empty    }
 
         let elemmap name (mapfn:string -> 'a) =
             match XElem.tryGetElement name xelem with
@@ -969,8 +990,17 @@ type ConfigSettings =
             | None   ->
                 {   Name      = name
                     Condition = None
-                    Data      = None    }
+                    Data      = None
+                    CustomAttributes = Seq.empty    }
+        let customElems names =
+            XElem.getElementsOtherThan names xelem
+            |> Seq.map (Property<string>.fromXElem)
 
+        let mappedElems = [
+            Constants.DebugSymbols; Constants.DebugType; Constants.Optimize; Constants.Tailcalls; Constants.OutputPath
+            Constants.CompilationConstants; Constants.WarningLevel; Constants.PlatformTarget; Constants.Prefer32Bit;
+            Constants.OtherFlags; Constants.FSharpTargetsPath
+        ]
         {   Condition            = XElem.getAttributeValue Constants.Condition xelem
             DebugSymbols         = elemmap Constants.DebugSymbols Boolean.Parse
             DebugType            = elemmap Constants.DebugType DebugType.Parse
@@ -983,6 +1013,7 @@ type ConfigSettings =
             Prefer32Bit          = elemmap Constants.Prefer32Bit Boolean.Parse
             OtherFlags           = elemmap Constants.OtherFlags split
             FSharpTargetsPath    = elem    Constants.FSharpTargetsPath
+            CustomProperties     = customElems mappedElems
         }
 
 
@@ -1000,6 +1031,7 @@ type ConfigSettings =
         |> mapOpt (toXElem self.Prefer32Bit) XElem.addElement
         |> mapOpt (toXElem self.OtherFlags) XElem.addElement
         |> mapOpt (toXElem self.FSharpTargetsPath) XElem.addElement
+        |> XElem.addManyElements (self.CustomProperties |> Seq.choose toXElem)
 
 // TODO - Check for duplicate files
 
