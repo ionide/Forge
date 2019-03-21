@@ -1,82 +1,14 @@
-[![Join the chat at https://gitter.im/fsharp-editing/Forge](https://badges.gitter.im/fsharp-editing/Forge.svg)](https://gitter.im/fsharp-editing/Forge?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-
 # Forge (F# Project Builder)
 
-Forge is a command line tool that provides tasks for creating F# projects with no dependence on other languages. For more documentation please visit [our wiki pages](https://github.com/fsharp-editing/Forge/wiki)
+Forge is a command line tool that provides tasks for creating and manipulation F# projects. For more documentation please visit [our wiki pages](https://github.com/ionide/Forge/wiki).
 
 
-### Installing
+Forge is part of Ionide tooling suite - You can support its development on [Open Collective](https://opencollective.com/ionide).
 
-#### Via Scoop.sh (Windows)
+[![open collective backers](https://img.shields.io/opencollective/backers/ionide.svg?color=blue)](https://opencollective.com/ionide)
+[![open collective sponsors](https://img.shields.io/opencollective/sponsors/ionide.svg?color=blue)](https://opencollective.com/ionide)
 
-You can install Forge via the [Scoop](http://scoop.sh/) package manager on Windows
-
-    scoop install forge
-
-#### Via Homebrew (OSX)
-
-You can install Forge via the [Homebrew](http://brew.sh) package manager on OS X
-
-    brew tap samritchie/forge && brew install forge
-
-#### Via Linuxbrew (Linux)
-
-You can install Forge via the [Linuxbrew](http://linuxbrew.sh/) package manager on Linux
-
-    brew tap samritchie/forge && brew install forge
-
-#### Other
-
-You can download one of the releases found at https://github.com/fsharp-editing/Forge/releases
-
-Alternately you can clone the repo, build the source, and then move the files in your bin folder to a location of your choosing.
-
-##### On Linux:
-
-One option is to build the project from source and create a symlink.
-
-Choose an installation directory:
-
-```bash
-export BUILD_DIR=apps
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
-```
-
-Clone the repo and build the app:
-
-```bash
-git clone https://github.com/fsharp-editing/Forge
-cd Forge
-fake build
-```
-
-Choose a location for the executable:
-
-```bash
-export INSTALL_DIR=~/bin
-mkdir -p $INSTALL_DIR
-```
-
-Ensure that the destination directory is on the user's `$PATH`.
-For example, in the user's `.bashrc`, add the following line:
-
-```
-export PATH=~/bin:$PATH
-```
-
-Reload the `.bashrc` with `source` or `.`:
-
-```bash
-. ~/.bashrc
-```
-
-Create a symlink that points to the script, which runs executable.
-
-```bash
-ln -s `pwd`/temp/forge.sh $INSTALL_DIR/forge
-```
+[![Open Collective](https://opencollective.com/ionide/donate/button.png?color=blue)](https://opencollective.com/ionide)
 
 ## How to contribute
 
@@ -107,8 +39,34 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 - [Krzysztof-Cieslak](https://github.com/Krzysztof-Cieslak)
 
-
 #### Past Maintainer(s)
 
 - [cloudRoutine](https://github.com/cloudRoutine/)
 - [@ReidNEvans](https://twitter.com/reidNEvans)
+
+## Sponsors
+
+Forge couldn't be created without support of [Lambda Factory](https://lambdafactory.io). If your company would be interested in supporting development of Forge, or acquiring commercial support sent us email - lambda_factory@outlook.com
+
+Forge is part of Ionide tooling suite - You can also support its development on [Open Collective](https://opencollective.com/ionide).
+
+[![Open Collective](https://opencollective.com/ionide/donate/button.png?color=blue)](https://opencollective.com/ionide)
+
+### Partners
+
+<div align="center">
+
+<a href="https://lambdafactory.io"><img src="https://cdn-images-1.medium.com/max/332/1*la7_YvDFvrtA720P5bYWBQ@2x.png" alt="drawing" width="100"/></a>
+
+</div>
+
+### Sponsors
+
+[Become a sponsor](https://opencollective.com/ionide) and get your logo on our README on Github, description in VSCode marketplace and on [ionide.io](http://ionide.io) with a link to your site.
+
+<div align="center">
+<a href="https://opencollective.com/ionide/sponsor/0/website?requireActive=false" target="_blank"><img src="https://opencollective.com/ionide/sponsor/0/avatar.svg?requireActive=false" height="50px"></a>
+<a href="https://opencollective.com/ionide/sponsor/1/website?requireActive=false" target="_blank"><img src="https://opencollective.com/ionide/sponsor/1/avatar.svg?requireActive=false" height="50px"></a>
+ <a href="https://opencollective.com/ionide/sponsor/2/website?requireActive=false" target="_blank"><img src="https://opencollective.com/ionide/sponsor/2/avatar.svg?requireActive=false" height="50px"></a>
+ <a href="http://www.miltonsecurity.com/" target="_blank"><img src="https://opencollective-production.s3-us-west-1.amazonaws.com/dec96cf0-3fd4-11e9-85d3-d3af44ed2d45.jpg" height="50px"></a>
+ <a href="https://opencollective.com/ionide/sponsor/3/website?requireActive=false" target="_blank"><img src="https://opencollective.com/ionide/sponsor/3/avatar.svg?requireActive=false" height="50px"></a>
