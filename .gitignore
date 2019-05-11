@@ -199,3 +199,4 @@ docs/content/release-notes.md
 .vscode
 .ionide
 out/
+AssemblyInfo.fs
