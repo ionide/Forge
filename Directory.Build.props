@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);FS2003</NoWarn>
+    </PropertyGroup>
+</Project>
