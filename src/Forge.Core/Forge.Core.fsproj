@@ -11,6 +11,7 @@
   <ItemGroup>
     <None Include="paket.references" />
     <None Include="paket.template" />
+    <Compile Include="AssemblyInfo.fs" Condition="Exists('AssemblyInfo.fs')" />
     <Compile Include="Environment.fs" />
     <Compile Include="JsonValue.fs" />
     <Compile Include="TraceListener.fs" />
