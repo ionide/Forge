@@ -895,7 +895,7 @@ let applyAlias (args : string []) =
     | Some a ->
         [| yield! a.Split(' '); yield! args.[1 ..] |]
 
-
+open System.Reflection
 
 let runForge (args : string []) =
     if args.Length = 0 then
@@ -922,7 +922,12 @@ let runForge (args : string []) =
                     | Command.Paket -> fun a -> Paket.Run a; Some ()
                     | Refresh -> fun _ -> Templates.Refresh (); Some ()
                     | Version -> fun _ ->
-                        printfn "%s" AssemblyVersionInformation.AssemblyVersion
+                        let assembly = Assembly.GetExecutingAssembly()
+                        let versionAttribute =
+                            Attribute.GetCustomAttribute(assembly, typeof<AssemblyInformationalVersionAttribute>)
+                            :?> AssemblyInformationalVersionAttribute
+                        let version = if isNull versionAttribute then "Unknown" else versionAttribute.InformationalVersion
+                        printfn "%s" version
                         Some ()
                 with
                 | ex ->
