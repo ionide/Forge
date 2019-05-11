@@ -1,5 +1,6 @@
 <Project>
     <PropertyGroup>
         <NoWarn>$(NoWarn);FS2003</NoWarn>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 </Project>
