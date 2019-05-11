@@ -924,9 +924,9 @@ let runForge (args : string []) =
                     | Version -> fun _ ->
                         let assembly = Assembly.GetExecutingAssembly()
                         let versionAttribute =
-                            Attribute.GetCustomAttribute(assembly, typeof<AssemblyInformationalVersionAttribute>)
-                            :?> AssemblyInformationalVersionAttribute
-                        let version = if isNull versionAttribute then "Unknown" else versionAttribute.InformationalVersion
+                            Attribute.GetCustomAttribute(assembly, typeof<AssemblyVersionAttribute>)
+                            :?> AssemblyVersionAttribute
+                        let version = if isNull versionAttribute then "Unknown" else versionAttribute.Version
                         printfn "%s" version
                         Some ()
                 with
