@@ -41,6 +41,6 @@ let Init folder =
         Update ()
         Run ["init"]
         let deps = folder </> "paket.dependencies"
-        File.AppendAllText(deps, "\nframework: >= net461\n")
+        File.AppendAllText(deps, "\nframework: auto-detect\n")
 
 
