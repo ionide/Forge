@@ -28,6 +28,15 @@ let inline (</>) path1 path2 = combinePathsNoTrim path1 path2
 
 /// Detects whether the given path does not contains invalid characters.
 let isValidPath (path:string) =
+    let invalidChars = [| yield! Path.GetInvalidPathChars() |]
+    (true, path.ToCharArray())
+    ||> Array.fold (fun isValid pathChar ->
+        if not isValid then false else
+        not ^ Array.exists ((=) pathChar) invalidChars
+    )
+
+/// Detects whether the given fileName does not contains invalid characters.
+let isValidFileName (path:string) =
     let invalidChars = [| yield! Path.GetInvalidPathChars(); yield! Path.GetInvalidFileNameChars() |]
     (true, path.ToCharArray())
     ||> Array.fold (fun isValid pathChar ->

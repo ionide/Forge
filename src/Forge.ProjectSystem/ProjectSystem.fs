@@ -535,7 +535,7 @@ module PathHelpers =
 
     let checkFile (path:string) (warning:string) =
         ignore warning
-        isValidPath path
+        isValidFileName path
 
 
 type SourceTree (files:SourceFile list) =

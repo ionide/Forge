@@ -246,7 +246,7 @@ module Furnace =
 
 
     let renameSourceFile (path:string, newName:string) (state: ActiveState) =
-        if not ^ isValidPath newName then
+        if not ^ isValidFileName newName then
             traceError ^ "Cannot Rename File - invalid name"
             state
         elif not ^ File.Exists path then

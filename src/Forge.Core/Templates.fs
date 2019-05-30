@@ -151,8 +151,7 @@ module Project =
         let templates = GetList()
 
         let pathCheck path =
-            let path' = getCwd() </> path
-            try Path.GetFullPath path' |> ignore; isValidPath path' && not (String.IsNullOrWhiteSpace path)
+            try Path.GetFullPath path |> ignore; isValidPath path && not (String.IsNullOrWhiteSpace path)
             with _ -> false
 
         let projectName' =
