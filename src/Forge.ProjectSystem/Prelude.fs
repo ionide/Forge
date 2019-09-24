@@ -26,25 +26,6 @@ let inline combinePathsNoTrim path1 path2 = Path.Combine (path1, path2)
 let inline (@@) path1 path2 = combinePaths path1 path2
 let inline (</>) path1 path2 = combinePathsNoTrim path1 path2
 
-/// Detects whether the given path does not contains invalid characters.
-let isValidPath (path:string) =
-    let invalidChars = [| yield! Path.GetInvalidPathChars() |]
-    (true, path.ToCharArray())
-    ||> Array.fold (fun isValid pathChar ->
-        if not isValid then false else
-        not ^ Array.exists ((=) pathChar) invalidChars
-    )
-
-/// Detects whether the given fileName does not contains invalid characters.
-let isValidFileName (path:string) =
-    let invalidChars = [| yield! Path.GetInvalidPathChars(); yield! Path.GetInvalidFileNameChars() |]
-    (true, path.ToCharArray())
-    ||> Array.fold (fun isValid pathChar ->
-        if not isValid then false else
-        not ^ Array.exists ((=) pathChar) invalidChars
-    )
-
-
 // String Helpers
 //=====================================================
 
@@ -114,6 +95,25 @@ module String =
 
     let editDistance (s: string) (t: string) =
         distanceCalc (s.Length, fun i -> s.[i]) (t.Length, fun i -> t.[i])
+    
+    let containsAnyChars (str:string) chars =
+        (false, str.ToCharArray())
+        ||> Array.fold (fun found strChar ->
+            if found then true
+            else Array.exists ((=) strChar) chars
+        )
+
+// Path/File Helpers
+//=====================================================
+
+/// Detects whether the given path does not contains invalid characters.
+let isValidPath (path:string) =
+    not ^ String.containsAnyChars path [| yield! Path.GetInvalidPathChars() |]
+
+/// Detects whether the given fileName does not contains invalid characters.
+let isValidFileName (path:string) =
+    not ^ String.containsAnyChars (Path.GetDirectoryName path) [| yield! Path.GetInvalidPathChars() |] &&
+    not ^ String.containsAnyChars (Path.GetFileName path) [| yield! Path.GetInvalidFileNameChars() |]
 
 // Process Helpers
 //=====================================================
