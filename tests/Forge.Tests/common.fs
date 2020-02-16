@@ -19,7 +19,7 @@ module Expect =
     let equivalent expected actual  =
         Expect.containsAll actual expected "should contain all"
 
-    let hasLength length xs  =
+    let hasLength' length xs  =
         Expect.equal (xs |> Seq.length) length "should have given length"
 
 let astInput =
@@ -122,4 +122,4 @@ let netCoreProjectMultiTargetsNoFiles = """
         <TargetFrameworks>net461;netstandard2.0;netcoreapp2.0</TargetFrameworks>
       </PropertyGroup>
     </Project>
-    """ 
+    """
