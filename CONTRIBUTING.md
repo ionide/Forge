@@ -58,8 +58,7 @@ accurate comments, etc.).
 
 ### Prerequisites
 
-- [.NET Core 2.0](https://dotnet.microsoft.com/download)
-- [FAKE 5](https://fake.build/)
+- [.NET Core 3.1](https://dotnet.microsoft.com/download)
 
 ### Building
 
@@ -76,8 +75,8 @@ git clone git@github.com:YOUR_GITHUB_USER/forge.git
 #### First time build:
 ```bash
 cd ionide-forge-fsharp
-dotnet restore
-fake build  # or build.cmd if your OS is Windows  (might need ./build Build here)
+dotnet tool restore
+dotnet fake build
 ```
 
 If `dotnet restore` gives the error `error MSB4126: The specified solution configuration "Debug|x64" is invalid`, there's a good chance you have the `Platform` environment variable set to "x64".  Unset the variable and try the restore command again.

@@ -3,10 +3,6 @@
 // --------------------------------------------------------------------------------------
 #r "paket: groupref build //"
 #load ".fake/build.fsx/intellisense.fsx"
-#if !FAKE
-  #r "netstandard"
-  #r "Facades/netstandard.dll"
-#endif
 
 open Fake.Core
 open Fake.DotNet
