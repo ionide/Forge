@@ -1,3 +1,5 @@
+# [Project is deprecated - read more in [#135](https://github.com/ionide/Forge/issues/135)]
+
 # Forge (F# Project Builder)
 
 Forge is a command line tool that provides tasks for creating and manipulation F# projects. For more documentation please visit [our wiki pages](https://github.com/ionide/Forge/wiki).
